@@ -1,0 +1,252 @@
+// ============================================================
+// GORDIJN CONFIGURATOR — Zoho Creator Deluge Script
+// Versie: V5 | Sleutel: L@b21#2026!
+// Trigger: On User Input
+//   Velden: KlaarBreedte, KlaarHoogte, Plooi, Kamehoog, Artikel
+// Formulier: Overgordijn / Vitrage — Kamerhoog & Breedtestof
+// ============================================================
+
+// ============================================================
+// SECTIE 1: PLOOIFACTOREN & STANDAARD ZOOMWAARDEN
+// ============================================================
+
+plooiFactor_Single = 2.0;    // Enkelvoudige plooi
+plooiFactor_Double = 2.5;    // Dubbele plooi
+plooiFactor_Wave   = 1.8;    // Wave-plooi (golfplooi)
+plooiFactor_Retour = 1.0;    // Retour / vlak (geen plooi)
+
+// Standaard valbehoud — worden overschreven door artikelwaarden indien ingevuld
+default_Onderzoom  = 20.0;   // cm onderzoom
+default_Band       = 10.0;   // cm bovenzoom / band (haak-opsteek toeslag)
+default_Zijzoom    = 8.0;    // cm per zijde (links + rechts = 2×)
+default_StofBreedte = 140.0; // cm standaard breedtestof breedte
+
+// ============================================================
+// SECTIE 2: FORMULIERVELDEN UITLEZEN
+// ============================================================
+// Opmerking: veldnamen zijn de API-namen in Zoho Creator.
+// "Kamehoog" volgt de spelwijze uit het formulier (zie veldtabel).
+
+breedte_rail    = ifnull(input.KlaarBreedte, 0).toDecimal();    // cm — breedte van de rail/roede
+hoogte_rail     = ifnull(input.KlaarHoogte, 0).toDecimal();     // cm — gewenste klaarmaat hoogte
+isKamerhoog     = input.Kamehoog;                                // "Ja" of "Nee"
+plooiKeuze      = input.Plooi;                                   // "Single" | "Double" | "Wave" | "Retour"
+patroonType     = input.Patroon;                                 // "Uni" | "Patroon"
+stuk            = input.Stuk;                                    // "Single" | "Links" | "Rechts"
+lockKeuze       = input.Lock;                                    // "Ja" | "Nee"
+voeren          = input.Voeren;                                  // "Ja" | "Nee"
+
+// Artikelspecifieke waarden (gekoppeld aan het gekozen stof-artikel)
+hoogte_stof      = ifnull(input.Hoogte_stof, 300.0).toDecimal();      // cm — max stofhoogte (artikel)
+breedte_stof     = ifnull(input.breedte_stof, default_StofBreedte).toDecimal(); // cm — stofbreedte (artikel)
+krimpercentage   = ifnull(input.Krimpercentage, 0).toDecimal();       // % — krimpfactor stof
+patroonHoogte_cm = ifnull(input.Patroonhoogte, 0).toDecimal();        // cm — rapportmaat patroon
+prijs_per_m1     = ifnull(input.prijs_per_m1, 0).toDecimal();         // € per lopende meter
+
+// Zoomwaarden — uit Config-kolom van het formulier (overschrijven standaarden)
+onderzoom_cm = ifnull(input.Onderzoom, default_Onderzoom).toDecimal(); // cm
+band_cm      = ifnull(input.Band, default_Band).toDecimal();           // cm (bovenzoom)
+zijzoom_cm   = ifnull(input.zijzoom, default_Zijzoom).toDecimal();    // cm per zijde
+
+// ============================================================
+// SECTIE 3: VALIDATIE INVOER
+// ============================================================
+
+foutmelding = "";
+
+if (breedte_rail <= 0)
+{
+    foutmelding = "Voer een geldige breedte in (meer dan 0 cm).";
+}
+else if (hoogte_rail <= 0)
+{
+    foutmelding = "Voer een geldige hoogte in (meer dan 0 cm).";
+}
+else if (breedte_stof <= 0)
+{
+    foutmelding = "Stofbreedte uit het artikel ontbreekt of is ongeldig.";
+}
+
+// ============================================================
+// SECTIE 4: CORRECTIES OP INVOER
+// ============================================================
+
+// 4a. Stuk-correctie: bij Links of Rechts is de effectieve breedte de helft van de rail
+effectieveBreedte = breedte_rail;
+if (stuk == "Links" || stuk == "Rechts")
+{
+    effectieveBreedte = breedte_rail / 2;
+}
+
+// 4b. Krimptoeslag op hoogte (vóór berekening al verwerkt)
+//     Formule: benodigde snijhoogte = klaarmaat / (1 - krimp%)
+//     Vereenvoudigd: snijhoogte ≈ klaarmaat × (1 + krimp / 100)
+effectieveHoogte = hoogte_rail;
+if (krimpercentage > 0)
+{
+    effectieveHoogte = hoogte_rail * (1 + krimpercentage / 100);
+}
+
+// 4c. Lock-correctie: afgelockte onderkant = geen klassieke onderzoom
+effectieveOnderzoom = onderzoom_cm;
+if (lockKeuze == "Ja")
+{
+    effectieveOnderzoom = 0; // locken vervangt de gestoomde zoom
+}
+
+// ============================================================
+// SECTIE 5: PLOOIFACTOR BEPALEN
+// ============================================================
+
+plooiFactor = plooiFactor_Single; // standaard fallback
+
+if (plooiKeuze == "Double")
+{
+    plooiFactor = plooiFactor_Double;
+}
+else if (plooiKeuze == "Wave")
+{
+    plooiFactor = plooiFactor_Wave;
+}
+else if (plooiKeuze == "Retour")
+{
+    plooiFactor = plooiFactor_Retour;
+}
+// "Single" → blijft 2.0
+
+// ============================================================
+// SECTIE 6: KERNBEREKENING
+// ============================================================
+
+aantalBanen    = 0;
+totaalMetrage  = 0.0;
+totaalPrijs    = 0.0;
+
+if (foutmelding == "")
+{
+    // Benodigde stofbreedte na opplooi + zijzomen (beide zijden)
+    benodigdeBreedte_cm = (effectieveBreedte * plooiFactor) + (2 * zijzoom_cm);
+
+    if (isKamerhoog == "Ja")
+    {
+        // --------------------------------------------------------
+        // SCENARIO A: KAMERHOOG STOF
+        // De breedte van de rol = hoogte van het gordijn (rot niet in banen)
+        // Je koopt lopende meters van een kamerhoge rol
+        // --------------------------------------------------------
+
+        // Validatie: vereiste afwerkhoogte moet passen binnen de stofhoogte
+        vereisteTotaalHoogte = effectieveHoogte + band_cm + effectieveOnderzoom;
+
+        if (vereisteTotaalHoogte > hoogte_stof)
+        {
+            foutmelding = "Hoogte overschreden: de vereiste snijhoogte ("
+                          + vereisteTotaalHoogte.round(1).toString()
+                          + " cm incl. zomen) is groter dan de maximale stofhoogte ("
+                          + hoogte_stof.toString()
+                          + " cm). Kies een lagere klaarmaat of een andere stof.";
+        }
+        else
+        {
+            // Aantal banen = hoeveel stofbreedtes (lopende meters) nodig
+            // Elke lopende meter uit de kamerhoge rol = 1 'baan' van breedte_stof breed
+            aantalBanen_dec = benodigdeBreedte_cm / breedte_stof;
+
+            // Naar boven afronden (altijd gehele banen)
+            aantalBanen_heel = aantalBanen_dec.toLong();
+            if (aantalBanen_dec > aantalBanen_heel.toDecimal())
+            {
+                aantalBanen_heel = aantalBanen_heel + 1;
+            }
+            aantalBanen = aantalBanen_heel;
+
+            // Metrage = aantal banen × hoogte_stof (in lopende meters van de kamerhoge rol)
+            metrage_per_baan_m = hoogte_stof / 100;
+            totaalMetrage = (aantalBanen.toDecimal() * metrage_per_baan_m).round(1);
+        }
+    }
+    else
+    {
+        // --------------------------------------------------------
+        // SCENARIO B: BREEDTESTOF (standaard rolbreedte, bijv. 140 cm)
+        // Stof heeft een vaste breedte; je stapelt banen naast elkaar
+        // --------------------------------------------------------
+
+        // Stap 1: Aantal banen berekenen
+        aantalBanen_dec = benodigdeBreedte_cm / breedte_stof;
+
+        aantalBanen_heel = aantalBanen_dec.toLong();
+        if (aantalBanen_dec > aantalBanen_heel.toDecimal())
+        {
+            aantalBanen_heel = aantalBanen_heel + 1;
+        }
+        aantalBanen = aantalBanen_heel;
+
+        // Stap 2: Hoogte per baan inclusief zomen en krimptoeslag
+        hoogte_per_baan_cm = effectieveHoogte + effectieveOnderzoom + band_cm;
+
+        // Patroon: hoogte opronden naar volledig rapport (patroonherhaling)
+        if (patroonType == "Patroon" && patroonHoogte_cm > 0)
+        {
+            rapportAantal_dec = hoogte_per_baan_cm / patroonHoogte_cm;
+            rapportAantal = rapportAantal_dec.toLong();
+            if (rapportAantal_dec > rapportAantal.toDecimal())
+            {
+                rapportAantal = rapportAantal + 1;
+            }
+            hoogte_per_baan_cm = rapportAantal.toDecimal() * patroonHoogte_cm;
+        }
+
+        // Metrage per baan in lopende meters
+        metrage_per_baan_m = hoogte_per_baan_cm / 100;
+
+        // Totaal metrage (afgerond op 1 decimaal)
+        totaalMetrage = (aantalBanen.toDecimal() * metrage_per_baan_m).round(1);
+    }
+
+    // --------------------------------------------------------
+    // SECTIE 7: PRIJSBEREKENING
+    // --------------------------------------------------------
+
+    if (totaalMetrage > 0 && prijs_per_m1 > 0 && foutmelding == "")
+    {
+        totaalPrijs = (totaalMetrage * prijs_per_m1).round(2);
+
+        // Voering: aparte berekening indien van toepassing
+        // Voeringsmetrage = gelijk aan gordijnmetrage (geen extra plooi)
+        // Voeringsartikelprijs apart inrichten — hier indicatief 60% van stofdprijs
+        // Pas aan zodra voeringsartikelen een eigen prijs_per_m1 hebben
+        if (voeren == "Ja")
+        {
+            voering_m = totaalMetrage;
+            voering_prijs_per_m1 = prijs_per_m1 * 0.60;
+            totaalPrijs = (totaalPrijs + voering_m * voering_prijs_per_m1).round(2);
+        }
+    }
+}
+
+// ============================================================
+// SECTIE 8: VELDEN BIJWERKEN
+// ============================================================
+
+if (foutmelding != "")
+{
+    // Wis berekende velden bij een fout
+    input.Aantal_Banen   = 0;
+    input.Totaal_Metrage = 0;
+    input.Totaal_Prijs   = 0;
+
+    // Log foutmelding (pas dit aan naar het meldingsveld in jouw formulier)
+    // Optie A — alert (werkt in formulier-context):
+    // alert foutmelding;
+    // Optie B — schrijf naar een tekstveld "Melding" in het formulier:
+    // input.Melding = foutmelding;
+    // Optie C — info voor debug:
+    info foutmelding;
+}
+else
+{
+    input.Aantal_Banen   = aantalBanen;
+    input.Totaal_Metrage = totaalMetrage;
+    input.Totaal_Prijs   = totaalPrijs;
+}
