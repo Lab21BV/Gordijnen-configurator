@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Artikel Import — Gordijn Configurator</title>
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -219,25 +219,11 @@
     .sel-count { font-size: .8rem; color: var(--muted); }
 
     /* ── Saved articles panel ── */
-    .saved-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 10px;
-    }
-    .saved-item {
-      background: var(--accent-lt);
-      border: 1px solid #b8d0e8;
-      border-radius: 6px;
-      padding: 10px 12px;
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-    }
-    .saved-item .info { flex: 1; min-width: 0; }
-    .saved-item .art-nr { font-size: .75rem; font-weight: 700; color: var(--accent-dk); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .saved-item .art-desc { font-size: .7rem; color: var(--muted); margin-top: 2px; }
-    .saved-item .actions { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
     .empty-state { color: var(--muted); font-size: .83rem; padding: 12px 0; }
+    #savedList .table-wrap { max-height: 520px; overflow-y: auto; }
+    #savedList thead th:first-child,
+    #savedList tbody td:first-child { position: sticky; left: 0; background: #f0f3f8; z-index: 1; }
+    #savedList tbody tr:hover td:first-child { background: var(--accent-lt); }
 
     /* ── Column mapping ── */
     .mapping-grid {
@@ -469,10 +455,18 @@
       <span class="badge" id="savedBadge">0</span>
     </div>
     <div class="card-body">
-      <div class="toolbar" style="margin-bottom:10px">
-        <button class="btn btn-danger btn-sm" onclick="clearAll()" id="btnClearAll" disabled>Alles wissen</button>
+      <div class="toolbar" style="margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <input type="text" id="savedSearch" placeholder="🔍  Zoeken op artikelnummer of omschrijving…"
+          oninput="renderSaved()"
+          style="flex:1;min-width:200px;max-width:320px;border:1px solid var(--border);border-radius:5px;padding:6px 10px;font-size:.82rem;color:var(--text)" />
         <span class="spacer"></span>
-        <span style="font-size:.78rem;color:var(--muted)">Artikelen worden opgeslagen in de browser (localStorage)</span>
+        <span style="font-size:.78rem;color:var(--muted)" id="savedInfo"></span>
+        <button class="btn btn-outline btn-sm" onclick="exportJSON()" id="btnExport" disabled title="Download alle artikelen als JSON back-up">⬇ Exporteer JSON</button>
+        <label class="btn btn-outline btn-sm" style="cursor:pointer" title="Laad een eerder geëxporteerde JSON back-up">
+          ⬆ Importeer JSON
+          <input type="file" accept=".json" onchange="importJSON(event)" style="display:none" />
+        </label>
+        <button class="btn btn-danger btn-sm" onclick="clearAll()" id="btnClearAll" disabled>Alles wissen</button>
       </div>
       <div id="savedList"><p class="empty-state">Nog geen artikelen opgeslagen.</p></div>
     </div>
@@ -700,13 +694,15 @@ function buildPreviewTable() {
   </tr>`;
 
   tbody.innerHTML = mappedRows.map((r, i) => `
-    <tr id="row_${i}" onclick="toggleRow(${i})">
-      <td class="check-col"><input type="checkbox" id="chk_${i}" onchange="updateSelCount()" onclick="event.stopPropagation()" /></td>
+    <tr id="row_${i}" class="selected" onclick="toggleRow(${i})">
+      <td class="check-col"><input type="checkbox" id="chk_${i}" checked onchange="updateSelCount()" onclick="event.stopPropagation()" /></td>
       ${PREVIEW_COLS.map(c => `<td>${renderCell(c.key, r[c.key])}</td>`).join('')}
     </tr>
   `).join('');
 
   document.getElementById('previewBadge').textContent = `${mappedRows.length} rijen`;
+  const ca = document.getElementById('checkAll');
+  if (ca) ca.checked = true;
   updateSelCount();
 }
 
@@ -786,36 +782,103 @@ function importSelected() {
 }
 
 function renderSaved() {
-  const saved = loadSaved();
-  const keys  = Object.keys(saved);
-  const badge = document.getElementById('savedBadge');
-  badge.textContent = keys.length;
-  document.getElementById('btnClearAll').disabled = keys.length === 0;
+  const saved  = loadSaved();
+  const query  = (document.getElementById('savedSearch')?.value || '').toLowerCase().trim();
+  const allKeys = Object.keys(saved).sort();
+  const keys   = query
+    ? allKeys.filter(nr => {
+        const a = saved[nr];
+        return nr.toLowerCase().includes(query) ||
+               (a.omschrijving || '').toLowerCase().includes(query) ||
+               (a.samenstelling || '').toLowerCase().includes(query);
+      })
+    : allKeys;
+
+  document.getElementById('savedBadge').textContent = allKeys.length;
+  document.getElementById('btnClearAll').disabled = allKeys.length === 0;
+  document.getElementById('btnExport').disabled   = allKeys.length === 0;
+  document.getElementById('savedInfo').textContent =
+    allKeys.length ? `${keys.length} van ${allKeys.length} artikel(en)` : '';
 
   const list = document.getElementById('savedList');
-  if (keys.length === 0) {
+  if (allKeys.length === 0) {
     list.innerHTML = '<p class="empty-state">Nog geen artikelen opgeslagen.</p>';
     return;
   }
+  if (keys.length === 0) {
+    list.innerHTML = '<p class="empty-state">Geen artikelen gevonden voor deze zoekopdracht.</p>';
+    return;
+  }
 
-  list.innerHTML = `<div class="saved-grid">` +
-    keys.sort().map(nr => {
-      const a = saved[nr];
-      const desc = a.omschrijving || a.samenstelling || '';
-      return `
-        <div class="saved-item">
-          <div class="info">
-            <div class="art-nr">${esc(nr)}</div>
-            ${desc ? `<div class="art-desc">${esc(desc)}</div>` : ''}
-            <div class="art-desc">${a.hoogte_stof ? `H:${a.hoogte_stof}` : ''}${a.breedte_stof ? ` B:${a.breedte_stof}` : ''}${a.prijs_per_m1 ? ` €${a.prijs_per_m1}` : ''}</div>
-          </div>
-          <div class="actions">
-            <button class="btn btn-outline btn-sm" onclick="openInConfigurator('${esc(nr)}')" title="Open in configurator">↗</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteArticle('${esc(nr)}')" title="Verwijderen">✕</button>
-          </div>
-        </div>`;
-    }).join('') +
-  `</div>`;
+  const yesNo = v => {
+    const l = String(v||'').toLowerCase();
+    if (l === 'ja' || l === 'yes' || l === '1' || l === 'true')
+      return `<span class="tag tag-yes">Ja</span>`;
+    if (l === 'nee' || l === 'no' || l === '0' || l === 'false')
+      return `<span class="tag tag-no">Nee</span>`;
+    return v ? esc(v) : `<span style="color:var(--muted)">—</span>`;
+  };
+  const dash = v => v ? esc(v) : `<span style="color:var(--muted)">—</span>`;
+  const price = v => {
+    const n = parseFloat(v);
+    return isNaN(n) || n === 0 ? `<span style="color:var(--muted)">—</span>` : `€ ${n.toFixed(2)}`;
+  };
+
+  list.innerHTML = `
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Artikelnr.</th>
+          <th>Omschrijving</th>
+          <th>H stof</th>
+          <th>B stof</th>
+          <th>Patroon</th>
+          <th>Prijs/m¹</th>
+          <th>Krimp%</th>
+          <th>KH</th>
+          <th>Lichtdoorlatenheid</th>
+          <th>Voeren</th>
+          <th>Voer.prijs</th>
+          <th>Kant.</th>
+          <th>D.face</th>
+          <th>BR</th>
+          <th>Akoest.</th>
+          <th>Verzw.</th>
+          <th>Samenstelling</th>
+          <th style="width:72px"></th>
+        </tr>
+      </thead>
+      <tbody>
+        ${keys.map(nr => {
+          const a = saved[nr];
+          return `<tr>
+            <td><strong>${esc(nr)}</strong></td>
+            <td>${dash(a.omschrijving)}</td>
+            <td>${dash(a.hoogte_stof)}</td>
+            <td>${dash(a.breedte_stof)}</td>
+            <td>${dash(a.patroon)}</td>
+            <td>${price(a.prijs_per_m1)}</td>
+            <td>${a.krimpercentage && a.krimpercentage !== '0' ? esc(a.krimpercentage)+'%' : dash('')}</td>
+            <td>${yesNo(a.kamerhoog)}</td>
+            <td style="white-space:normal;max-width:110px">${dash(a.lichtdoorlatenheid)}</td>
+            <td>${yesNo(a.voeren)}</td>
+            <td>${price(a.voering_prijs_per_m1)}</td>
+            <td>${yesNo(a.kantelbaar)}</td>
+            <td>${yesNo(a.doubleface)}</td>
+            <td>${yesNo(a.brandvertragend)}</td>
+            <td>${dash(a.akoestiek)}</td>
+            <td>${yesNo(a.verzwaaringskoord)}</td>
+            <td style="white-space:normal;max-width:130px">${dash(a.samenstelling)}</td>
+            <td style="white-space:nowrap">
+              <button class="btn btn-outline btn-sm" onclick="openInConfigurator('${esc(nr)}')" title="Openen in configurator">↗</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteArticle('${esc(nr)}')" title="Verwijderen">✕</button>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  </div>`;
 }
 
 function deleteArticle(nr) {
@@ -844,6 +907,43 @@ function resetImport() {
   document.getElementById('mappingCard').style.display = 'none';
   document.getElementById('previewCard').style.display = 'none';
   document.getElementById('fileInput').value = '';
+}
+
+function exportJSON() {
+  const saved = loadSaved();
+  const count = Object.keys(saved).length;
+  if (count === 0) return;
+  const blob = new Blob([JSON.stringify(saved, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `gordijn_artikelen_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+
+function importJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const incoming = JSON.parse(ev.target.result);
+      if (typeof incoming !== 'object' || Array.isArray(incoming))
+        throw new Error('Ongeldig formaat');
+      const saved  = loadSaved();
+      let added = 0, updated = 0;
+      Object.keys(incoming).forEach(nr => {
+        if (saved[nr]) updated++; else added++;
+        saved[nr] = incoming[nr];
+      });
+      localStorage.setItem(LS_KEY, JSON.stringify(saved));
+      renderSaved();
+      alert(`JSON geïmporteerd: ${added} nieuw, ${updated} bijgewerkt.`);
+    } catch(e) {
+      alert('Fout bij laden JSON: ' + e.message);
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file, 'UTF-8');
 }
 
 function toggleHint() {

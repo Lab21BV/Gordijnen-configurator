@@ -45,8 +45,8 @@
     }
     header svg { flex-shrink: 0; }
     header h1  { font-size: 1.15rem; font-weight: 600; letter-spacing: .02em; }
-    header span{ font-size: .78rem; opacity: .75; }
-    header nav { margin-left: auto; display: flex; gap: 8px; }
+    header span{ font-size: .78rem; opacity: .75; flex-shrink: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    header nav { margin-left: auto; display: flex; gap: 8px; flex-shrink: 0; }
     header nav a {
       color: rgba(255,255,255,.85);
       text-decoration: none;
