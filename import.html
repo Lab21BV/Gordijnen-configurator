@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Artikel Import — Gordijn Configurator</title>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #f4f5f7;
+      --surface:   #ffffff;
+      --border:    #d9dde8;
+      --accent:    #2c5f8a;
+      --accent-lt: #e8f0f8;
+      --accent-dk: #1e4166;
+      --success:   #2e7d32;
+      --error:     #c62828;
+      --warn:      #e65100;
+      --text:      #1a1a2e;
+      --muted:     #5a6072;
+      --radius:    8px;
+      --shadow:    0 2px 8px rgba(0,0,0,.10);
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--accent);
+      color: #fff;
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.25);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    header svg { flex-shrink: 0; }
+    header h1  { font-size: 1.15rem; font-weight: 600; letter-spacing: .02em; }
+    header nav { margin-left: auto; display: flex; gap: 8px; }
+    header nav a {
+      color: rgba(255,255,255,.85);
+      text-decoration: none;
+      font-size: .82rem;
+      font-weight: 500;
+      padding: 5px 12px;
+      border-radius: 5px;
+      border: 1px solid rgba(255,255,255,.3);
+      transition: background .15s;
+    }
+    header nav a:hover { background: rgba(255,255,255,.15); color: #fff; }
+
+    /* ── Page layout ── */
+    .page { max-width: 1200px; margin: 0 auto; padding: 24px; }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .card-header {
+      background: var(--accent);
+      color: #fff;
+      padding: 10px 18px;
+      font-size: .8rem;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .card-header .badge {
+      background: rgba(255,255,255,.2);
+      border-radius: 12px;
+      padding: 2px 9px;
+      font-size: .72rem;
+      font-weight: 600;
+    }
+    .card-body { padding: 20px; }
+
+    /* ── Drop zone ── */
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 48px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+      position: relative;
+    }
+    .drop-zone:hover,
+    .drop-zone.over {
+      border-color: var(--accent);
+      background: var(--accent-lt);
+    }
+    .drop-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+    .drop-zone .icon { font-size: 2.4rem; margin-bottom: 10px; line-height: 1; }
+    .drop-zone .title { font-size: 1rem; font-weight: 600; color: var(--accent); margin-bottom: 4px; }
+    .drop-zone .hint  { font-size: .8rem; color: var(--muted); }
+
+    /* ── Template download ── */
+    .template-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: var(--accent-lt);
+      border: 1px solid #b8d0e8;
+      border-radius: 6px;
+      margin-top: 16px;
+      font-size: .83rem;
+    }
+    .template-row strong { color: var(--accent-dk); }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 16px;
+      border-radius: 6px;
+      font-size: .83rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: filter .15s;
+    }
+    .btn:hover { filter: brightness(1.08); }
+    .btn-primary   { background: var(--accent);   color: #fff; }
+    .btn-success   { background: var(--success);  color: #fff; }
+    .btn-danger    { background: var(--error);     color: #fff; }
+    .btn-outline   { background: #fff; color: var(--accent); border: 1px solid var(--accent); }
+    .btn-sm        { padding: 4px 10px; font-size: .76rem; }
+    .btn:disabled  { opacity: .4; cursor: not-allowed; filter: none; }
+
+    /* ── Banner ── */
+    .banner {
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-size: .83rem;
+      margin-bottom: 16px;
+    }
+    .banner.error   { background: #ffebee; border: 1px solid #ef9a9a; color: var(--error); }
+    .banner.success { background: #e8f5e9; border: 1px solid #a5d6a7; color: var(--success); }
+    .banner.info    { background: #fff8e1; border: 1px solid #ffe082; color: #7b5e00; }
+
+    /* ── Table ── */
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .78rem;
+    }
+    thead th {
+      background: #f0f3f8;
+      color: var(--accent-dk);
+      font-weight: 700;
+      padding: 8px 10px;
+      text-align: left;
+      white-space: nowrap;
+      border-bottom: 2px solid var(--border);
+      position: sticky;
+      top: 0;
+    }
+    thead th.check-col { width: 36px; text-align: center; }
+    tbody tr { border-bottom: 1px solid var(--border); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--accent-lt); }
+    tbody tr.selected { background: #dceefb; }
+    tbody td { padding: 6px 10px; vertical-align: middle; white-space: nowrap; }
+    tbody td.check-col { text-align: center; }
+    tbody td input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-color: var(--accent); }
+    .tag {
+      display: inline-block;
+      font-size: .67rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 20px;
+      letter-spacing: .03em;
+    }
+    .tag-yes  { background: #e8f5e9; color: var(--success); }
+    .tag-no   { background: #f5f5f5; color: var(--muted); }
+    .tag-kh   { background: var(--accent-lt); color: var(--accent-dk); }
+
+    /* ── Toolbar ── */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .toolbar .spacer { flex: 1; }
+    .sel-count { font-size: .8rem; color: var(--muted); }
+
+    /* ── Saved articles panel ── */
+    .saved-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px;
+    }
+    .saved-item {
+      background: var(--accent-lt);
+      border: 1px solid #b8d0e8;
+      border-radius: 6px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .saved-item .info { flex: 1; min-width: 0; }
+    .saved-item .art-nr { font-size: .75rem; font-weight: 700; color: var(--accent-dk); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .saved-item .art-desc { font-size: .7rem; color: var(--muted); margin-top: 2px; }
+    .saved-item .actions { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+    .empty-state { color: var(--muted); font-size: .83rem; padding: 12px 0; }
+
+    /* ── Column mapping ── */
+    .mapping-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 10px;
+    }
+    .mapping-field { display: flex; flex-direction: column; gap: 3px; }
+    .mapping-field label { font-size: .72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+    .mapping-field select {
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 5px 8px;
+      font-size: .82rem;
+      color: var(--text);
+      background: #fff;
+    }
+    .mapping-field select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-lt); }
+
+    /* ── Hint panel ── */
+    .hint-field {
+      font-size: .75rem;
+      color: var(--text);
+      padding: 3px 0;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .hint-field em { color: var(--muted); font-style: normal; }
+    .req { color: var(--accent); font-weight: 700; font-size: .75rem; }
+
+    /* ── Progress ── */
+    #import-progress { display: none; }
+    .progress-bar-wrap { background: var(--border); border-radius: 4px; height: 6px; overflow: hidden; }
+    .progress-bar { height: 100%; background: var(--accent); transition: width .3s; }
+  </style>
+</head>
+<body>
+
+<header>
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="3" width="18" height="2" rx="1"/>
+    <line x1="6"  y1="5" x2="6"  y2="21"/>
+    <line x1="18" y1="5" x2="18" y2="21"/>
+    <path d="M6 8 Q9 10 12 8 Q15 6 18 8"/>
+    <path d="M6 13 Q9 15 12 13 Q15 11 18 13"/>
+    <path d="M6 18 Q9 20 12 18 Q15 16 18 18"/>
+  </svg>
+  <h1>Gordijn Configurator — Artikel Import</h1>
+  <nav>
+    <a href="index.html">← Terug naar configurator</a>
+  </nav>
+</header>
+
+<div class="page">
+
+  <!-- ── Step 1: Upload ── -->
+  <div class="card">
+    <div class="card-header">
+      <span>Stap 1 — Bestand uploaden (CSV of Excel)</span>
+    </div>
+    <div class="card-body">
+      <div class="drop-zone" id="dropZone">
+        <input type="file" id="fileInput" accept=".csv,.xls,.xlsx,.ods" />
+        <div class="icon">📂</div>
+        <div class="title">Sleep een bestand hier naartoe of klik om te selecteren</div>
+        <div class="hint">Ondersteunde formaten: .csv · .xlsx · .xls · .ods</div>
+      </div>
+
+      <div class="template-row">
+        <span>📋</span>
+        <div>
+          <strong>Voorbeeld CSV-sjabloon downloaden</strong><br>
+          <span style="color:var(--muted);font-size:.78rem">Download een sjabloon met alle vereiste kolommen en vul dit in.</span>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="downloadTemplate()">Download sjabloon</button>
+      </div>
+
+      <!-- Layout hint -->
+      <div style="margin-top:18px">
+        <button class="btn btn-outline btn-sm" onclick="toggleHint()" id="hintToggle" style="margin-bottom:10px">
+          💡 Hoe moet mijn bestand eruit zien?
+        </button>
+        <div id="hintPanel" style="display:none">
+          <p style="font-size:.8rem;color:var(--muted);margin-bottom:10px">
+            Uw bestand moet een <strong>headerrij</strong> hebben op rij 1, gevolgd door één rij per artikel.
+            Kolommen mogen in elke volgorde staan — de tool koppelt ze automatisch op naam.
+          </p>
+
+          <!-- Mini spreadsheet preview -->
+          <div style="overflow-x:auto;border:1px solid var(--border);border-radius:6px;margin-bottom:12px">
+            <table style="border-collapse:collapse;font-size:.72rem;white-space:nowrap;width:100%">
+              <thead>
+                <tr style="background:#f0f3f8">
+                  <th style="padding:0;width:28px"></th>
+                  <th style="padding:5px 10px;color:var(--muted);font-weight:400;border-bottom:2px solid var(--border);border-right:1px solid var(--border)">A</th>
+                  <th style="padding:5px 10px;color:var(--muted);font-weight:400;border-bottom:2px solid var(--border);border-right:1px solid var(--border)">B</th>
+                  <th style="padding:5px 10px;color:var(--muted);font-weight:400;border-bottom:2px solid var(--border);border-right:1px solid var(--border)">C</th>
+                  <th style="padding:5px 10px;color:var(--muted);font-weight:400;border-bottom:2px solid var(--border);border-right:1px solid var(--border)">D</th>
+                  <th style="padding:5px 10px;color:var(--muted);font-weight:400;border-bottom:2px solid var(--border);border-right:1px solid var(--border)">E</th>
+                  <th style="padding:5px 10px;color:var(--muted);font-weight:400;border-bottom:2px solid var(--border);border-right:1px solid var(--border)">F</th>
+                  <th style="padding:5px 10px;color:var(--muted);font-weight:400;border-bottom:2px solid var(--border);border-right:1px solid var(--border)">G</th>
+                  <th style="padding:5px 10px;color:var(--muted);font-weight:400;border-bottom:2px solid var(--border)">…</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="background:#fffde7">
+                  <td style="padding:5px 8px;color:var(--muted);font-weight:600;text-align:center;border-right:1px solid var(--border);background:#f0f3f8">1</td>
+                  <td style="padding:5px 10px;font-weight:700;color:var(--accent-dk);border-right:1px solid var(--border)">Artikelnummer</td>
+                  <td style="padding:5px 10px;font-weight:700;color:var(--accent-dk);border-right:1px solid var(--border)">Omschrijving</td>
+                  <td style="padding:5px 10px;font-weight:700;color:var(--accent-dk);border-right:1px solid var(--border)">Hoogte stof (cm)</td>
+                  <td style="padding:5px 10px;font-weight:700;color:var(--accent-dk);border-right:1px solid var(--border)">Breedte stof (cm)</td>
+                  <td style="padding:5px 10px;font-weight:700;color:var(--accent-dk);border-right:1px solid var(--border)">Patroon</td>
+                  <td style="padding:5px 10px;font-weight:700;color:var(--accent-dk);border-right:1px solid var(--border)">Prijs per m¹ (€)</td>
+                  <td style="padding:5px 10px;font-weight:700;color:var(--accent-dk);border-right:1px solid var(--border)">Kamerhoog</td>
+                  <td style="padding:5px 10px;font-weight:700;color:var(--accent-dk)">…</td>
+                </tr>
+                <tr>
+                  <td style="padding:5px 8px;color:var(--muted);font-weight:600;text-align:center;border-right:1px solid var(--border);background:#f0f3f8">2</td>
+                  <td style="padding:5px 10px;border-right:1px solid var(--border)">ART-001</td>
+                  <td style="padding:5px 10px;border-right:1px solid var(--border)">Linnen naturel</td>
+                  <td style="padding:5px 10px;border-right:1px solid var(--border)">300</td>
+                  <td style="padding:5px 10px;border-right:1px solid var(--border)">140</td>
+                  <td style="padding:5px 10px;border-right:1px solid var(--border)">Uni</td>
+                  <td style="padding:5px 10px;border-right:1px solid var(--border)">24,95</td>
+                  <td style="padding:5px 10px;border-right:1px solid var(--border)">Ja</td>
+                  <td style="padding:5px 10px;color:var(--muted)">…</td>
+                </tr>
+                <tr style="background:#fafbfc">
+                  <td style="padding:5px 8px;color:var(--muted);font-weight:600;text-align:center;border-right:1px solid var(--border);background:#f0f3f8">3</td>
+                  <td style="padding:5px 10px;border-right:1px solid var(--border)">ART-002</td>
+                  <td style="padding:5px 10px;border-right:1px solid var(--border)">Velvet donkerblauw</td>
+                  <td style="padding:5px 10px;border-right:1px solid var(--border)">280</td>
+                  <td style="padding:5px 10px;border-right:1px solid var(--border)">150</td>
+                  <td style="padding:5px 10px;border-right:1px solid var(--border)">Patroon</td>
+                  <td style="padding:5px 10px;border-right:1px solid var(--border)">38,50</td>
+                  <td style="padding:5px 10px;border-right:1px solid var(--border)">Nee</td>
+                  <td style="padding:5px 10px;color:var(--muted)">…</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Field reference list -->
+          <p style="font-size:.78rem;font-weight:700;color:var(--accent-dk);margin-bottom:6px">Alle beschikbare velden:</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:4px 12px">
+            <span class="hint-field"><span class="req">★</span> Artikelnummer</span>
+            <span class="hint-field">Omschrijving</span>
+            <span class="hint-field">Hoogte stof (cm)</span>
+            <span class="hint-field">Breedte stof (cm)</span>
+            <span class="hint-field">Patroon <em>(Uni / Patroon)</em></span>
+            <span class="hint-field">Patroonhoogte (cm)</span>
+            <span class="hint-field">Patroonbreedte (cm)</span>
+            <span class="hint-field">Prijs per m¹ (€)</span>
+            <span class="hint-field">Krimpercentage (%)</span>
+            <span class="hint-field">Kamerhoog <em>(Ja / Nee)</em></span>
+            <span class="hint-field">Lichtdoorlatenheid</span>
+            <span class="hint-field">Voeren <em>(Ja / Nee)</em></span>
+            <span class="hint-field">Voering prijs per m¹ (€)</span>
+            <span class="hint-field">Kantelbaar <em>(Ja / Nee)</em></span>
+            <span class="hint-field">Doubleface <em>(Ja / Nee)</em></span>
+            <span class="hint-field">Brandvertragend <em>(Ja / Nee)</em></span>
+            <span class="hint-field">Akoestiek klasse <em>(— / A / B)</em></span>
+            <span class="hint-field">Verzwaaringskoord <em>(Ja / Nee)</em></span>
+            <span class="hint-field">Samenstelling</span>
+          </div>
+          <p style="font-size:.73rem;color:var(--muted);margin-top:8px"><span class="req">★</span> = verplicht veld. Alle overige velden zijn optioneel.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Step 2: Column mapping ── -->
+  <div class="card" id="mappingCard" style="display:none">
+    <div class="card-header">
+      <span>Stap 2 — Kolommen koppelen</span>
+      <span class="badge" id="mappingFileLabel"></span>
+    </div>
+    <div class="card-body">
+      <div class="banner info" id="mappingBanner"></div>
+      <p style="font-size:.82rem;color:var(--muted);margin-bottom:14px">
+        Koppel de kolommen uit uw bestand aan de artikelvelden. Velden die niet aanwezig zijn in uw bestand kunt u op <em>— niet koppelen —</em> laten staan.
+      </p>
+      <div class="mapping-grid" id="mappingGrid"></div>
+      <div style="margin-top:16px;display:flex;gap:10px">
+        <button class="btn btn-primary" onclick="applyMapping()">Doorgaan naar preview ›</button>
+        <button class="btn btn-outline" onclick="resetImport()">Annuleren</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Step 3: Preview & select ── -->
+  <div class="card" id="previewCard" style="display:none">
+    <div class="card-header">
+      <span>Stap 3 — Artikelen selecteren &amp; importeren</span>
+      <span class="badge" id="previewBadge"></span>
+    </div>
+    <div class="card-body">
+      <div id="import-progress">
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:6px">Importeren…</p>
+        <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+      </div>
+      <div id="previewBanner"></div>
+
+      <div class="toolbar">
+        <button class="btn btn-outline btn-sm" onclick="selectAll(true)">Alles selecteren</button>
+        <button class="btn btn-outline btn-sm" onclick="selectAll(false)">Deselecteren</button>
+        <span class="sel-count" id="selCount">0 geselecteerd</span>
+        <span class="spacer"></span>
+        <button class="btn btn-success" id="btnImport" onclick="importSelected()" disabled>
+          ✓ Geselecteerde importeren
+        </button>
+      </div>
+
+      <div class="table-wrap">
+        <table id="previewTable">
+          <thead id="previewHead"></thead>
+          <tbody id="previewBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Saved articles ── -->
+  <div class="card" id="savedCard">
+    <div class="card-header">
+      <span>Opgeslagen artikelen</span>
+      <span class="badge" id="savedBadge">0</span>
+    </div>
+    <div class="card-body">
+      <div class="toolbar" style="margin-bottom:10px">
+        <button class="btn btn-danger btn-sm" onclick="clearAll()" id="btnClearAll" disabled>Alles wissen</button>
+        <span class="spacer"></span>
+        <span style="font-size:.78rem;color:var(--muted)">Artikelen worden opgeslagen in de browser (localStorage)</span>
+      </div>
+      <div id="savedList"><p class="empty-state">Nog geen artikelen opgeslagen.</p></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// ARTIKEL IMPORT — Gordijn Configurator
+// ============================================================
+
+// ── Field definitions (internal key → Dutch label) ──
+const FIELDS = [
+  { key: 'artikelnummer',        label: 'Artikelnummer',           required: true  },
+  { key: 'omschrijving',         label: 'Omschrijving',            required: false },
+  { key: 'hoogte_stof',          label: 'Hoogte stof (cm)',        required: false },
+  { key: 'breedte_stof',         label: 'Breedte stof (cm)',       required: false },
+  { key: 'patroon',              label: 'Patroon',                 required: false },
+  { key: 'patroonhoogte',        label: 'Patroonhoogte (cm)',      required: false },
+  { key: 'patroonbreedte',       label: 'Patroonbreedte (cm)',     required: false },
+  { key: 'prijs_per_m1',         label: 'Prijs per m¹ (€)',        required: false },
+  { key: 'krimpercentage',       label: 'Krimpercentage (%)',      required: false },
+  { key: 'kamerhoog',            label: 'Kamerhoog',               required: false },
+  { key: 'lichtdoorlatenheid',   label: 'Lichtdoorlatenheid',      required: false },
+  { key: 'voeren',               label: 'Voeren',                  required: false },
+  { key: 'voering_prijs_per_m1', label: 'Voering prijs per m¹ (€)',required: false },
+  { key: 'kantelbaar',           label: 'Kantelbaar',              required: false },
+  { key: 'doubleface',           label: 'Doubleface',              required: false },
+  { key: 'brandvertragend',      label: 'Brandvertragend',         required: false },
+  { key: 'akoestiek',            label: 'Akoestiek klasse',        required: false },
+  { key: 'verzwaaringskoord',    label: 'Verzwaaringskoord',       required: false },
+  { key: 'samenstelling',        label: 'Samenstelling',           required: false },
+];
+
+// Aliases used for auto-detecting column headers
+const ALIASES = {
+  artikelnummer:        ['artikelnummer','artikel nr','artikel_nr','article','artnr','art.nr','art nr','art_nr','code','sku','item'],
+  omschrijving:         ['omschrijving','naam','name','description','desc','omschr'],
+  hoogte_stof:          ['hoogte stof','hoogte_stof','stofhoogte','height fabric','fabric height','hoogte','max hoogte'],
+  breedte_stof:         ['breedte stof','breedte_stof','stofbreedte','fabric width','width fabric','breedte','rolbreedte'],
+  patroon:              ['patroon','pattern','patroontype'],
+  patroonhoogte:        ['patroonhoogte','patroon hoogte','rapport','patroonhoogte (cm)','pattern height'],
+  patroonbreedte:       ['patroonbreedte','patroon breedte','pattern width'],
+  prijs_per_m1:         ['prijs per m1','prijs per m¹','prijs/m1','prijs/m','prijs per meter','price','prijs'],
+  krimpercentage:       ['krimpercentage','krimp','shrinkage','krimp %','krimpp'],
+  kamerhoog:            ['kamerhoog','kamerhoog?','room height','kamer hoog'],
+  lichtdoorlatenheid:   ['lichtdoorlatenheid','licht','transparantie','transparancy','light','lichtdoorl'],
+  voeren:               ['voeren','voering','lined','lining'],
+  voering_prijs_per_m1: ['voering prijs','voering_prijs','voering prijs per m1','voering prijs per m¹','lining price'],
+  kantelbaar:           ['kantelbaar','tiltable','kantel'],
+  doubleface:           ['doubleface','double face','double-face','reversible'],
+  brandvertragend:      ['brandvertragend','brandwerend','fire retardant','fire','fr'],
+  akoestiek:            ['akoestiek','akoestiek klasse','acoustic','acoustic class','akoestiekklasse'],
+  verzwaaringskoord:    ['verzwaaringskoord','verzwaring','weight cord','weighting'],
+  samenstelling:        ['samenstelling','composition','materiaal','material','fiber','vezel'],
+};
+
+let rawRows = [];       // parsed rows from file
+let rawHeaders = [];    // original headers from file
+let mappedRows = [];    // after mapping applied
+let columnMap = {};     // fieldKey → rawHeader
+
+// ── Template CSV ──
+function downloadTemplate() {
+  const headers = FIELDS.map(f => f.label);
+  const example = [
+    'ART-001','Linnen naturel','300','140','Uni','0','0','24.95','3','Ja','Semi transparant','Nee','0','Ja','Nee','Nee','—','Nee','100% Linnen',
+  ];
+  const csv = [headers.join(';'), example.join(';')].join('\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'gordijn_artikel_sjabloon.csv';
+  a.click();
+}
+
+// ── Drag & drop ──
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('over');
+  if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+document.getElementById('fileInput').addEventListener('change', e => {
+  if (e.target.files.length) handleFile(e.target.files[0]);
+});
+
+function handleFile(file) {
+  const reader = new FileReader();
+  const ext = file.name.split('.').pop().toLowerCase();
+
+  reader.onload = ev => {
+    try {
+      let workbook;
+      if (ext === 'csv') {
+        workbook = XLSX.read(ev.target.result, { type: 'string', raw: true });
+      } else {
+        workbook = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' });
+      }
+
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const data  = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+
+      if (data.length < 2) {
+        alert('Het bestand bevat geen gegevens (minimaal 1 headerrij + 1 datarij vereist).');
+        return;
+      }
+
+      rawHeaders = data[0].map(h => String(h).trim());
+      rawRows    = data.slice(1).filter(r => r.some(c => String(c).trim() !== ''));
+
+      document.getElementById('mappingFileLabel').textContent = `${file.name} — ${rawRows.length} rijen`;
+      buildMappingUI();
+      document.getElementById('mappingCard').style.display = '';
+      document.getElementById('previewCard').style.display = 'none';
+      document.getElementById('mappingCard').scrollIntoView({ behavior: 'smooth' });
+    } catch(err) {
+      alert('Fout bij lezen bestand: ' + err.message);
+    }
+  };
+
+  if (ext === 'csv') {
+    reader.readAsText(file, 'UTF-8');
+  } else {
+    reader.readAsArrayBuffer(file);
+  }
+}
+
+function autoDetect(fieldKey) {
+  const aliases = (ALIASES[fieldKey] || [fieldKey]).map(a => a.toLowerCase().replace(/\s+/g,''));
+  for (const h of rawHeaders) {
+    const norm = h.toLowerCase().replace(/\s+/g,'').replace(/[¹²³]/g,'1');
+    if (aliases.some(a => norm === a || norm.includes(a) || a.includes(norm))) return h;
+  }
+  return '';
+}
+
+function buildMappingUI() {
+  const grid = document.getElementById('mappingGrid');
+  grid.innerHTML = '';
+  columnMap = {};
+
+  FIELDS.forEach(f => {
+    const detected = autoDetect(f.key);
+    columnMap[f.key] = detected;
+
+    const div = document.createElement('div');
+    div.className = 'mapping-field';
+    div.innerHTML = `
+      <label>${f.label}${f.required ? ' <span style="color:var(--error)">*</span>' : ''}</label>
+      <select id="map_${f.key}" data-key="${f.key}">
+        <option value="">— niet koppelen —</option>
+        ${rawHeaders.map(h => `<option value="${esc(h)}"${h === detected ? ' selected' : ''}>${esc(h)}</option>`).join('')}
+      </select>
+    `;
+    grid.appendChild(div);
+  });
+
+  const detected = FIELDS.filter(f => columnMap[f.key]).length;
+  document.getElementById('mappingBanner').textContent =
+    `${detected} van de ${FIELDS.length} velden automatisch herkend. Controleer de koppelingen en klik op "Doorgaan".`;
+}
+
+function applyMapping() {
+  columnMap = {};
+  FIELDS.forEach(f => {
+    const sel = document.getElementById('map_' + f.key);
+    columnMap[f.key] = sel ? sel.value : '';
+  });
+
+  if (!columnMap.artikelnummer) {
+    alert('Koppel minimaal het veld "Artikelnummer" voor u doorgaat.');
+    return;
+  }
+
+  // Build mapped rows
+  mappedRows = rawRows.map(row => {
+    const obj = {};
+    FIELDS.forEach(f => {
+      const header = columnMap[f.key];
+      if (!header) { obj[f.key] = ''; return; }
+      const colIdx = rawHeaders.indexOf(header);
+      obj[f.key] = colIdx >= 0 ? String(row[colIdx] ?? '').trim() : '';
+    });
+    return obj;
+  }).filter(r => r.artikelnummer !== '');
+
+  if (mappedRows.length === 0) {
+    alert('Na toepassen van de koppeling zijn er geen geldige rijen gevonden (artikelnummer leeg).');
+    return;
+  }
+
+  buildPreviewTable();
+  document.getElementById('previewCard').style.display = '';
+  document.getElementById('previewCard').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ── Preview table ──
+const PREVIEW_COLS = [
+  { key: 'artikelnummer',      label: 'Artikelnr.' },
+  { key: 'omschrijving',       label: 'Omschrijving' },
+  { key: 'hoogte_stof',        label: 'H stof' },
+  { key: 'breedte_stof',       label: 'B stof' },
+  { key: 'patroon',            label: 'Patroon' },
+  { key: 'prijs_per_m1',       label: 'Prijs/m¹' },
+  { key: 'krimpercentage',     label: 'Krimp%' },
+  { key: 'kamerhoog',          label: 'KH' },
+  { key: 'lichtdoorlatenheid', label: 'Licht' },
+  { key: 'voeren',             label: 'Voe-ren' },
+  { key: 'kantelbaar',         label: 'Kant.' },
+  { key: 'brandvertragend',    label: 'BR' },
+  { key: 'samenstelling',      label: 'Samen-stelling' },
+];
+
+function buildPreviewTable() {
+  const thead = document.getElementById('previewHead');
+  const tbody = document.getElementById('previewBody');
+
+  thead.innerHTML = `<tr>
+    <th class="check-col"><input type="checkbox" id="checkAll" onchange="selectAll(this.checked)" title="Alles"></th>
+    ${PREVIEW_COLS.map(c => `<th>${c.label}</th>`).join('')}
+  </tr>`;
+
+  tbody.innerHTML = mappedRows.map((r, i) => `
+    <tr id="row_${i}" onclick="toggleRow(${i})">
+      <td class="check-col"><input type="checkbox" id="chk_${i}" onchange="updateSelCount()" onclick="event.stopPropagation()" /></td>
+      ${PREVIEW_COLS.map(c => `<td>${renderCell(c.key, r[c.key])}</td>`).join('')}
+    </tr>
+  `).join('');
+
+  document.getElementById('previewBadge').textContent = `${mappedRows.length} rijen`;
+  updateSelCount();
+}
+
+function renderCell(key, val) {
+  if (!val || val === '0' && ['patroonhoogte','patroonbreedte','voering_prijs_per_m1'].includes(key)) {
+    return `<span style="color:var(--muted)">—</span>`;
+  }
+  const lower = val.toLowerCase();
+  if (['kamerhoog','voeren','kantelbaar','doubleface','brandvertragend','verzwaaringskoord'].includes(key)) {
+    if (lower === 'ja' || lower === 'yes' || lower === '1' || lower === 'true')
+      return `<span class="tag tag-yes">Ja</span>`;
+    return `<span class="tag tag-no">Nee</span>`;
+  }
+  if (key === 'kamerhoog' && (lower === 'ja' || lower === 'yes'))
+    return `<span class="tag tag-kh">KH</span>`;
+  if (key === 'prijs_per_m1') {
+    const n = parseFloat(val);
+    return isNaN(n) ? val : `€ ${n.toFixed(2)}`;
+  }
+  return esc(val);
+}
+
+function toggleRow(i) {
+  const chk = document.getElementById('chk_' + i);
+  chk.checked = !chk.checked;
+  document.getElementById('row_' + i).classList.toggle('selected', chk.checked);
+  updateSelCount();
+}
+
+function selectAll(checked) {
+  mappedRows.forEach((_, i) => {
+    document.getElementById('chk_' + i).checked = checked;
+    document.getElementById('row_' + i).classList.toggle('selected', checked);
+  });
+  const ca = document.getElementById('checkAll');
+  if (ca) ca.checked = checked;
+  updateSelCount();
+}
+
+function updateSelCount() {
+  const n = mappedRows.filter((_, i) => document.getElementById('chk_' + i)?.checked).length;
+  document.getElementById('selCount').textContent = `${n} geselecteerd`;
+  document.getElementById('btnImport').disabled = n === 0;
+  const ca = document.getElementById('checkAll');
+  if (ca) ca.indeterminate = n > 0 && n < mappedRows.length;
+}
+
+// ── Import to localStorage ──
+const LS_KEY = 'gordijn_artikelen';
+
+function loadSaved() {
+  try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}'); }
+  catch { return {}; }
+}
+
+function importSelected() {
+  const saved = loadSaved();
+  let count = 0, skipped = 0;
+
+  mappedRows.forEach((row, i) => {
+    if (!document.getElementById('chk_' + i)?.checked) return;
+    const nr = row.artikelnummer;
+    if (!nr) return;
+    if (saved[nr]) skipped++;
+    saved[nr] = row;
+    count++;
+  });
+
+  localStorage.setItem(LS_KEY, JSON.stringify(saved));
+
+  const bannerEl = document.getElementById('previewBanner');
+  bannerEl.className = 'banner success';
+  bannerEl.textContent = `${count} artikel(en) opgeslagen.${skipped > 0 ? ` ${skipped} bestaand(e) artikel(en) bijgewerkt.` : ''}`;
+
+  renderSaved();
+  document.getElementById('savedCard').scrollIntoView({ behavior: 'smooth' });
+}
+
+function renderSaved() {
+  const saved = loadSaved();
+  const keys  = Object.keys(saved);
+  const badge = document.getElementById('savedBadge');
+  badge.textContent = keys.length;
+  document.getElementById('btnClearAll').disabled = keys.length === 0;
+
+  const list = document.getElementById('savedList');
+  if (keys.length === 0) {
+    list.innerHTML = '<p class="empty-state">Nog geen artikelen opgeslagen.</p>';
+    return;
+  }
+
+  list.innerHTML = `<div class="saved-grid">` +
+    keys.sort().map(nr => {
+      const a = saved[nr];
+      const desc = a.omschrijving || a.samenstelling || '';
+      return `
+        <div class="saved-item">
+          <div class="info">
+            <div class="art-nr">${esc(nr)}</div>
+            ${desc ? `<div class="art-desc">${esc(desc)}</div>` : ''}
+            <div class="art-desc">${a.hoogte_stof ? `H:${a.hoogte_stof}` : ''}${a.breedte_stof ? ` B:${a.breedte_stof}` : ''}${a.prijs_per_m1 ? ` €${a.prijs_per_m1}` : ''}</div>
+          </div>
+          <div class="actions">
+            <button class="btn btn-outline btn-sm" onclick="openInConfigurator('${esc(nr)}')" title="Open in configurator">↗</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteArticle('${esc(nr)}')" title="Verwijderen">✕</button>
+          </div>
+        </div>`;
+    }).join('') +
+  `</div>`;
+}
+
+function deleteArticle(nr) {
+  if (!confirm(`Artikel "${nr}" verwijderen?`)) return;
+  const saved = loadSaved();
+  delete saved[nr];
+  localStorage.setItem(LS_KEY, JSON.stringify(saved));
+  renderSaved();
+}
+
+function clearAll() {
+  if (!confirm('Alle opgeslagen artikelen wissen?')) return;
+  localStorage.removeItem(LS_KEY);
+  renderSaved();
+}
+
+function openInConfigurator(nr) {
+  const saved = loadSaved();
+  if (!saved[nr]) return;
+  localStorage.setItem('gordijn_load_artikel', nr);
+  window.location.href = 'index.html';
+}
+
+function resetImport() {
+  rawRows = []; rawHeaders = []; mappedRows = []; columnMap = {};
+  document.getElementById('mappingCard').style.display = 'none';
+  document.getElementById('previewCard').style.display = 'none';
+  document.getElementById('fileInput').value = '';
+}
+
+function toggleHint() {
+  const panel  = document.getElementById('hintPanel');
+  const btn    = document.getElementById('hintToggle');
+  const open   = panel.style.display === 'none';
+  panel.style.display = open ? '' : 'none';
+  btn.textContent     = open
+    ? '▲ Verberg uitleg'
+    : '💡 Hoe moet mijn bestand eruit zien?';
+}
+
+function esc(str) {
+  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Init ──
+renderSaved();
+</script>
+</body>
+</html>

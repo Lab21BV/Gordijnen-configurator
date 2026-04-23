@@ -45,7 +45,19 @@
     }
     header svg { flex-shrink: 0; }
     header h1  { font-size: 1.15rem; font-weight: 600; letter-spacing: .02em; }
-    header span{ font-size: .78rem; opacity: .75; margin-left: auto; }
+    header span{ font-size: .78rem; opacity: .75; }
+    header nav { margin-left: auto; display: flex; gap: 8px; }
+    header nav a {
+      color: rgba(255,255,255,.85);
+      text-decoration: none;
+      font-size: .82rem;
+      font-weight: 500;
+      padding: 5px 12px;
+      border-radius: 5px;
+      border: 1px solid rgba(255,255,255,.3);
+      transition: background .15s;
+    }
+    header nav a:hover { background: rgba(255,255,255,.15); color: #fff; }
 
     /* ── Layout ── */
     .layout {
@@ -208,6 +220,9 @@
   </svg>
   <h1>Gordijn Configurator</h1>
   <span>Overgordijn · Vitrage · Kamerhoog &amp; Breedtestof — V5</span>
+  <nav>
+    <a href="import.html">📂 Artikel import</a>
+  </nav>
 </header>
 
 <div class="layout">
@@ -219,6 +234,18 @@
     <div class="card">
       <div class="card-header">Stof — Artikel specificaties</div>
       <div class="card-body">
+
+        <!-- Artikel laden -->
+        <div id="artikelLoader" style="margin-bottom:14px;display:none">
+          <div style="font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">Artikel laden</div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <select id="artikelSelect" style="flex:1;border:1px solid var(--border);border-radius:5px;padding:6px 10px;font-size:.85rem;color:var(--text)">
+              <option value="">— kies een artikel —</option>
+            </select>
+            <button onclick="laadArtikel()" style="padding:6px 12px;background:var(--accent);color:#fff;border:none;border-radius:5px;font-size:.82rem;font-weight:600;cursor:pointer">Laden</button>
+          </div>
+          <div id="artikelInfo" style="font-size:.72rem;color:var(--muted);margin-top:4px"></div>
+        </div>
 
         <div class="fg s1">
           <div class="section-label">Afmetingen stof</div>
@@ -699,9 +726,94 @@ inputs.forEach(id => {
 el('patroon').addEventListener('change', togglePatroon);
 el('voeren').addEventListener('change', toggleVoering);
 
+// ── Artikel loader (from import page) ──
+const LS_KEY  = 'gordijn_artikelen';
+const LS_LOAD = 'gordijn_load_artikel';
+
+function setVal(id, val) {
+  const node = document.getElementById(id);
+  if (!node || val === undefined || val === '') return;
+  if (node.tagName === 'SELECT') {
+    // find closest option value
+    const opts = Array.from(node.options).map(o => o.value.toLowerCase());
+    const target = String(val).toLowerCase();
+    const idx = opts.findIndex(o => o === target || o.startsWith(target.charAt(0)));
+    if (idx >= 0) node.selectedIndex = idx;
+    // exact match preferred
+    const exact = Array.from(node.options).findIndex(o => o.value.toLowerCase() === target);
+    if (exact >= 0) node.selectedIndex = exact;
+  } else {
+    node.value = val;
+  }
+}
+
+function initArtikelLoader() {
+  const saved = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+  const keys  = Object.keys(saved).sort();
+  const loader = document.getElementById('artikelLoader');
+  const select = document.getElementById('artikelSelect');
+
+  if (keys.length === 0) return;
+
+  select.innerHTML = '<option value="">— kies een artikel —</option>' +
+    keys.map(k => {
+      const a = saved[k];
+      const label = a.omschrijving ? `${k} — ${a.omschrijving}` : k;
+      return `<option value="${k}">${label}</option>`;
+    }).join('');
+
+  loader.style.display = '';
+
+  // Auto-load if redirected from import page
+  const toLoad = localStorage.getItem(LS_LOAD);
+  if (toLoad && saved[toLoad]) {
+    select.value = toLoad;
+    localStorage.removeItem(LS_LOAD);
+    applyArtikel(saved[toLoad]);
+  }
+}
+
+function laadArtikel() {
+  const nr = document.getElementById('artikelSelect').value;
+  if (!nr) return;
+  const saved = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+  if (!saved[nr]) return;
+  applyArtikel(saved[nr]);
+}
+
+function applyArtikel(a) {
+  setVal('hoogte_stof',          a.hoogte_stof);
+  setVal('breedte_stof',         a.breedte_stof);
+  setVal('patroon',              a.patroon);
+  setVal('patroonhoogte',        a.patroonhoogte);
+  setVal('patroonbreedte',       a.patroonbreedte);
+  setVal('prijs_per_m1',         a.prijs_per_m1);
+  setVal('krimpercentage',       a.krimpercentage);
+  setVal('kamerhoog',            a.kamerhoog);
+  setVal('lichtdoorlatenheid',   a.lichtdoorlatenheid);
+  setVal('voeren',               a.voeren);
+  setVal('voering_prijs_per_m1', a.voering_prijs_per_m1);
+  setVal('kantelbaar',           a.kantelbaar);
+  setVal('doubleface',           a.doubleface);
+  setVal('brandvertragend',      a.brandvertragend);
+  setVal('akoestiek',            a.akoestiek);
+  setVal('verzwaaringskoord',    a.verzwaaringskoord);
+  setVal('samenstelling',        a.samenstelling);
+
+  const info = [];
+  if (a.omschrijving) info.push(a.omschrijving);
+  if (a.samenstelling) info.push(a.samenstelling);
+  document.getElementById('artikelInfo').textContent = info.join(' · ');
+
+  togglePatroon();
+  toggleVoering();
+  compute();
+}
+
 // ── Init ──
 togglePatroon();
 toggleVoering();
+initArtikelLoader();
 compute();
 </script>
 </body>
