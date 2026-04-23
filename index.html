@@ -206,6 +206,9 @@
 
     hr.sep { border: none; border-top: 1px solid var(--border); margin: 12px 0; grid-column: 1/-1; }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="supabase-config.js"></script>
+  <script src="db.js"></script>
 </head>
 <body>
 
@@ -747,9 +750,9 @@ function setVal(id, val) {
   }
 }
 
-function initArtikelLoader() {
-  const saved = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
-  const keys  = Object.keys(saved).sort();
+async function initArtikelLoader() {
+  const { data: saved } = await dbLoadAll();
+  const keys = Object.keys(saved || {}).sort();
   const loader = document.getElementById('artikelLoader');
   const select = document.getElementById('artikelSelect');
 
@@ -774,9 +777,9 @@ function initArtikelLoader() {
 }
 
 function laadArtikel() {
-  const nr = document.getElementById('artikelSelect').value;
+  const nr    = document.getElementById('artikelSelect').value;
   if (!nr) return;
-  const saved = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+  const saved = lsLoad();
   if (!saved[nr]) return;
   applyArtikel(saved[nr]);
 }

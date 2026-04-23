@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Artikel Import — Gordijn Configurator</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="supabase-config.js"></script>
+  <script src="db.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -453,6 +456,10 @@
     <div class="card-header">
       <span>Opgeslagen artikelen</span>
       <span class="badge" id="savedBadge">0</span>
+      <span id="dbStatus" style="margin-left:auto;font-size:.72rem;opacity:.85;display:flex;align-items:center;gap:5px">
+        <span id="dbDot" style="width:8px;height:8px;border-radius:50%;background:#aaa;display:inline-block"></span>
+        <span id="dbLabel">Verbinden…</span>
+      </span>
     </div>
     <div class="card-body">
       <div class="toolbar" style="margin-bottom:12px;flex-wrap:wrap;gap:8px">
@@ -750,39 +757,69 @@ function updateSelCount() {
   if (ca) ca.indeterminate = n > 0 && n < mappedRows.length;
 }
 
-// ── Import to localStorage ──
-const LS_KEY = 'gordijn_artikelen';
+// ── DB helpers (LS_KEY defined in db.js) ──
+function loadSaved() { return lsLoad(); }
 
-function loadSaved() {
-  try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}'); }
-  catch { return {}; }
-}
-
-function importSelected() {
-  const saved = loadSaved();
-  let count = 0, skipped = 0;
-
-  mappedRows.forEach((row, i) => {
-    if (!document.getElementById('chk_' + i)?.checked) return;
-    const nr = row.artikelnummer;
-    if (!nr) return;
-    if (saved[nr]) skipped++;
-    saved[nr] = row;
-    count++;
-  });
-
-  localStorage.setItem(LS_KEY, JSON.stringify(saved));
-
+async function importSelected() {
   const bannerEl = document.getElementById('previewBanner');
-  bannerEl.className = 'banner success';
-  bannerEl.textContent = `${count} artikel(en) opgeslagen.${skipped > 0 ? ` ${skipped} bestaand(e) artikel(en) bijgewerkt.` : ''}`;
+  const btn      = document.getElementById('btnImport');
 
-  renderSaved();
+  const toSave = mappedRows.filter((_, i) => document.getElementById('chk_' + i)?.checked && mappedRows[i].artikelnummer);
+  if (toSave.length === 0) return;
+
+  btn.disabled = true;
+  btn.textContent = 'Opslaan…';
+
+  const existing = lsLoad();
+  const skipped  = toSave.filter(r => existing[r.artikelnummer]).length;
+
+  const { error } = await dbUpsertArticles(toSave);
+
+  btn.disabled = false;
+  btn.textContent = '✓ Geselecteerde importeren';
+
+  if (error) {
+    bannerEl.className = 'banner error';
+    bannerEl.textContent = `Fout bij opslaan: ${error.message}`;
+    return;
+  }
+
+  bannerEl.className = 'banner success';
+  bannerEl.textContent = `${toSave.length} artikel(en) opgeslagen${dbConfigured() ? ' in Supabase' : ' lokaal'}.${skipped > 0 ? ` ${skipped} bestaand(e) bijgewerkt.` : ''}`;
+
+  await refreshSaved();
   document.getElementById('savedCard').scrollIntoView({ behavior: 'smooth' });
 }
 
+let _savedCache = {};
+
+async function refreshSaved() {
+  setDbStatus('loading');
+  const { data, error, source } = await dbLoadAll();
+  _savedCache = data || {};
+  if (source === 'supabase') setDbStatus('ok');
+  else if (!dbConfigured())  setDbStatus('local');
+  else                        setDbStatus('error', error?.message);
+  renderSaved();
+}
+
+function setDbStatus(state, msg) {
+  const dot   = document.getElementById('dbDot');
+  const label = document.getElementById('dbLabel');
+  if (!dot) return;
+  const map = {
+    ok:      { color: '#4caf50', text: 'Supabase verbonden' },
+    local:   { color: '#ff9800', text: 'Lokale opslag' },
+    error:   { color: '#f44336', text: msg || 'Verbindingsfout' },
+    loading: { color: '#aaa',    text: 'Verbinden…' },
+  };
+  const s = map[state] || map.loading;
+  dot.style.background   = s.color;
+  label.textContent      = s.text;
+}
+
 function renderSaved() {
-  const saved  = loadSaved();
+  const saved  = _savedCache;
   const query  = (document.getElementById('savedSearch')?.value || '').toLowerCase().trim();
   const allKeys = Object.keys(saved).sort();
   const keys   = query
@@ -881,23 +918,20 @@ function renderSaved() {
   </div>`;
 }
 
-function deleteArticle(nr) {
+async function deleteArticle(nr) {
   if (!confirm(`Artikel "${nr}" verwijderen?`)) return;
-  const saved = loadSaved();
-  delete saved[nr];
-  localStorage.setItem(LS_KEY, JSON.stringify(saved));
-  renderSaved();
+  await dbDeleteArticle(nr);
+  await refreshSaved();
 }
 
-function clearAll() {
+async function clearAll() {
   if (!confirm('Alle opgeslagen artikelen wissen?')) return;
-  localStorage.removeItem(LS_KEY);
-  renderSaved();
+  await dbDeleteAll();
+  await refreshSaved();
 }
 
 function openInConfigurator(nr) {
-  const saved = loadSaved();
-  if (!saved[nr]) return;
+  if (!_savedCache[nr]) return;
   localStorage.setItem('gordijn_load_artikel', nr);
   window.location.href = 'index.html';
 }
@@ -910,7 +944,7 @@ function resetImport() {
 }
 
 function exportJSON() {
-  const saved = loadSaved();
+  const saved = _savedCache;
   const count = Object.keys(saved).length;
   if (count === 0) return;
   const blob = new Blob([JSON.stringify(saved, null, 2)], { type: 'application/json' });
@@ -924,19 +958,16 @@ function importJSON(event) {
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = ev => {
+  reader.onload = async ev => {
     try {
       const incoming = JSON.parse(ev.target.result);
       if (typeof incoming !== 'object' || Array.isArray(incoming))
         throw new Error('Ongeldig formaat');
-      const saved  = loadSaved();
-      let added = 0, updated = 0;
-      Object.keys(incoming).forEach(nr => {
-        if (saved[nr]) updated++; else added++;
-        saved[nr] = incoming[nr];
-      });
-      localStorage.setItem(LS_KEY, JSON.stringify(saved));
-      renderSaved();
+      const added   = Object.keys(incoming).filter(nr => !_savedCache[nr]).length;
+      const updated = Object.keys(incoming).length - added;
+      const { error } = await dbUpsertArticles(incoming);
+      if (error) throw error;
+      await refreshSaved();
       alert(`JSON geïmporteerd: ${added} nieuw, ${updated} bijgewerkt.`);
     } catch(e) {
       alert('Fout bij laden JSON: ' + e.message);
@@ -961,7 +992,7 @@ function esc(str) {
 }
 
 // ── Init ──
-renderSaved();
+refreshSaved();
 </script>
 </body>
 </html>
