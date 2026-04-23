@@ -8,7 +8,7 @@ const LS_KEY    = 'gordijn_artikelen';
 
 // Alle velden die in de tabel opgeslagen worden
 const DB_FIELDS = [
-  'artikelnummer','omschrijving','hoogte_stof','breedte_stof',
+  'artikelnummer','gordijn_type','omschrijving','hoogte_stof','breedte_stof',
   'patroon','patroonhoogte','patroonbreedte','prijs_per_m1',
   'krimpercentage','kamerhoog','lichtdoorlatenheid','voeren',
   'voering_prijs_per_m1','kantelbaar','doubleface','brandvertragend',

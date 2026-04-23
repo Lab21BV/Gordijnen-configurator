@@ -15,7 +15,9 @@
       --accent-lt: #e8f0f8;
       --accent-dk: #1e4166;
       --success:   #2e7d32;
+      --success-lt:#e8f5e9;
       --error:     #c62828;
+      --error-lt:  #ffebee;
       --warn:      #e65100;
       --text:      #1a1a2e;
       --muted:     #5a6072;
@@ -23,72 +25,147 @@
       --shadow:    0 2px 8px rgba(0,0,0,.10);
     }
 
-    body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-    }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
     /* ── Header ── */
     header {
-      background: var(--accent);
-      color: #fff;
-      padding: 14px 28px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      box-shadow: 0 2px 6px rgba(0,0,0,.25);
-      position: sticky;
-      top: 0;
-      z-index: 100;
+      background: var(--accent); color: #fff; padding: 14px 28px;
+      display: flex; align-items: center; gap: 14px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.25); position: sticky; top: 0; z-index: 100;
     }
     header svg { flex-shrink: 0; }
     header h1  { font-size: 1.15rem; font-weight: 600; letter-spacing: .02em; }
     header span{ font-size: .78rem; opacity: .75; flex-shrink: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     header nav { margin-left: auto; display: flex; gap: 8px; flex-shrink: 0; }
     header nav a {
-      color: rgba(255,255,255,.85);
-      text-decoration: none;
-      font-size: .82rem;
-      font-weight: 500;
-      padding: 5px 12px;
-      border-radius: 5px;
-      border: 1px solid rgba(255,255,255,.3);
-      transition: background .15s;
+      color: rgba(255,255,255,.85); text-decoration: none; font-size: .82rem; font-weight: 500;
+      padding: 5px 12px; border-radius: 5px; border: 1px solid rgba(255,255,255,.3); transition: background .15s;
     }
     header nav a:hover { background: rgba(255,255,255,.15); color: #fff; }
 
-    /* ── Layout ── */
-    .layout {
-      display: grid;
-      grid-template-columns: 340px 1fr;
-      gap: 20px;
-      padding: 22px 24px;
-      max-width: 1280px;
-      margin: 0 auto;
-      align-items: start;
+    /* ── Step wrapper ── */
+    .steps-wrap { max-width: 1280px; margin: 22px auto 0; padding: 0 24px; display: flex; flex-direction: column; gap: 16px; }
+
+    /* ── Step card ── */
+    .step-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden;
     }
-    @media (max-width: 860px) {
-      .layout { grid-template-columns: 1fr; }
+    .step-card.active { border-color: var(--accent); }
+    .step-header {
+      background: var(--accent); color: #fff; padding: 10px 18px;
+      font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .step-header.done { background: var(--success); }
+    .step-badge {
+      background: rgba(255,255,255,.25); border-radius: 50%;
+      width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center;
+      font-size: .78rem; font-weight: 800; flex-shrink: 0;
+    }
+    .step-summary { margin-left: auto; font-size: .78rem; opacity: .9; font-weight: 400; letter-spacing: 0; }
+    .step-body { padding: 18px 20px; }
+
+    /* ── Stap 1: Type keuze ── */
+    .type-keuze { display: flex; gap: 16px; flex-wrap: wrap; }
+    .type-btn {
+      flex: 1; min-width: 180px; padding: 20px 24px;
+      border: 2px solid var(--border); border-radius: var(--radius);
+      background: #fff; cursor: pointer; text-align: left;
+      transition: border-color .15s, background .15s, box-shadow .15s;
+    }
+    .type-btn:hover { border-color: var(--accent); background: var(--accent-lt); }
+    .type-btn.selected { border-color: var(--accent); background: var(--accent-lt); box-shadow: 0 0 0 3px rgba(44,95,138,.18); }
+    .type-btn .type-icon { font-size: 1.8rem; margin-bottom: 8px; }
+    .type-btn .type-title { font-size: 1rem; font-weight: 700; color: var(--accent-dk); margin-bottom: 4px; }
+    .type-btn .type-desc  { font-size: .78rem; color: var(--muted); line-height: 1.4; }
+
+    /* ── Stap 2: Klaarmaten ── */
+    .maten-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 480px; }
+    @media (max-width: 500px) { .maten-grid { grid-template-columns: 1fr; } }
+    .maten-grid .field label { font-size: .74rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; display: block; margin-bottom: 5px; }
+    .maten-grid .field input {
+      width: 100%; border: 1px solid var(--border); border-radius: 5px;
+      padding: 9px 12px; font-size: 1.1rem; font-weight: 600; color: var(--accent-dk);
+      background: #fff; transition: border-color .15s;
+    }
+    .maten-grid .field input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-lt); }
+    .maten-grid .field .unit { font-size: .72rem; color: var(--muted); margin-top: 3px; }
+
+    /* ── Stap 3: Artikel overzicht ── */
+    .artikel-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 6px; }
+    .artikel-table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+    .artikel-table thead th {
+      background: #f0f3f8; color: var(--accent-dk); font-weight: 700;
+      padding: 8px 10px; text-align: left; white-space: nowrap;
+      border-bottom: 2px solid var(--border);
+    }
+    .artikel-table tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background .1s; }
+    .artikel-table tbody tr:last-child { border-bottom: none; }
+    .artikel-table tbody tr:hover { background: var(--accent-lt); }
+    .artikel-table tbody tr.row-selected { background: #dceefb; }
+    .artikel-table tbody tr.row-impossible { opacity: .65; }
+    .artikel-table tbody td { padding: 8px 10px; vertical-align: middle; white-space: nowrap; }
+
+    .feasible-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: .72rem; font-weight: 700; padding: 3px 8px; border-radius: 20px;
+    }
+    .feasible-badge.ok      { background: var(--success-lt); color: var(--success); }
+    .feasible-badge.nok     { background: var(--error-lt);   color: var(--error);   }
+    .feasible-badge.unknown { background: #f5f5f5;           color: var(--muted);   }
+
+    .no-artikelen-msg { padding: 20px; text-align: center; color: var(--muted); font-size: .85rem; }
+    .no-artikelen-msg a { color: var(--accent); text-decoration: underline; }
+
+    /* ── Filter uitleg box ── */
+    .filter-uitleg {
+      background: #f8f9fb; border: 1px solid var(--border); border-radius: 6px;
+      padding: 12px 16px; margin-bottom: 14px; font-size: .78rem; line-height: 1.8;
+    }
+    .filter-uitleg .fu-title {
+      font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+      color: var(--accent-dk); margin-bottom: 6px;
+    }
+    .filter-uitleg .fu-row {
+      display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px;
+    }
+    .filter-uitleg .fu-row:last-child { margin-bottom: 0; }
+    .filter-uitleg .fu-num {
+      background: var(--accent); color: #fff; border-radius: 50%;
+      width: 18px; height: 18px; font-size: .65rem; font-weight: 800;
+      display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .filter-uitleg .fu-text { color: var(--text); }
+    .filter-uitleg .fu-text em { color: var(--muted); font-style: normal; }
+    .filter-uitleg .fu-formula {
+      font-family: 'Courier New', monospace; font-size: .75rem;
+      background: var(--accent-lt); border-radius: 4px; padding: 2px 6px;
+      color: var(--accent-dk); white-space: nowrap;
     }
 
-    /* ── Cards ── */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow: hidden;
+    /* ── Calc detail in table row ── */
+    .calc-detail {
+      font-size: .7rem; color: var(--muted); margin-top: 3px;
+      font-family: 'Courier New', monospace; white-space: nowrap;
     }
+    .calc-detail.ok  { color: var(--success); }
+    .calc-detail.nok { color: var(--error); }
+    .calc-detail.bst { color: var(--accent); }
+
+    /* ── Layout (stap 4) ── */
+    .layout {
+      display: grid; grid-template-columns: 340px 1fr; gap: 20px;
+      padding: 0 24px 24px; max-width: 1280px; margin: 0 auto; align-items: start;
+    }
+    @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
+
+    /* ── Cards ── */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
     .card-header {
-      background: var(--accent);
-      color: #fff;
-      padding: 10px 16px;
-      font-size: .8rem;
-      font-weight: 700;
-      letter-spacing: .06em;
-      text-transform: uppercase;
+      background: var(--accent); color: #fff; padding: 10px 16px;
+      font-size: .8rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+      display: flex; align-items: center; gap: 8px;
     }
     .card-body { padding: 16px; }
 
@@ -96,114 +173,41 @@
     .fg   { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
     .fg.s1{ grid-template-columns: 1fr; }
     .field { display: flex; flex-direction: column; gap: 4px; }
-    .field label {
-      font-size: .74rem;
-      font-weight: 600;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: .04em;
+    .field label { font-size: .74rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+    .field input, .field select {
+      border: 1px solid var(--border); border-radius: 5px; padding: 6px 10px;
+      font-size: .88rem; color: var(--text); background: #fff; transition: border-color .15s; width: 100%;
     }
-    .field input,
-    .field select {
-      border: 1px solid var(--border);
-      border-radius: 5px;
-      padding: 6px 10px;
-      font-size: .88rem;
-      color: var(--text);
-      background: #fff;
-      transition: border-color .15s;
-      width: 100%;
-    }
-    .field input:focus,
-    .field select:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-lt);
-    }
-    .field input[readonly] {
-      background: #f8f9fb;
-      color: var(--muted);
-      cursor: default;
-    }
-    .field .unit {
-      font-size: .72rem;
-      color: var(--muted);
-      margin-top: 1px;
-    }
+    .field input:focus, .field select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-lt); }
+    .field .unit { font-size: .72rem; color: var(--muted); margin-top: 1px; }
 
     /* ── Section dividers ── */
     .section-label {
-      font-size: .7rem;
-      font-weight: 700;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      color: var(--accent);
-      border-bottom: 1px solid var(--accent-lt);
-      padding-bottom: 4px;
-      margin: 14px 0 10px;
-      grid-column: 1 / -1;
+      font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+      color: var(--accent); border-bottom: 1px solid var(--accent-lt);
+      padding-bottom: 4px; margin: 14px 0 10px; grid-column: 1 / -1;
     }
 
     /* ── Results panel ── */
-    .results {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    .result-box {
-      background: var(--accent-lt);
-      border: 1px solid #b8d0e8;
-      border-radius: var(--radius);
-      padding: 14px;
-      text-align: center;
-    }
+    .results { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+    .result-box { background: var(--accent-lt); border: 1px solid #b8d0e8; border-radius: var(--radius); padding: 14px; text-align: center; }
     .result-box .lbl { font-size: .7rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
     .result-box .val { font-size: 1.7rem; font-weight: 700; color: var(--accent-dk); line-height: 1; }
     .result-box .sub { font-size: .72rem; color: var(--muted); margin-top: 3px; }
+    @media (max-width: 500px) { .results { grid-template-columns: 1fr; } }
 
-    /* ── Error / info banners ── */
-    .banner {
-      border-radius: 6px;
-      padding: 10px 14px;
-      font-size: .83rem;
-      margin-bottom: 12px;
-      display: none;
-    }
-    .banner.error   { background: #ffebee; border: 1px solid #ef9a9a; color: var(--error); display: block; }
-    .banner.warning { background: #fff3e0; border: 1px solid #ffcc80; color: var(--warn);  display: block; }
-    .banner.info    { background: #e8f5e9; border: 1px solid #a5d6a7; color: var(--success); display: block; }
+    /* ── Banners ── */
+    .banner { border-radius: 6px; padding: 10px 14px; font-size: .83rem; margin-bottom: 12px; display: none; }
+    .banner.error   { background: var(--error-lt);   border: 1px solid #ef9a9a; color: var(--error);   display: block; }
+    .banner.warning { background: #fff3e0;            border: 1px solid #ffcc80; color: var(--warn);    display: block; }
+    .banner.info    { background: var(--success-lt);  border: 1px solid #a5d6a7; color: var(--success); display: block; }
 
-    /* ── Calculation breakdown ── */
-    .breakdown {
-      background: #f8f9fb;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 12px 14px;
-      font-size: .8rem;
-      line-height: 1.9;
-      color: var(--muted);
-    }
+    /* ── Breakdown ── */
+    .breakdown { background: #f8f9fb; border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; font-size: .8rem; line-height: 1.9; color: var(--muted); }
     .breakdown b { color: var(--text); }
     .breakdown .step { color: var(--accent-dk); font-weight: 600; display: block; margin-top: 6px; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; }
 
-    /* ── Tags / badges ── */
-    .tag {
-      display: inline-block;
-      font-size: .68rem;
-      font-weight: 700;
-      padding: 2px 7px;
-      border-radius: 20px;
-      letter-spacing: .04em;
-    }
-    .tag.kh  { background: #e8f0f8; color: var(--accent-dk); }
-    .tag.bst { background: #f3e8f8; color: #5b2d8a; }
-
-    /* ── Responsive 3-col results ── */
-    @media (max-width: 500px) {
-      .results { grid-template-columns: 1fr; }
-    }
-
+    .tag { display: inline-block; font-size: .68rem; font-weight: 700; padding: 2px 7px; border-radius: 20px; letter-spacing: .04em; }
     hr.sep { border: none; border-top: 1px solid var(--border); margin: 12px 0; grid-column: 1/-1; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -215,44 +219,93 @@
 <header>
   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
     <rect x="3" y="3" width="18" height="2" rx="1"/>
-    <line x1="6"  y1="5" x2="6"  y2="21"/>
+    <line x1="6" y1="5" x2="6" y2="21"/>
     <line x1="18" y1="5" x2="18" y2="21"/>
     <path d="M6 8 Q9 10 12 8 Q15 6 18 8"/>
     <path d="M6 13 Q9 15 12 13 Q15 11 18 13"/>
     <path d="M6 18 Q9 20 12 18 Q15 16 18 18"/>
   </svg>
   <h1>Gordijn Configurator</h1>
-  <span>Overgordijn · Vitrage · Kamerhoog &amp; Breedtestof — V5</span>
+  <span>Overgordijn &middot; Vitrage &middot; Kamerhoog &amp; Breedtestof &mdash; V5</span>
   <nav>
-    <a href="import.html">📂 Artikel import</a>
+    <a href="import.html">&#128194; Artikel import</a>
   </nav>
 </header>
 
-<div class="layout">
+<div class="steps-wrap">
 
-  <!-- ══════════════════════════════════════
-       LEFT PANEL — Stof artikel
-  ══════════════════════════════════════ -->
+  <!-- ══ STAP 1 — Type gordijn ══ -->
+  <div class="step-card active" id="stap1Card">
+    <div class="step-header" id="stap1Header">
+      <span class="step-badge">1</span>
+      Kies type gordijn
+      <span class="step-summary" id="stap1Summary" style="display:none"></span>
+    </div>
+    <div class="step-body" id="stap1Body">
+      <div class="type-keuze">
+        <button class="type-btn" id="btnOvergordijn" onclick="kiesType('Overgordijn')">
+          <div class="type-icon">&#127985;</div>
+          <div class="type-title">Overgordijn</div>
+          <div class="type-desc">Zware decoratieve gordijnen, verduisterend of semi-transparant</div>
+        </button>
+        <button class="type-btn" id="btnInbetween" onclick="kiesType('Inbetween')">
+          <div class="type-icon">&#129703;</div>
+          <div class="type-title">Inbetween</div>
+          <div class="type-desc">Lichte vitrage-achtige gordijnen, luchtig en lichtdoorlatend</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ STAP 2 — Klaarmaten ══ -->
+  <div class="step-card" id="stap2Card" style="display:none">
+    <div class="step-header" id="stap2Header">
+      <span class="step-badge">2</span>
+      Klaarmaten invoeren
+      <span class="step-summary" id="stap2Summary" style="display:none"></span>
+    </div>
+    <div class="step-body">
+      <div class="maten-grid">
+        <div class="field">
+          <label>KlaarBreedte (cm)</label>
+          <input type="number" id="klaarbreedte" min="1" step="1" placeholder="bijv. 300"
+                 oninput="onMatenChange()" onchange="onMatenChange()" />
+          <span class="unit">Breedte van de rail of roede</span>
+        </div>
+        <div class="field">
+          <label>KlaarHoogte (cm)</label>
+          <input type="number" id="klaarhoogte" min="1" step="1" placeholder="bijv. 250"
+                 oninput="onMatenChange()" onchange="onMatenChange()" />
+          <span class="unit">Gewenste klaarmaat hoogte</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ STAP 3 — Artikel kiezen ══ -->
+  <div class="step-card" id="stap3Card" style="display:none">
+    <div class="step-header" id="stap3Header">
+      <span class="step-badge">3</span>
+      Kies een artikel
+      <span class="step-summary" id="stap3Summary" style="display:none"></span>
+    </div>
+    <div class="step-body" id="stap3Body">
+      <div id="artikelLijst"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ STAP 4 — Specificaties + Configuratie + Resultaat ══ -->
+<div class="layout" id="mainLayout" style="display:none; margin-top:16px;">
+
+  <!-- LEFT — Artikel specificaties -->
   <aside>
     <div class="card">
-      <div class="card-header">Stof — Artikel specificaties</div>
+      <div class="card-header">Artikel specificaties</div>
       <div class="card-body">
-
-        <!-- Artikel laden -->
-        <div id="artikelLoader" style="margin-bottom:14px;display:none">
-          <div style="font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">Artikel laden</div>
-          <div style="display:flex;gap:6px;align-items:center">
-            <select id="artikelSelect" style="flex:1;border:1px solid var(--border);border-radius:5px;padding:6px 10px;font-size:.85rem;color:var(--text)">
-              <option value="">— kies een artikel —</option>
-            </select>
-            <button onclick="laadArtikel()" style="padding:6px 12px;background:var(--accent);color:#fff;border:none;border-radius:5px;font-size:.82rem;font-weight:600;cursor:pointer">Laden</button>
-          </div>
-          <div id="artikelInfo" style="font-size:.72rem;color:var(--muted);margin-top:4px"></div>
-        </div>
-
         <div class="fg s1">
           <div class="section-label">Afmetingen stof</div>
-
           <div class="field">
             <label>Hoogte stof (cm)</label>
             <input type="number" id="hoogte_stof" value="300" min="1" step="1" />
@@ -261,11 +314,10 @@
           <div class="field">
             <label>Breedte stof (cm)</label>
             <input type="number" id="breedte_stof" value="140" min="1" step="1" />
-            <span class="unit">Standaard rolbreedte (bijv. 140 cm)</span>
+            <span class="unit">Standaard rolbreedte</span>
           </div>
 
           <div class="section-label">Patroon</div>
-
           <div class="field">
             <label>Patroon</label>
             <select id="patroon">
@@ -283,9 +335,8 @@
           </div>
 
           <div class="section-label">Prijs &amp; Eigenschappen</div>
-
           <div class="field">
-            <label>Prijs per m¹ (€)</label>
+            <label>Prijs per m&sup1; (&euro;)</label>
             <input type="number" id="prijs_per_m1" value="0" min="0" step="0.01" />
           </div>
           <div class="field">
@@ -295,8 +346,8 @@
           <div class="field">
             <label>Kamerhoog</label>
             <select id="kamerhoog">
-              <option value="Nee">Nee — Breedtestof</option>
-              <option value="Ja">Ja — Kamerhoog</option>
+              <option value="Nee">Nee &mdash; Breedtestof</option>
+              <option value="Ja">Ja &mdash; Kamerhoog</option>
             </select>
           </div>
           <div class="field">
@@ -317,62 +368,42 @@
             </select>
           </div>
           <div class="field" id="wrap_voering_prijs" style="display:none">
-            <label>Voering prijs per m¹ (€)</label>
+            <label>Voering prijs per m&sup1; (&euro;)</label>
             <input type="number" id="voering_prijs_per_m1" value="0" min="0" step="0.01" />
             <span class="unit">Laat 0 voor 60%-schatting</span>
           </div>
 
           <div class="section-label">Overige kenmerken</div>
-
           <div class="field">
             <label>Kantelbaar</label>
-            <select id="kantelbaar">
-              <option>Ja</option>
-              <option>Nee</option>
-            </select>
+            <select id="kantelbaar"><option>Ja</option><option>Nee</option></select>
           </div>
           <div class="field">
             <label>Doubleface</label>
-            <select id="doubleface">
-              <option>Nee</option>
-              <option>Ja</option>
-            </select>
+            <select id="doubleface"><option>Nee</option><option>Ja</option></select>
           </div>
           <div class="field">
             <label>Brandvertragend</label>
-            <select id="brandvertragend">
-              <option>Nee</option>
-              <option>Ja</option>
-            </select>
+            <select id="brandvertragend"><option>Nee</option><option>Ja</option></select>
           </div>
           <div class="field">
             <label>Akoestiek klasse</label>
-            <select id="akoestiek">
-              <option>—</option>
-              <option>A</option>
-              <option>B</option>
-            </select>
+            <select id="akoestiek"><option>—</option><option>A</option><option>B</option></select>
           </div>
           <div class="field">
             <label>Verzwaaringskoord</label>
-            <select id="verzwaaringskoord">
-              <option>Nee</option>
-              <option>Ja</option>
-            </select>
+            <select id="verzwaaringskoord"><option>Nee</option><option>Ja</option></select>
           </div>
           <div class="field">
             <label>Samenstelling</label>
             <input type="text" id="samenstelling" placeholder="bijv. 100% Polyester" />
           </div>
         </div>
-
       </div>
     </div>
   </aside>
 
-  <!-- ══════════════════════════════════════
-       RIGHT PANEL — Configuratie + Resultaat
-  ══════════════════════════════════════ -->
+  <!-- RIGHT — Configuratie + Resultaat -->
   <main>
 
     <!-- Results -->
@@ -380,7 +411,6 @@
       <div class="card-header">Berekeningsresultaat</div>
       <div class="card-body">
         <div id="banner" class="banner"></div>
-
         <div class="results">
           <div class="result-box">
             <div class="lbl">Aantal Banen</div>
@@ -398,10 +428,7 @@
             <div class="sub">incl. voering indien van toepassing</div>
           </div>
         </div>
-
-        <div class="breakdown" id="breakdown">
-          Vul de configuratie in om de berekening te zien.
-        </div>
+        <div class="breakdown" id="breakdown">Vul de configuratie in om de berekening te zien.</div>
       </div>
     </div>
 
@@ -409,31 +436,16 @@
     <div class="card">
       <div class="card-header">Configuratie</div>
       <div class="card-body">
-
         <div class="fg">
 
-          <div class="section-label">Klaarmaten</div>
-
-          <div class="field">
-            <label>KlaarBreedte (cm) *</label>
-            <input type="number" id="klaarbreedte" value="" min="1" step="1" placeholder="bijv. 300" />
-            <span class="unit">Breedte van de rail of roede</span>
-          </div>
-          <div class="field">
-            <label>KlaarHoogte (cm) *</label>
-            <input type="number" id="klaarhoogte" value="" min="1" step="1" placeholder="bijv. 250" />
-            <span class="unit">Gewenste klaarmaat hoogte</span>
-          </div>
-
           <div class="section-label">Plooi &amp; Afwerking</div>
-
           <div class="field">
             <label>Plooi</label>
             <select id="plooi">
-              <option value="Single">Single plooi (×2.0)</option>
-              <option value="Double">Double plooi (×2.5)</option>
-              <option value="Wave">Wave plooi (×1.8)</option>
-              <option value="Retour">Retour / vlak (×1.0)</option>
+              <option value="Single">Single plooi (&times;2.0)</option>
+              <option value="Double">Double plooi (&times;2.5)</option>
+              <option value="Wave">Wave plooi (&times;1.8)</option>
+              <option value="Retour">Retour / vlak (&times;1.0)</option>
             </select>
           </div>
           <div class="field">
@@ -447,25 +459,33 @@
           <div class="field">
             <label>Vaste kant stuk</label>
             <select id="vaste_kant">
-              <option>—</option>
-              <option>Links</option>
-              <option>Rechts</option>
+              <option>—</option><option>Links</option><option>Rechts</option>
             </select>
           </div>
           <div class="field">
             <label>Lock</label>
             <select id="lock">
-              <option value="Nee">Nee — gestoomde onderzoom</option>
-              <option value="Ja">Ja — afgelockt (geen zoom)</option>
+              <option value="Nee">Nee &mdash; gestoomde onderzoom</option>
+              <option value="Ja">Ja &mdash; afgelockt (geen zoom)</option>
             </select>
           </div>
 
           <div class="section-label">Zomen &amp; Toeslagen (cm)</div>
-
           <div class="field">
-            <label>Band / bovenzoom (cm)</label>
-            <input type="number" id="band" value="10" min="0" step="1" />
-            <span class="unit">Standaard: 10 cm</span>
+            <label>Vliesband (cm)</label>
+            <select id="band">
+              <option value="8">8 cm</option>
+              <option value="10" selected>10 cm</option>
+              <option value="12">12 cm</option>
+              <option value="15">15 cm</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Loodveter</label>
+            <select id="loodveter">
+              <option value="Nee">Nee</option>
+              <option value="Ja">Ja</option>
+            </select>
           </div>
           <div class="field">
             <label>Onderzoom (cm)</label>
@@ -475,44 +495,32 @@
           <div class="field">
             <label>Zijzoom per zijde (cm)</label>
             <input type="number" id="zijzoom" value="8" min="0" step="1" />
-            <span class="unit">Standaard: 8 cm (2× = 16 cm totaal)</span>
+            <span class="unit">Standaard: 8 cm (2&times; = 16 cm totaal)</span>
           </div>
 
           <div class="section-label">Systeem &amp; Bevestiging</div>
-
           <div class="field">
             <label>Bevestiging</label>
             <select id="bevestiging">
-              <option>Plafond</option>
-              <option>Wand</option>
-              <option>Op de dag</option>
-              <option>In de dag</option>
+              <option>Plafond</option><option>Wand</option>
+              <option>Op de dag</option><option>In de dag</option>
             </select>
           </div>
           <div class="field">
             <label>Bediening</label>
             <select id="bediening">
-              <option>Opstrek links</option>
-              <option>Opstrek rechts</option>
-              <option>Tuimelen links</option>
-              <option>Tuimelen rechts</option>
-              <option>Middenstroom</option>
-              <option>Koordloos</option>
+              <option>Opstrek links</option><option>Opstrek rechts</option>
+              <option>Tuimelen links</option><option>Tuimelen rechts</option>
+              <option>Middenstroom</option><option>Koordloos</option>
             </select>
           </div>
           <div class="field">
             <label>Kleur</label>
             <select id="kleur">
-              <option>Wit</option>
-              <option>Naturel</option>
-              <option>Grijs</option>
-              <option>Lichtgrijs</option>
-              <option>Smoky</option>
-              <option>Eiken</option>
-              <option>Licht eiken</option>
-              <option>Donker eiken</option>
-              <option>Bruin</option>
-              <option>Zwart</option>
+              <option>Wit</option><option>Naturel</option><option>Grijs</option>
+              <option>Lichtgrijs</option><option>Smoky</option><option>Eiken</option>
+              <option>Licht eiken</option><option>Donker eiken</option>
+              <option>Bruin</option><option>Zwart</option>
             </select>
           </div>
 
@@ -525,263 +533,276 @@
 
 <script>
 // ============================================================
-// Gordijn Configurator — JavaScript (port van Deluge V5)
-// Sleutel: L@b21#2026!
+// Gordijn Configurator — V5
 // ============================================================
 
 const PLOOI = { Single: 2.0, Double: 2.5, Wave: 1.8, Retour: 1.0 };
 
+let _gekozenType    = null;   // 'Overgordijn' | 'Inbetween'
+let _savedArtikelen = {};
+let _gekozenArtikel = null;
+
 function num(id, fallback = 0) {
-  const v = parseFloat(document.getElementById(id).value);
+  const v = parseFloat(document.getElementById(id)?.value);
   return isNaN(v) ? fallback : v;
 }
-function sel(id) { return document.getElementById(id).value; }
-function el(id)  { return document.getElementById(id); }
-
-function ceilDec(v) {
-  const fl = Math.floor(v);
-  return v > fl ? fl + 1 : fl;
-}
-
+function bandNum() { const n = parseInt(sel('band')); return isNaN(n) ? 10 : n; }
+function sel(id)  { return document.getElementById(id)?.value ?? ''; }
+function el(id)   { return document.getElementById(id); }
 function fmt(n, dec = 1) { return n.toFixed(dec); }
-function fmtEur(n) {
-  return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(n);
+function fmtEur(n) { return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(n); }
+function esc(s)   { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function ceilDec(v) { const fl = Math.floor(v); return v > fl ? fl + 1 : fl; }
+
+// ── Feasibility check ──────────────────────────────────────
+function checkFeasibility(a, klaarbreedte, klaarhoogte) {
+  if (!klaarbreedte || !klaarhoogte || klaarbreedte <= 0 || klaarhoogte <= 0)
+    return { mogelijk: null };
+
+  if (String(a.kamerhoog).toLowerCase() === 'ja') {
+    const krimp          = parseFloat(a.krimpercentage) || 0;
+    const effectieveH    = klaarhoogte * (1 + krimp / 100);
+    const DEFAULT_BAND   = 10;
+    const DEFAULT_ZOOM   = 20;
+    const vereist        = effectieveH + DEFAULT_BAND + DEFAULT_ZOOM;
+    const maxH           = parseFloat(a.hoogte_stof) || 0;
+    if (maxH > 0 && vereist > maxH) {
+      return {
+        mogelijk: false,
+        reden: `Vereiste hoogte ${Math.ceil(vereist)} cm > stofhoogte ${maxH} cm`
+      };
+    }
+  }
+  return { mogelijk: true };
 }
 
-function setBanner(msg, type) {
-  const b = el('banner');
-  b.textContent = msg;
-  b.className = 'banner ' + (msg ? type : '');
-  b.style.display = msg ? 'block' : 'none';
+// ── STAP 1: type keuze ─────────────────────────────────────
+function kiesType(type) {
+  _gekozenType = type;
+
+  el('btnOvergordijn').classList.toggle('selected', type === 'Overgordijn');
+  el('btnInbetween').classList.toggle('selected',   type === 'Inbetween');
+
+  el('stap1Header').classList.add('done');
+  el('stap1Summary').textContent = type;
+  el('stap1Summary').style.display = '';
+
+  el('stap2Card').style.display = '';
+  el('stap2Card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  renderArtikelLijst();
 }
 
-function compute() {
-  // ── Inputs ──
-  const breedte_rail   = num('klaarbreedte');
-  const hoogte_rail    = num('klaarhoogte');
-  const kamerhoog      = sel('kamerhoog');         // "Ja" | "Nee"
-  const plooiKeuze     = sel('plooi');             // "Single"|"Double"|"Wave"|"Retour"
-  const patroonType    = sel('patroon');           // "Uni"|"Patroon"
-  const patroonHoogte  = num('patroonhoogte');
-  const prijs_per_m1   = num('prijs_per_m1');
-  const lockKeuze      = sel('lock');
-  const voeren         = sel('voeren');
-  const voering_prijs  = num('voering_prijs_per_m1');
-  const stuk           = sel('stuk');
-  const krimperc       = num('krimpercentage');
-  const hoogte_stof    = num('hoogte_stof', 300);
-  const breedte_stof   = num('breedte_stof', 140);
-  const onderzoom_in   = num('onderzoom', 20);
-  const band_in        = num('band', 10);
-  const zijzoom_in     = num('zijzoom', 8);
+// ── STAP 2: klaarmaten change ───────────────────────────────
+function onMatenChange() {
+  const b = num('klaarbreedte');
+  const h = num('klaarhoogte');
 
-  // ── Validatie ──
-  if (breedte_rail <= 0 || hoogte_rail <= 0) {
-    setBanner('Voer een geldige breedte én hoogte in (> 0 cm).', 'error');
-    el('out_banen').textContent   = '—';
-    el('out_metrage').textContent = '—';
-    el('out_prijs').textContent   = '—';
-    el('breakdown').innerHTML     = 'Vul de configuratie in om de berekening te zien.';
+  if (b > 0 && h > 0) {
+    el('stap2Header').classList.add('done');
+    el('stap2Summary').textContent = `${b} × ${h} cm`;
+    el('stap2Summary').style.display = '';
+    el('stap3Card').style.display = '';
+  } else {
+    el('stap2Header').classList.remove('done');
+    el('stap2Summary').style.display = 'none';
+  }
+
+  renderArtikelLijst();
+
+  // If an artikel is already selected, re-check feasibility and recompute
+  if (_gekozenArtikel) {
+    const f = checkFeasibility(_gekozenArtikel, b, h);
+    if (f.mogelijk === false) {
+      setBanner(`Opgelet: dit artikel is niet geschikt voor deze maten. ${f.reden}.`, 'warning');
+    } else {
+      setBanner('', '');
+    }
+    compute();
+  }
+}
+
+// ── STAP 3: render artikel lijst ───────────────────────────
+const DEFAULT_BAND_CHECK = 10;
+const DEFAULT_ZOOM_CHECK = 20;
+
+function buildCalcDetail(a, b, h) {
+  const isKH = String(a.kamerhoog).toLowerCase() === 'ja';
+  if (!h || h <= 0) {
+    return { html: `<div class="calc-detail">Voer klaarhoogte in voor controle</div>`, ok: null };
+  }
+  if (!isKH) {
+    return {
+      html: `<div class="calc-detail bst">Breedtestof &mdash; geen maximale hoogte vereist</div>`,
+      ok: true
+    };
+  }
+  const krimp    = parseFloat(a.krimpercentage) || 0;
+  const effH     = h * (1 + krimp / 100);
+  const vereist  = effH + DEFAULT_BAND_CHECK + DEFAULT_ZOOM_CHECK;
+  const maxH     = parseFloat(a.hoogte_stof) || 0;
+  const mogelijk = maxH > 0 ? vereist <= maxH : true;
+
+  const krimpStr = krimp > 0
+    ? `${h}&times;(1+${krimp}%) = ${effH.toFixed(1)}`
+    : `${h}`;
+  const formula  = `${krimpStr} + ${DEFAULT_BAND_CHECK} + ${DEFAULT_ZOOM_CHECK} = ${vereist.toFixed(1)} cm`;
+  const vergelijk = maxH > 0
+    ? ` ${mogelijk ? '&le;' : '&gt;'} ${maxH} cm ${mogelijk ? '&#10003;' : '&#10007;'}`
+    : '';
+  const cls = maxH > 0 ? (mogelijk ? 'ok' : 'nok') : '';
+
+  return {
+    html: `<div class="calc-detail ${cls}">${formula}${vergelijk}</div>`,
+    ok: maxH > 0 ? mogelijk : null
+  };
+}
+
+function buildFilterUitleg(b, h) {
+  const hasMaten = b > 0 && h > 0;
+
+  let filter2 = hasMaten
+    ? `<span class="fu-text">Hoogtegrens (Kamerhoog artikelen):
+        <span class="fu-formula">KlaarHoogte &times; (1 + krimp%) + ${DEFAULT_BAND_CHECK} + ${DEFAULT_ZOOM_CHECK} &le; Hoogte&nbsp;stof</span>
+        &mdash; met jouw maten: <span class="fu-formula">${h}&times;(1+krimp%) + ${DEFAULT_BAND_CHECK} + ${DEFAULT_ZOOM_CHECK}</span>
+        (Vliesband ${DEFAULT_BAND_CHECK}&nbsp;cm standaard, Onderzoom ${DEFAULT_ZOOM_CHECK}&nbsp;cm standaard).
+        Breedtestof-artikelen hebben geen hoogtebegrenzing.</span>`
+    : `<span class="fu-text">Vul klaarhoogte in (stap 2) om te zien welke artikelen geschikt zijn. <em>Kamerhoog-artikelen worden gecontroleerd op: KlaarHoogte + vliesband + onderzoom &le; hoogte stof.</em></span>`;
+
+  return `<div class="filter-uitleg">
+    <div class="fu-title">Actieve filters &amp; berekeningsmethode</div>
+    <div class="fu-row">
+      <span class="fu-num">1</span>
+      <span class="fu-text">Gordijn type = <strong>${esc(_gekozenType)}</strong> &mdash;
+        alleen artikelen met gordijn&nbsp;type&nbsp;<em>${esc(_gekozenType)}</em> worden getoond
+        (gekozen in stap&nbsp;1).</span>
+    </div>
+    <div class="fu-row">
+      <span class="fu-num">2</span>
+      ${filter2}
+    </div>
+  </div>`;
+}
+
+function renderArtikelLijst() {
+  const container = el('artikelLijst');
+  if (!container) return;
+
+  const b = num('klaarbreedte');
+  const h = num('klaarhoogte');
+
+  const alleKeys = Object.keys(_savedArtikelen).sort();
+  const filtered = _gekozenType
+    ? alleKeys.filter(k => String(_savedArtikelen[k].gordijn_type || '').trim() === _gekozenType)
+    : alleKeys;
+
+  const uitleg = _gekozenType ? buildFilterUitleg(b, h) : '';
+
+  if (filtered.length === 0) {
+    container.innerHTML = uitleg + `<div class="no-artikelen-msg">
+      Geen ${_gekozenType ? _gekozenType.toLowerCase() + '-' : ''}artikelen gevonden.
+      <a href="import.html">Importeer artikelen</a> om te beginnen.
+    </div>`;
+    el('stap3Header').classList.remove('done');
+    el('stap3Summary').style.display = 'none';
     return;
   }
-  setBanner('', '');
 
-  // ── Correcties ──
-  const effectieveBreedte = (stuk === 'Links' || stuk === 'Rechts')
-    ? breedte_rail / 2
-    : breedte_rail;
+  const rows = filtered.map(k => {
+    const a   = _savedArtikelen[k];
+    const f   = checkFeasibility(a, b, h);
+    const cd  = buildCalcDetail(a, b, h);
 
-  const effectieveHoogte = krimperc > 0
-    ? hoogte_rail * (1 + krimperc / 100)
-    : hoogte_rail;
+    let badge, rowClass = '';
+    if (f.mogelijk === true)  { badge = `<span class="feasible-badge ok">&#10003; Mogelijk</span>`; }
+    else if (f.mogelijk === false) { badge = `<span class="feasible-badge nok">&#10007; Niet mogelijk</span>`; rowClass = 'row-impossible'; }
+    else                      { badge = `<span class="feasible-badge unknown">— Voer maten in</span>`; }
 
-  const effectieveOnderzoom = lockKeuze === 'Ja' ? 0 : onderzoom_in;
+    const selected = _gekozenArtikel && _gekozenArtikel.artikelnummer === k ? 'row-selected' : '';
+    const prijs    = parseFloat(a.prijs_per_m1);
+    const prijsStr = !isNaN(prijs) && prijs > 0 ? `&euro;&nbsp;${prijs.toFixed(2)}` : '—';
+    const isKH     = String(a.kamerhoog).toLowerCase() === 'ja';
 
-  // ── Plooifactor ──
-  const plooiFactor = PLOOI[plooiKeuze] ?? 2.0;
+    return `<tr class="${rowClass} ${selected}" onclick="selectArtikel('${esc(k)}', ${f.mogelijk === false})">
+      <td>
+        ${badge}
+        ${cd.html}
+      </td>
+      <td><strong>${esc(k)}</strong></td>
+      <td>${esc(a.omschrijving || '—')}</td>
+      <td>${esc(a.hoogte_stof || '—')} cm</td>
+      <td>${esc(a.breedte_stof || '—')} cm</td>
+      <td>${isKH
+        ? '<span class="tag" style="background:#e8f0f8;color:var(--accent-dk)">Kamerhoog</span>'
+        : '<span class="tag" style="background:#f5f5f5;color:var(--muted)">Breedtestof</span>'}</td>
+      <td>${esc(a.lichtdoorlatenheid || '—')}</td>
+      <td>${prijsStr}</td>
+      <td style="white-space:normal;max-width:150px">${esc(a.samenstelling || '—')}</td>
+    </tr>`;
+  }).join('');
 
-  // ── Berekening ──
-  const benodigdeBreedte = (effectieveBreedte * plooiFactor) + (2 * zijzoom_in);
+  container.innerHTML = uitleg + `
+    <div class="artikel-table-wrap">
+      <table class="artikel-table">
+        <thead>
+          <tr>
+            <th>Status &amp; controle</th>
+            <th>Artikelnr.</th>
+            <th>Omschrijving</th>
+            <th>H stof</th>
+            <th>B stof</th>
+            <th>Stoftype</th>
+            <th>Licht</th>
+            <th>Prijs/m&sup1;</th>
+            <th>Samenstelling</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
 
-  let aantalBanen = 0, totaalMetrage = 0, totaalPrijs = 0;
-  let breakdownHTML = '';
+// ── STAP 3: artikel geselecteerd ───────────────────────────
+function selectArtikel(nr, isNietMogelijk) {
+  const a = _savedArtikelen[nr];
+  if (!a) return;
 
-  if (kamerhoog === 'Ja') {
-    // ── SCENARIO A: KAMERHOOG ──
-    const vereistTotaal = effectieveHoogte + band_in + effectieveOnderzoom;
-
-    if (vereistTotaal > hoogte_stof) {
-      setBanner(
-        `Hoogte overschreden: vereiste snijhoogte ${fmt(vereistTotaal)} cm ` +
-        `(incl. zomen) is groter dan stofhoogte ${hoogte_stof} cm. ` +
-        `Kies een lagere klaarmaat of andere stof.`,
-        'error'
-      );
-      el('out_banen').textContent   = '—';
-      el('out_metrage').textContent = '—';
-      el('out_prijs').textContent   = '—';
-      el('breakdown').innerHTML = '❌ Hoogte overschrijdt maximum stofhoogte.';
-      return;
-    }
-
-    aantalBanen   = ceilDec(benodigdeBreedte / breedte_stof);
-    const mPerBaan = hoogte_stof / 100;
-    totaalMetrage  = parseFloat((aantalBanen * mPerBaan).toFixed(1));
-
-    breakdownHTML = `
-      <span class="step">Scenario A — Kamerhoog</span>
-      <b>Effectieve breedte:</b> ${fmt(effectieveBreedte, 0)} cm ${stuk !== 'Single' ? '(halve rail: ' + breedte_rail + '/2)' : ''}<br>
-      <b>Plooifactor:</b> ${plooiFactor} (${plooiKeuze})<br>
-      <b>Benodigd stofbreedte:</b> ${fmt(effectieveBreedte, 0)} × ${plooiFactor} + 2×${zijzoom_in} = <b>${fmt(benodigdeBreedte)} cm</b><br>
-      <b>Banen:</b> ⌈${fmt(benodigdeBreedte)} ÷ ${breedte_stof}⌉ = <b>${aantalBanen} banen</b><br>
-      <b>Metrage/baan:</b> ${hoogte_stof} cm ÷ 100 = ${fmt(mPerBaan)} m<br>
-      <b>Totaal metrage:</b> ${aantalBanen} × ${fmt(mPerBaan)} = <b>${fmt(totaalMetrage)} m</b><br>
-      ${krimperc > 0 ? `<b>Krimptoeslaghoudte:</b> ${hoogte_rail} × (1 + ${krimperc}/100) = ${fmt(effectieveHoogte)} cm<br>` : ''}
-      ${lockKeuze === 'Ja' ? `<b>Lock:</b> onderzoom = 0 cm (afgelockt)<br>` : ''}
-      <b>Vereiste snijhoogte:</b> ${fmt(effectieveHoogte)} + ${band_in} (band) + ${effectieveOnderzoom} (zoom) = <b>${fmt(vereistTotaal)} cm</b> ≤ ${hoogte_stof} cm ✓
-    `;
-
-  } else {
-    // ── SCENARIO B: BREEDTESTOF ──
-    aantalBanen = ceilDec(benodigdeBreedte / breedte_stof);
-
-    let hoogte_per_baan = effectieveHoogte + effectieveOnderzoom + band_in;
-    let patroonNote = '';
-
-    if (patroonType === 'Patroon' && patroonHoogte > 0) {
-      const rapporten = ceilDec(hoogte_per_baan / patroonHoogte);
-      const hoogteMet = rapporten * patroonHoogte;
-      patroonNote = `<b>Patroon rapport:</b> ⌈${fmt(hoogte_per_baan)} ÷ ${patroonHoogte}⌉ = ${rapporten} rapporten → ${fmt(hoogteMet)} cm<br>`;
-      hoogte_per_baan = hoogteMet;
-    }
-
-    const mPerBaan = hoogte_per_baan / 100;
-    totaalMetrage  = parseFloat((aantalBanen * mPerBaan).toFixed(1));
-
-    breakdownHTML = `
-      <span class="step">Scenario B — Breedtestof</span>
-      <b>Effectieve breedte:</b> ${fmt(effectieveBreedte, 0)} cm ${stuk !== 'Single' ? '(halve rail: ' + breedte_rail + '/2)' : ''}<br>
-      <b>Plooifactor:</b> ${plooiFactor} (${plooiKeuze})<br>
-      <b>Benodigd stofbreedte:</b> ${fmt(effectieveBreedte, 0)} × ${plooiFactor} + 2×${zijzoom_in} = <b>${fmt(benodigdeBreedte)} cm</b><br>
-      <b>Banen:</b> ⌈${fmt(benodigdeBreedte)} ÷ ${breedte_stof}⌉ = <b>${aantalBanen} banen</b><br>
-      <b>Hoogte per baan:</b> ${fmt(effectieveHoogte)} (klaar${krimperc > 0 ? '+krimp' : ''}) + ${effectieveOnderzoom} (zoom) + ${band_in} (band) = ${fmt(hoogte_per_baan)} cm<br>
-      ${patroonNote}
-      <b>Metrage/baan:</b> ${fmt(hoogte_per_baan)} ÷ 100 = ${fmt(mPerBaan)} m<br>
-      <b>Totaal metrage:</b> ${aantalBanen} × ${fmt(mPerBaan)} = <b>${fmt(totaalMetrage)} m</b><br>
-      ${krimperc > 0 ? `<b>Krimptoeslag:</b> ${hoogte_rail} × (1 + ${krimperc}/100) = ${fmt(effectieveHoogte)} cm<br>` : ''}
-      ${lockKeuze === 'Ja' ? `<b>Lock:</b> onderzoom = 0 cm (afgelockt)<br>` : ''}
-    `;
-  }
-
-  // ── Prijs ──
-  let prijsBreakdown = '';
-  if (prijs_per_m1 > 0) {
-    const stolPrijs = totaalMetrage * prijs_per_m1;
-    totaalPrijs = stolPrijs;
-    prijsBreakdown = `<span class="step">Prijsberekening</span><b>Stofprijs:</b> ${fmt(totaalMetrage)} m × ${fmtEur(prijs_per_m1)} = <b>${fmtEur(stolPrijs)}</b><br>`;
-
-    if (voeren === 'Ja') {
-      const vPrijsM1 = voering_prijs > 0 ? voering_prijs : prijs_per_m1 * 0.60;
-      const vPrijs   = totaalMetrage * vPrijsM1;
-      totaalPrijs   += vPrijs;
-      prijsBreakdown += `<b>Voering:</b> ${fmt(totaalMetrage)} m × ${fmtEur(vPrijsM1)} = <b>${fmtEur(vPrijs)}</b>${voering_prijs <= 0 ? ' <i>(60% schatting)</i>' : ''}<br>`;
-      prijsBreakdown += `<b>Totaal incl. voering:</b> <b>${fmtEur(totaalPrijs)}</b>`;
-    }
-  }
-
-  // ── Update DOM ──
-  el('out_banen').textContent   = aantalBanen;
-  el('out_metrage').textContent = fmt(totaalMetrage);
-  el('out_prijs').textContent   = prijs_per_m1 > 0 ? fmtEur(totaalPrijs) : '—';
-  el('breakdown').innerHTML     = breakdownHTML + prijsBreakdown;
-
-  if (!document.getElementById('banner').className.includes('error')) {
-    setBanner(
-      `Berekening voltooid — ${kamerhoog === 'Ja' ? 'Kamerhoog' : 'Breedtestof'} scenario`,
-      'info'
+  if (isNietMogelijk) {
+    const f = checkFeasibility(a, num('klaarbreedte'), num('klaarhoogte'));
+    const doorgaan = confirm(
+      `Dit artikel is niet geschikt voor de ingevoerde maten:\n${f.reden}\n\nWilt u toch doorgaan?`
     );
+    if (!doorgaan) return;
   }
+
+  _gekozenArtikel = a;
+
+  // Update stap 3 header
+  el('stap3Header').classList.add('done');
+  el('stap3Summary').textContent = nr + (a.omschrijving ? ' — ' + a.omschrijving : '');
+  el('stap3Summary').style.display = '';
+
+  // Re-render table so selected row is highlighted
+  renderArtikelLijst();
+
+  // Apply artikel to spec fields
+  applyArtikel(a);
+
+  // Show main layout
+  el('mainLayout').style.display = '';
+  el('mainLayout').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// ── Toggle visibility helpers ──
-function togglePatroon() {
-  const show = sel('patroon') === 'Patroon';
-  el('wrap_patroonhoogte').style.display = show ? '' : 'none';
-  el('wrap_patroonbreedte').style.display = show ? '' : 'none';
-}
-function toggleVoering() {
-  el('wrap_voering_prijs').style.display = sel('voeren') === 'Ja' ? '' : 'none';
-}
-
-// ── Event listeners ──
-const inputs = [
-  'klaarbreedte','klaarhoogte','kamerhoog','plooi','patroon',
-  'patroonhoogte','patroonbreedte','prijs_per_m1','krimpercentage',
-  'lock','voeren','voering_prijs_per_m1','stuk','hoogte_stof',
-  'breedte_stof','onderzoom','band','zijzoom'
-];
-inputs.forEach(id => {
-  const node = document.getElementById(id);
-  if (node) node.addEventListener('input', compute);
-  if (node) node.addEventListener('change', compute);
-});
-
-el('patroon').addEventListener('change', togglePatroon);
-el('voeren').addEventListener('change', toggleVoering);
-
-// ── Artikel loader (from import page) ──
-const LS_KEY  = 'gordijn_artikelen';
-const LS_LOAD = 'gordijn_load_artikel';
-
+// ── Apply artikel to spec fields ───────────────────────────
 function setVal(id, val) {
-  const node = document.getElementById(id);
+  const node = el(id);
   if (!node || val === undefined || val === '') return;
   if (node.tagName === 'SELECT') {
-    // find closest option value
-    const opts = Array.from(node.options).map(o => o.value.toLowerCase());
-    const target = String(val).toLowerCase();
-    const idx = opts.findIndex(o => o === target || o.startsWith(target.charAt(0)));
-    if (idx >= 0) node.selectedIndex = idx;
-    // exact match preferred
-    const exact = Array.from(node.options).findIndex(o => o.value.toLowerCase() === target);
-    if (exact >= 0) node.selectedIndex = exact;
+    const exact = Array.from(node.options).findIndex(o => o.value.toLowerCase() === String(val).toLowerCase());
+    if (exact >= 0) { node.selectedIndex = exact; return; }
   } else {
     node.value = val;
   }
-}
-
-async function initArtikelLoader() {
-  const { data: saved } = await dbLoadAll();
-  const keys = Object.keys(saved || {}).sort();
-  const loader = document.getElementById('artikelLoader');
-  const select = document.getElementById('artikelSelect');
-
-  if (keys.length === 0) return;
-
-  select.innerHTML = '<option value="">— kies een artikel —</option>' +
-    keys.map(k => {
-      const a = saved[k];
-      const label = a.omschrijving ? `${k} — ${a.omschrijving}` : k;
-      return `<option value="${k}">${label}</option>`;
-    }).join('');
-
-  loader.style.display = '';
-
-  // Auto-load if redirected from import page
-  const toLoad = localStorage.getItem(LS_LOAD);
-  if (toLoad && saved[toLoad]) {
-    select.value = toLoad;
-    localStorage.removeItem(LS_LOAD);
-    applyArtikel(saved[toLoad]);
-  }
-}
-
-function laadArtikel() {
-  const nr    = document.getElementById('artikelSelect').value;
-  if (!nr) return;
-  const saved = lsLoad();
-  if (!saved[nr]) return;
-  applyArtikel(saved[nr]);
 }
 
 function applyArtikel(a) {
@@ -803,21 +824,176 @@ function applyArtikel(a) {
   setVal('verzwaaringskoord',    a.verzwaaringskoord);
   setVal('samenstelling',        a.samenstelling);
 
-  const info = [];
-  if (a.omschrijving) info.push(a.omschrijving);
-  if (a.samenstelling) info.push(a.samenstelling);
-  document.getElementById('artikelInfo').textContent = info.join(' · ');
+  // Feasibility warning
+  const f = checkFeasibility(a, num('klaarbreedte'), num('klaarhoogte'));
+  if (f.mogelijk === false) {
+    setBanner(`Opgelet: dit artikel is niet geschikt voor de ingevoerde maten. ${f.reden}.`, 'warning');
+  } else {
+    setBanner('', '');
+  }
 
   togglePatroon();
   toggleVoering();
   compute();
 }
 
-// ── Init ──
+// ── Calculation ────────────────────────────────────────────
+function setBanner(msg, type) {
+  const b = el('banner');
+  if (!b) return;
+  b.textContent = msg;
+  b.className = 'banner ' + (msg ? type : '');
+  b.style.display = msg ? 'block' : 'none';
+}
+
+function compute() {
+  if (!el('mainLayout') || el('mainLayout').style.display === 'none') return;
+
+  const breedte_rail  = num('klaarbreedte');
+  const hoogte_rail   = num('klaarhoogte');
+  const kamerhoog     = sel('kamerhoog');
+  const plooiKeuze    = sel('plooi');
+  const patroonType   = sel('patroon');
+  const patroonHoogte = num('patroonhoogte');
+  const prijs_per_m1  = num('prijs_per_m1');
+  const lockKeuze     = sel('lock');
+  const voeren        = sel('voeren');
+  const voering_prijs = num('voering_prijs_per_m1');
+  const stuk          = sel('stuk');
+  const krimperc      = num('krimpercentage');
+  const hoogte_stof   = num('hoogte_stof', 300);
+  const breedte_stof  = num('breedte_stof', 140);
+  const onderzoom_in  = num('onderzoom', 20);
+  const band_in       = bandNum();
+  const zijzoom_in    = num('zijzoom', 8);
+
+  if (breedte_rail <= 0 || hoogte_rail <= 0) {
+    setBanner('Voer een geldige breedte én hoogte in (> 0 cm).', 'error');
+    el('out_banen').textContent   = '—';
+    el('out_metrage').textContent = '—';
+    el('out_prijs').textContent   = '—';
+    el('breakdown').innerHTML     = 'Vul de klaarmaten in om de berekening te zien.';
+    return;
+  }
+  if (!el('banner').className.includes('warning')) setBanner('', '');
+
+  const effectieveBreedte = (stuk === 'Links' || stuk === 'Rechts') ? breedte_rail / 2 : breedte_rail;
+  const effectieveHoogte  = krimperc > 0 ? hoogte_rail * (1 + krimperc / 100) : hoogte_rail;
+  const effectieveOnderzoom = lockKeuze === 'Ja' ? 0 : onderzoom_in;
+  const plooiFactor = PLOOI[plooiKeuze] ?? 2.0;
+  const benodigdeBreedte = (effectieveBreedte * plooiFactor) + (2 * zijzoom_in);
+
+  let aantalBanen = 0, totaalMetrage = 0, totaalPrijs = 0, breakdownHTML = '';
+
+  if (kamerhoog === 'Ja') {
+    const vereistTotaal = effectieveHoogte + band_in + effectieveOnderzoom;
+    if (vereistTotaal > hoogte_stof) {
+      setBanner(`Hoogte overschreden: vereiste snijhoogte ${fmt(vereistTotaal)} cm > stofhoogte ${hoogte_stof} cm.`, 'error');
+      el('out_banen').textContent = el('out_metrage').textContent = el('out_prijs').textContent = '—';
+      el('breakdown').innerHTML = '&#10060; Hoogte overschrijdt maximum stofhoogte.';
+      return;
+    }
+    aantalBanen  = ceilDec(benodigdeBreedte / breedte_stof);
+    const mPerBaan = hoogte_stof / 100;
+    totaalMetrage  = parseFloat((aantalBanen * mPerBaan).toFixed(1));
+    breakdownHTML = `
+      <span class="step">Scenario A &mdash; Kamerhoog</span>
+      <b>Effectieve breedte:</b> ${fmt(effectieveBreedte,0)} cm ${stuk !== 'Single' ? '(halve rail: '+breedte_rail+'/2)' : ''}<br>
+      <b>Plooifactor:</b> ${plooiFactor} (${plooiKeuze})<br>
+      <b>Benodigd stofbreedte:</b> ${fmt(effectieveBreedte,0)} &times; ${plooiFactor} + 2&times;${zijzoom_in} = <b>${fmt(benodigdeBreedte)} cm</b><br>
+      <b>Banen:</b> &lceil;${fmt(benodigdeBreedte)} &divide; ${breedte_stof}&rceil; = <b>${aantalBanen} banen</b><br>
+      <b>Metrage/baan:</b> ${hoogte_stof} &divide; 100 = ${fmt(mPerBaan)} m<br>
+      <b>Totaal metrage:</b> ${aantalBanen} &times; ${fmt(mPerBaan)} = <b>${fmt(totaalMetrage)} m</b><br>
+      ${krimperc > 0 ? `<b>Krimptoeslag:</b> ${hoogte_rail} &times; (1+${krimperc}/100) = ${fmt(effectieveHoogte)} cm<br>` : ''}
+      <b>Vereiste snijhoogte:</b> ${fmt(effectieveHoogte)} + ${band_in} + ${effectieveOnderzoom} = <b>${fmt(vereistTotaal)} cm</b> &le; ${hoogte_stof} cm &#10003;`;
+  } else {
+    aantalBanen = ceilDec(benodigdeBreedte / breedte_stof);
+    let hoogte_per_baan = effectieveHoogte + effectieveOnderzoom + band_in;
+    let patroonNote = '';
+    if (patroonType === 'Patroon' && patroonHoogte > 0) {
+      const rapporten = ceilDec(hoogte_per_baan / patroonHoogte);
+      const hoogteMet = rapporten * patroonHoogte;
+      patroonNote = `<b>Patroon rapport:</b> &lceil;${fmt(hoogte_per_baan)} &divide; ${patroonHoogte}&rceil; = ${rapporten} &rarr; ${fmt(hoogteMet)} cm<br>`;
+      hoogte_per_baan = hoogteMet;
+    }
+    const mPerBaan = hoogte_per_baan / 100;
+    totaalMetrage  = parseFloat((aantalBanen * mPerBaan).toFixed(1));
+    breakdownHTML = `
+      <span class="step">Scenario B &mdash; Breedtestof</span>
+      <b>Effectieve breedte:</b> ${fmt(effectieveBreedte,0)} cm ${stuk !== 'Single' ? '(halve rail: '+breedte_rail+'/2)' : ''}<br>
+      <b>Plooifactor:</b> ${plooiFactor} (${plooiKeuze})<br>
+      <b>Benodigd stofbreedte:</b> ${fmt(effectieveBreedte,0)} &times; ${plooiFactor} + 2&times;${zijzoom_in} = <b>${fmt(benodigdeBreedte)} cm</b><br>
+      <b>Banen:</b> &lceil;${fmt(benodigdeBreedte)} &divide; ${breedte_stof}&rceil; = <b>${aantalBanen} banen</b><br>
+      <b>Hoogte per baan:</b> ${fmt(effectieveHoogte)} + ${effectieveOnderzoom} + ${band_in} = ${fmt(hoogte_per_baan)} cm<br>
+      ${patroonNote}
+      <b>Metrage/baan:</b> ${fmt(hoogte_per_baan)} &divide; 100 = ${fmt(mPerBaan)} m<br>
+      <b>Totaal metrage:</b> ${aantalBanen} &times; ${fmt(mPerBaan)} = <b>${fmt(totaalMetrage)} m</b><br>
+      ${krimperc > 0 ? `<b>Krimptoeslag:</b> ${hoogte_rail} &times; (1+${krimperc}/100) = ${fmt(effectieveHoogte)} cm<br>` : ''}`;
+  }
+
+  let prijsBreakdown = '';
+  if (prijs_per_m1 > 0) {
+    const stolPrijs = totaalMetrage * prijs_per_m1;
+    totaalPrijs = stolPrijs;
+    prijsBreakdown = `<span class="step">Prijsberekening</span><b>Stofprijs:</b> ${fmt(totaalMetrage)} m &times; ${fmtEur(prijs_per_m1)} = <b>${fmtEur(stolPrijs)}</b><br>`;
+    if (voeren === 'Ja') {
+      const vPrijsM1 = voering_prijs > 0 ? voering_prijs : prijs_per_m1 * 0.60;
+      const vPrijs   = totaalMetrage * vPrijsM1;
+      totaalPrijs   += vPrijs;
+      prijsBreakdown += `<b>Voering:</b> ${fmt(totaalMetrage)} m &times; ${fmtEur(vPrijsM1)} = <b>${fmtEur(vPrijs)}</b>${voering_prijs <= 0 ? ' <i>(60% schatting)</i>' : ''}<br>`;
+      prijsBreakdown += `<b>Totaal incl. voering:</b> <b>${fmtEur(totaalPrijs)}</b>`;
+    }
+  }
+
+  el('out_banen').textContent   = aantalBanen;
+  el('out_metrage').textContent = fmt(totaalMetrage);
+  el('out_prijs').textContent   = prijs_per_m1 > 0 ? fmtEur(totaalPrijs) : '—';
+  el('breakdown').innerHTML     = breakdownHTML + prijsBreakdown;
+
+  if (!el('banner').className.includes('error') && !el('banner').className.includes('warning')) {
+    setBanner(`Berekening voltooid &mdash; ${kamerhoog === 'Ja' ? 'Kamerhoog' : 'Breedtestof'} scenario`, 'info');
+  }
+}
+
+function togglePatroon() {
+  const show = sel('patroon') === 'Patroon';
+  el('wrap_patroonhoogte').style.display = show ? '' : 'none';
+  el('wrap_patroonbreedte').style.display = show ? '' : 'none';
+}
+function toggleVoering() {
+  el('wrap_voering_prijs').style.display = sel('voeren') === 'Ja' ? '' : 'none';
+}
+
+// ── Config field listeners ─────────────────────────────────
+['kamerhoog','plooi','patroon','patroonhoogte','patroonbreedte','prijs_per_m1',
+ 'krimpercentage','lock','voeren','voering_prijs_per_m1','stuk',
+ 'hoogte_stof','breedte_stof','onderzoom','band','loodveter','zijzoom'
+].forEach(id => {
+  const n = el(id);
+  if (n) { n.addEventListener('input', compute); n.addEventListener('change', compute); }
+});
+el('patroon').addEventListener('change', togglePatroon);
+el('voeren').addEventListener('change',  toggleVoering);
+
+// ── Init ──────────────────────────────────────────────────
 togglePatroon();
 toggleVoering();
-initArtikelLoader();
-compute();
+
+(async () => {
+  const { data } = await dbLoadAll();
+  _savedArtikelen = data || {};
+
+  // Auto-load if redirected from import page
+  const LS_LOAD = 'gordijn_load_artikel';
+  const toLoad  = localStorage.getItem(LS_LOAD);
+  if (toLoad && _savedArtikelen[toLoad]) {
+    localStorage.removeItem(LS_LOAD);
+    const a = _savedArtikelen[toLoad];
+    _gekozenType = a.gordijn_type || 'Overgordijn';
+    kiesType(_gekozenType);
+    selectArtikel(toLoad, false);
+  }
+})();
 </script>
 </body>
 </html>

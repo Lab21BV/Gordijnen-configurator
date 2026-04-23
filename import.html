@@ -329,6 +329,7 @@
                   <th style="padding:5px 10px;color:var(--muted);font-weight:400;border-bottom:2px solid var(--border);border-right:1px solid var(--border)">E</th>
                   <th style="padding:5px 10px;color:var(--muted);font-weight:400;border-bottom:2px solid var(--border);border-right:1px solid var(--border)">F</th>
                   <th style="padding:5px 10px;color:var(--muted);font-weight:400;border-bottom:2px solid var(--border);border-right:1px solid var(--border)">G</th>
+                  <th style="padding:5px 10px;color:var(--muted);font-weight:400;border-bottom:2px solid var(--border);border-right:1px solid var(--border)">H</th>
                   <th style="padding:5px 10px;color:var(--muted);font-weight:400;border-bottom:2px solid var(--border)">…</th>
                 </tr>
               </thead>
@@ -336,6 +337,7 @@
                 <tr style="background:#fffde7">
                   <td style="padding:5px 8px;color:var(--muted);font-weight:600;text-align:center;border-right:1px solid var(--border);background:#f0f3f8">1</td>
                   <td style="padding:5px 10px;font-weight:700;color:var(--accent-dk);border-right:1px solid var(--border)">Artikelnummer</td>
+                  <td style="padding:5px 10px;font-weight:700;color:var(--accent-dk);border-right:1px solid var(--border)">Gordijn type</td>
                   <td style="padding:5px 10px;font-weight:700;color:var(--accent-dk);border-right:1px solid var(--border)">Omschrijving</td>
                   <td style="padding:5px 10px;font-weight:700;color:var(--accent-dk);border-right:1px solid var(--border)">Hoogte stof (cm)</td>
                   <td style="padding:5px 10px;font-weight:700;color:var(--accent-dk);border-right:1px solid var(--border)">Breedte stof (cm)</td>
@@ -347,6 +349,7 @@
                 <tr>
                   <td style="padding:5px 8px;color:var(--muted);font-weight:600;text-align:center;border-right:1px solid var(--border);background:#f0f3f8">2</td>
                   <td style="padding:5px 10px;border-right:1px solid var(--border)">ART-001</td>
+                  <td style="padding:5px 10px;border-right:1px solid var(--border)">Overgordijn</td>
                   <td style="padding:5px 10px;border-right:1px solid var(--border)">Linnen naturel</td>
                   <td style="padding:5px 10px;border-right:1px solid var(--border)">300</td>
                   <td style="padding:5px 10px;border-right:1px solid var(--border)">140</td>
@@ -358,6 +361,7 @@
                 <tr style="background:#fafbfc">
                   <td style="padding:5px 8px;color:var(--muted);font-weight:600;text-align:center;border-right:1px solid var(--border);background:#f0f3f8">3</td>
                   <td style="padding:5px 10px;border-right:1px solid var(--border)">ART-002</td>
+                  <td style="padding:5px 10px;border-right:1px solid var(--border)">Inbetween</td>
                   <td style="padding:5px 10px;border-right:1px solid var(--border)">Velvet donkerblauw</td>
                   <td style="padding:5px 10px;border-right:1px solid var(--border)">280</td>
                   <td style="padding:5px 10px;border-right:1px solid var(--border)">150</td>
@@ -374,6 +378,7 @@
           <p style="font-size:.78rem;font-weight:700;color:var(--accent-dk);margin-bottom:6px">Alle beschikbare velden:</p>
           <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:4px 12px">
             <span class="hint-field"><span class="req">★</span> Artikelnummer</span>
+            <span class="hint-field">Gordijn type <em>(Overgordijn / Inbetween)</em></span>
             <span class="hint-field">Omschrijving</span>
             <span class="hint-field">Hoogte stof (cm)</span>
             <span class="hint-field">Breedte stof (cm)</span>
@@ -489,6 +494,7 @@
 // ── Field definitions (internal key → Dutch label) ──
 const FIELDS = [
   { key: 'artikelnummer',        label: 'Artikelnummer',           required: true  },
+  { key: 'gordijn_type',         label: 'Gordijn type',            required: false },
   { key: 'omschrijving',         label: 'Omschrijving',            required: false },
   { key: 'hoogte_stof',          label: 'Hoogte stof (cm)',        required: false },
   { key: 'breedte_stof',         label: 'Breedte stof (cm)',       required: false },
@@ -512,6 +518,7 @@ const FIELDS = [
 // Aliases used for auto-detecting column headers
 const ALIASES = {
   artikelnummer:        ['artikelnummer','artikel nr','artikel_nr','article','artnr','art.nr','art nr','art_nr','code','sku','item'],
+  gordijn_type:         ['gordijn type','gordijn_type','type gordijn','type','overgordijn','inbetween','gordijntype'],
   omschrijving:         ['omschrijving','naam','name','description','desc','omschr'],
   hoogte_stof:          ['hoogte stof','hoogte_stof','stofhoogte','height fabric','fabric height','hoogte','max hoogte'],
   breedte_stof:         ['breedte stof','breedte_stof','stofbreedte','fabric width','width fabric','breedte','rolbreedte'],
@@ -541,7 +548,7 @@ let columnMap = {};     // fieldKey → rawHeader
 function downloadTemplate() {
   const headers = FIELDS.map(f => f.label);
   const example = [
-    'ART-001','Linnen naturel','300','140','Uni','0','0','24.95','3','Ja','Semi transparant','Nee','0','Ja','Nee','Nee','—','Nee','100% Linnen',
+    'ART-001','Overgordijn','Linnen naturel','300','140','Uni','0','0','24.95','3','Ja','Semi transparant','Nee','0','Ja','Nee','Nee','—','Nee','100% Linnen',
   ];
   const csv = [headers.join(';'), example.join(';')].join('\n');
   const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -677,6 +684,7 @@ function applyMapping() {
 // ── Preview table ──
 const PREVIEW_COLS = [
   { key: 'artikelnummer',      label: 'Artikelnr.' },
+  { key: 'gordijn_type',       label: 'Type' },
   { key: 'omschrijving',       label: 'Omschrijving' },
   { key: 'hoogte_stof',        label: 'H stof' },
   { key: 'breedte_stof',       label: 'B stof' },
@@ -797,6 +805,7 @@ async function refreshSaved() {
   setDbStatus('loading');
   const { data, error, source } = await dbLoadAll();
   _savedCache = data || {};
+  await migrateGordijnType(_savedCache);
   if (source === 'supabase') setDbStatus('ok');
   else if (!dbConfigured())  setDbStatus('local');
   else                        setDbStatus('error', error?.message);
@@ -816,6 +825,28 @@ function setDbStatus(state, msg) {
   const s = map[state] || map.loading;
   dot.style.background   = s.color;
   label.textContent      = s.text;
+}
+
+function renderGordijnType(val) {
+  if (!val) return `<span style="color:var(--muted)">—</span>`;
+  const v = String(val).trim();
+  if (v === 'Overgordijn') return `<span class="tag" style="background:#e8f0f8;color:var(--accent-dk)">${esc(v)}</span>`;
+  if (v === 'Inbetween')   return `<span class="tag" style="background:#f3e8f8;color:#5b2d8a">${esc(v)}</span>`;
+  return esc(v);
+}
+
+async function migrateGordijnType(saved) {
+  const CYCLE = ['Overgordijn', 'Inbetween'];
+  const toUpdate = [];
+  let i = 0;
+  Object.keys(saved).sort().forEach(nr => {
+    if (!saved[nr].gordijn_type) {
+      saved[nr].gordijn_type = CYCLE[i % 2];
+      i++;
+      toUpdate.push(saved[nr]);
+    }
+  });
+  if (toUpdate.length > 0) await dbUpsertArticles(toUpdate);
 }
 
 function renderSaved() {
@@ -867,6 +898,7 @@ function renderSaved() {
       <thead>
         <tr>
           <th>Artikelnr.</th>
+          <th>Type</th>
           <th>Omschrijving</th>
           <th>H stof</th>
           <th>B stof</th>
@@ -891,6 +923,7 @@ function renderSaved() {
           const a = saved[nr];
           return `<tr>
             <td><strong>${esc(nr)}</strong></td>
+            <td>${renderGordijnType(a.gordijn_type)}</td>
             <td>${dash(a.omschrijving)}</td>
             <td>${dash(a.hoogte_stof)}</td>
             <td>${dash(a.breedte_stof)}</td>
