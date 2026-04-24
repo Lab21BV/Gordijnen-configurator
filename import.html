@@ -208,7 +208,6 @@
     }
     .tag-yes  { background: #e8f5e9; color: var(--success); }
     .tag-no   { background: #f5f5f5; color: var(--muted); }
-    .tag-kh   { background: var(--accent-lt); color: var(--accent-dk); }
 
     /* ── Toolbar ── */
     .toolbar {
@@ -262,6 +261,43 @@
     #import-progress { display: none; }
     .progress-bar-wrap { background: var(--border); border-radius: 4px; height: 6px; overflow: hidden; }
     .progress-bar { height: 100%; background: var(--accent); transition: width .3s; }
+
+    /* ── Veld-uitleg ── */
+    .veld-uitleg {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px 0;
+    }
+    @media (min-width: 720px) {
+      .veld-uitleg { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 24px; }
+    }
+    .veld-uitleg .veld {
+      display: grid;
+      grid-template-columns: 190px 1fr;
+      gap: 10px;
+      align-items: baseline;
+      padding: 6px 0;
+      border-bottom: 1px dashed var(--border);
+      font-size: .83rem;
+    }
+    .veld-uitleg .veld:last-child { border-bottom: none; }
+    .veld-uitleg dt {
+      font-weight: 700;
+      color: var(--accent-dk);
+      white-space: normal;
+    }
+    .veld-uitleg dt .req { color: var(--accent); margin-left: 4px; }
+    .veld-uitleg dd {
+      color: var(--text);
+      line-height: 1.45;
+    }
+    .veld-uitleg dd em {
+      color: var(--muted);
+      font-style: normal;
+    }
+    @media (max-width: 540px) {
+      .veld-uitleg .veld { grid-template-columns: 1fr; gap: 2px; }
+    }
   </style>
 </head>
 <body>
@@ -330,6 +366,9 @@
                   <th style="padding:5px 10px;color:var(--muted);font-weight:400;border-bottom:2px solid var(--border);border-right:1px solid var(--border)">F</th>
                   <th style="padding:5px 10px;color:var(--muted);font-weight:400;border-bottom:2px solid var(--border);border-right:1px solid var(--border)">G</th>
                   <th style="padding:5px 10px;color:var(--muted);font-weight:400;border-bottom:2px solid var(--border);border-right:1px solid var(--border)">H</th>
+                  <th style="padding:5px 10px;color:var(--muted);font-weight:400;border-bottom:2px solid var(--border);border-right:1px solid var(--border)">I</th>
+                  <th style="padding:5px 10px;color:var(--muted);font-weight:400;border-bottom:2px solid var(--border);border-right:1px solid var(--border)">J</th>
+                  <th style="padding:5px 10px;color:var(--muted);font-weight:400;border-bottom:2px solid var(--border);border-right:1px solid var(--border)">K</th>
                   <th style="padding:5px 10px;color:var(--muted);font-weight:400;border-bottom:2px solid var(--border)">…</th>
                 </tr>
               </thead>
@@ -342,8 +381,11 @@
                   <td style="padding:5px 10px;font-weight:700;color:var(--accent-dk);border-right:1px solid var(--border)">Hoogte stof (cm)</td>
                   <td style="padding:5px 10px;font-weight:700;color:var(--accent-dk);border-right:1px solid var(--border)">Breedte stof (cm)</td>
                   <td style="padding:5px 10px;font-weight:700;color:var(--accent-dk);border-right:1px solid var(--border)">Patroon</td>
-                  <td style="padding:5px 10px;font-weight:700;color:var(--accent-dk);border-right:1px solid var(--border)">Prijs per m¹ (€)</td>
+                  <td style="padding:5px 10px;font-weight:700;color:var(--accent-dk);border-right:1px solid var(--border)">Inkoopprijs per m¹ (€)</td>
                   <td style="padding:5px 10px;font-weight:700;color:var(--accent-dk);border-right:1px solid var(--border)">Kamerhoog</td>
+                  <td style="padding:5px 10px;font-weight:700;color:var(--accent-dk);border-right:1px solid var(--border)">Verzwaaringskoord</td>
+                  <td style="padding:5px 10px;font-weight:700;color:var(--accent-dk);border-right:1px solid var(--border)">Kantelbaar</td>
+                  <td style="padding:5px 10px;font-weight:700;color:var(--accent-dk);border-right:1px solid var(--border)">Kleuren</td>
                   <td style="padding:5px 10px;font-weight:700;color:var(--accent-dk)">…</td>
                 </tr>
                 <tr>
@@ -356,6 +398,9 @@
                   <td style="padding:5px 10px;border-right:1px solid var(--border)">Uni</td>
                   <td style="padding:5px 10px;border-right:1px solid var(--border)">24,95</td>
                   <td style="padding:5px 10px;border-right:1px solid var(--border)">Ja</td>
+                  <td style="padding:5px 10px;border-right:1px solid var(--border)">Nee</td>
+                  <td style="padding:5px 10px;border-right:1px solid var(--border)">Ja</td>
+                  <td style="padding:5px 10px;border-right:1px solid var(--border)">Wit, Naturel, Beige</td>
                   <td style="padding:5px 10px;color:var(--muted)">…</td>
                 </tr>
                 <tr style="background:#fafbfc">
@@ -368,6 +413,9 @@
                   <td style="padding:5px 10px;border-right:1px solid var(--border)">Patroon</td>
                   <td style="padding:5px 10px;border-right:1px solid var(--border)">38,50</td>
                   <td style="padding:5px 10px;border-right:1px solid var(--border)">Nee</td>
+                  <td style="padding:5px 10px;border-right:1px solid var(--border)">Ja</td>
+                  <td style="padding:5px 10px;border-right:1px solid var(--border)">Nee</td>
+                  <td style="padding:5px 10px;border-right:1px solid var(--border)">Grijs, Antraciet, Zwart</td>
                   <td style="padding:5px 10px;color:var(--muted)">…</td>
                 </tr>
               </tbody>
@@ -385,8 +433,8 @@
             <span class="hint-field">Patroon <em>(Uni / Patroon)</em></span>
             <span class="hint-field">Patroonhoogte (cm)</span>
             <span class="hint-field">Patroonbreedte (cm)</span>
-            <span class="hint-field">Prijs per m¹ (€)</span>
-            <span class="hint-field">Krimpercentage (%)</span>
+            <span class="hint-field">Inkoopprijs per m¹ (€)</span>
+            <span class="hint-field">Krimpercentage (%) <em>(informatief)</em></span>
             <span class="hint-field">Kamerhoog <em>(Ja / Nee)</em></span>
             <span class="hint-field">Lichtdoorlatenheid</span>
             <span class="hint-field">Voeren <em>(Ja / Nee)</em></span>
@@ -397,8 +445,10 @@
             <span class="hint-field">Akoestiek klasse <em>(— / A / B)</em></span>
             <span class="hint-field">Verzwaaringskoord <em>(Ja / Nee)</em></span>
             <span class="hint-field">Samenstelling</span>
+            <span class="hint-field">Kleuren <em>(komma- of puntkomma-gescheiden)</em></span>
           </div>
-          <p style="font-size:.73rem;color:var(--muted);margin-top:8px"><span class="req">★</span> = verplicht veld. Alle overige velden zijn optioneel.</p>
+          <p style="font-size:.73rem;color:var(--muted);margin-top:8px"><span class="req">★</span> = verplicht veld. Alle overige velden zijn optioneel.
+          Verkoopprijs wordt automatisch berekend (<em>inkoopprijs × 3</em>, afgerond op <em>xx.95</em>) en is dus geen importveld.</p>
         </div>
       </div>
 
@@ -456,6 +506,61 @@
     </div>
   </div>
 
+  <!-- ── Veld uitleg ── -->
+  <div class="card" id="veldUitlegCard">
+    <div class="card-header">
+      <span>Uitleg artikelvelden</span>
+    </div>
+    <div class="card-body">
+      <dl class="veld-uitleg">
+        <div class="veld"><dt>Artikelnummer <span class="req">★</span></dt>
+          <dd>Unieke code die dit artikel identificeert (bijv. <em>ART-001</em>). Verplicht veld.</dd></div>
+        <div class="veld"><dt>Gordijn type</dt>
+          <dd><em>Overgordijn</em> (zwaar, decoratief, verduisterend/semi-transparant) of <em>Inbetween</em> (licht en lichtdoorlatend). Bepaalt welk tabblad in de configurator het artikel toont.</dd></div>
+        <div class="veld"><dt>Omschrijving</dt>
+          <dd>Vrije naam of beschrijving van de stof, bijv. <em>"Linnen naturel"</em> of <em>"Velvet donkerblauw"</em>.</dd></div>
+        <div class="veld"><dt>Hoogte stof (cm)</dt>
+          <dd>Maximale hoogte van de stofrol. Bepaalt of een kamerhoge uitvoering haalbaar is: <em>KlaarHoogte + vliesband + onderzoom ≤ Hoogte stof</em>.</dd></div>
+        <div class="veld"><dt>Breedte stof (cm)</dt>
+          <dd>Rolbreedte van de stof. Bepaalt hoeveel banen nodig zijn: <em>⌈benodigde breedte ÷ breedte stof⌉</em>.</dd></div>
+        <div class="veld"><dt>Patroon</dt>
+          <dd><em>Uni</em> (egaal) of <em>Patroon</em> (met herhaling). Bij patroon wordt de snijhoogte afgerond op hele rapporten.</dd></div>
+        <div class="veld"><dt>Patroonhoogte (cm)</dt>
+          <dd>Verticale rapporthoogte (afstand tussen herhalingen). Alleen relevant wanneer <em>Patroon</em> is gekozen.</dd></div>
+        <div class="veld"><dt>Patroonbreedte (cm)</dt>
+          <dd>Horizontale rapportbreedte. Informatief; wordt momenteel niet in de berekening gebruikt.</dd></div>
+        <div class="veld"><dt>Inkoopprijs per m¹ (€)</dt>
+          <dd>De <strong>inkoopprijs</strong> per lopende meter stof. Wordt gebruikt voor de metrage-berekening en dient als basis voor de automatische verkoopprijs.</dd></div>
+        <div class="veld"><dt>Verkoopprijs per m¹ incl. btw <em>(berekend)</em></dt>
+          <dd>Géén importveld. Wordt automatisch afgeleid uit de inkoopprijs: <em>verkoop = inkoop × 3</em>, omhoog afgerond naar het eerstvolgende <em>xx.95</em> (bijv. <em>inkoop € 12,34 → verkoop € 37,95</em>). Zichtbaar in de kolom <strong>Verkoop/m¹ incl. btw</strong>.</dd></div>
+        <div class="veld"><dt>Krimpercentage (%)</dt>
+          <dd>Verwachte krimp na wasbeurt. <em>Informatief</em> — wordt niet meer in de berekening gebruikt.</dd></div>
+        <div class="veld"><dt>Kamerhoog</dt>
+          <dd><em>Ja</em> = kamerhoge verwerking: één baan uit de rolbreedte gesneden; hoogtebeperking <em>KlaarHoogte + vliesband + onderzoom ≤ Hoogte stof</em> geldt. <em>Nee</em> = banenstof: meerdere banen naast elkaar, geen hoogtebegrenzing.</dd></div>
+        <div class="veld"><dt>Lichtdoorlatenheid</dt>
+          <dd>Lichtklasse: <em>Transparant</em>, <em>Semi transparant</em>, <em>Lichtblokkade</em>, <em>Dimout</em> of <em>Blackout</em>.</dd></div>
+        <div class="veld"><dt>Voeren</dt>
+          <dd>Of een aparte voeringstof geplaatst wordt. <em>Ja</em> voegt de voeringprijs toe aan het totaal.</dd></div>
+        <div class="veld"><dt>Voering prijs per m¹ (€)</dt>
+          <dd>Inkoopprijs van de voeringstof per lopende meter. Laat <em>0</em> voor een automatische schatting (60% van de stofprijs).</dd></div>
+        <div class="veld"><dt>Kantelbaar</dt>
+          <dd><em>Ja</em> = de stof mag 90° gekanteld verwerkt worden. Wanneer de klaarhoogte normaal gezien te groot is voor de stofhoogte, valt de configurator voor deze stof terug op gekanteld verwerken (klant wordt gewaarschuwd). <em>Nee</em> = standaard verwerking, hoogte strikt beperkt door stofhoogte.</dd></div>
+        <div class="veld"><dt>Doubleface</dt>
+          <dd><em>Ja</em> = de stof is aan beide zijden afgewerkt en geschikt voor tweezijdig gebruik.</dd></div>
+        <div class="veld"><dt>Brandvertragend</dt>
+          <dd><em>Ja</em> = de stof voldoet aan brandvertragende normen (FR). Relevant voor projecten en publieke ruimtes.</dd></div>
+        <div class="veld"><dt>Akoestiek klasse</dt>
+          <dd>Geluidsabsorberende klasse: <em>—</em> (geen), <em>A</em> (beste absorptie) of <em>B</em>.</dd></div>
+        <div class="veld"><dt>Verzwaaringskoord</dt>
+          <dd><em>Ja</em> = verzwaringskoord in de onderzoom → onderzoom = 2 cm (coupageverlies = vliesband + 2). <em>Nee</em> = geen koord → onderzoom = 15 cm (coupageverlies = vliesband + 15). Is <em>Ja</em>, dan wordt Loodveter automatisch op <em>Nee</em> gezet (nooit beide nodig).</dd></div>
+        <div class="veld"><dt>Samenstelling</dt>
+          <dd>Vezelsamenstelling van de stof, bijv. <em>"100% Polyester"</em> of <em>"60% Linnen, 40% Viscose"</em>.</dd></div>
+        <div class="veld"><dt>Kleuren</dt>
+          <dd>Beschikbare kleuren voor dit artikel, gescheiden door komma of puntkomma (bijv. <em>"Wit, Naturel, Grijs, Beige, Taupe"</em>). Ideaal 10–20 waarden. Vult het Kleur-dropdown in de configurator wanneer het artikel gekozen is. Artikelen zonder kleuren krijgen bij het laden automatisch een fictieve set toegewezen.</dd></div>
+      </dl>
+    </div>
+  </div>
+
   <!-- ── Saved articles ── -->
   <div class="card" id="savedCard">
     <div class="card-header">
@@ -501,7 +606,7 @@ const FIELDS = [
   { key: 'patroon',              label: 'Patroon',                 required: false },
   { key: 'patroonhoogte',        label: 'Patroonhoogte (cm)',      required: false },
   { key: 'patroonbreedte',       label: 'Patroonbreedte (cm)',     required: false },
-  { key: 'prijs_per_m1',         label: 'Prijs per m¹ (€)',        required: false },
+  { key: 'prijs_per_m1',         label: 'Inkoopprijs per m¹ (€)',  required: false },
   { key: 'krimpercentage',       label: 'Krimpercentage (%)',      required: false },
   { key: 'kamerhoog',            label: 'Kamerhoog',               required: false },
   { key: 'lichtdoorlatenheid',   label: 'Lichtdoorlatenheid',      required: false },
@@ -513,6 +618,7 @@ const FIELDS = [
   { key: 'akoestiek',            label: 'Akoestiek klasse',        required: false },
   { key: 'verzwaaringskoord',    label: 'Verzwaaringskoord',       required: false },
   { key: 'samenstelling',        label: 'Samenstelling',           required: false },
+  { key: 'kleuren',              label: 'Kleuren',                 required: false },
 ];
 
 // Aliases used for auto-detecting column headers
@@ -525,7 +631,7 @@ const ALIASES = {
   patroon:              ['patroon','pattern','patroontype'],
   patroonhoogte:        ['patroonhoogte','patroon hoogte','rapport','patroonhoogte (cm)','pattern height'],
   patroonbreedte:       ['patroonbreedte','patroon breedte','pattern width'],
-  prijs_per_m1:         ['prijs per m1','prijs per m¹','prijs/m1','prijs/m','prijs per meter','price','prijs'],
+  prijs_per_m1:         ['inkoopprijs','inkoopprijs per m1','inkoopprijs per m¹','inkoop','inkoop/m','inkoop per m','inkoop m1','prijs per m1','prijs per m¹','prijs/m1','prijs/m','prijs per meter','price','prijs','cost'],
   krimpercentage:       ['krimpercentage','krimp','shrinkage','krimp %','krimpp'],
   kamerhoog:            ['kamerhoog','kamerhoog?','room height','kamer hoog'],
   lichtdoorlatenheid:   ['lichtdoorlatenheid','licht','transparantie','transparancy','light','lichtdoorl'],
@@ -537,6 +643,7 @@ const ALIASES = {
   akoestiek:            ['akoestiek','akoestiek klasse','acoustic','acoustic class','akoestiekklasse'],
   verzwaaringskoord:    ['verzwaaringskoord','verzwaring','weight cord','weighting'],
   samenstelling:        ['samenstelling','composition','materiaal','material','fiber','vezel'],
+  kleuren:              ['kleuren','kleur','colors','colour','colours','color'],
 };
 
 let rawRows = [];       // parsed rows from file
@@ -547,8 +654,29 @@ let columnMap = {};     // fieldKey → rawHeader
 // ── Template CSV ──
 function downloadTemplate() {
   const headers = FIELDS.map(f => f.label);
+  // Voorbeeldrij — ordening volgt exact de FIELDS-array.
   const example = [
-    'ART-001','Overgordijn','Linnen naturel','300','140','Uni','0','0','24.95','3','Ja','Semi transparant','Nee','0','Ja','Nee','Nee','—','Nee','100% Linnen',
+    'ART-001',        // Artikelnummer
+    'Overgordijn',    // Gordijn type
+    'Linnen naturel', // Omschrijving
+    '300',            // Hoogte stof (cm)
+    '140',            // Breedte stof (cm)
+    'Uni',            // Patroon
+    '0',              // Patroonhoogte (cm)
+    '0',              // Patroonbreedte (cm)
+    '24.95',          // Inkoopprijs per m¹ (€)
+    '3',              // Krimpercentage (%)
+    'Ja',             // Kamerhoog
+    'Semi transparant', // Lichtdoorlatenheid
+    'Nee',            // Voeren
+    '0',              // Voering prijs per m¹ (€)
+    'Ja',             // Kantelbaar
+    'Nee',            // Doubleface
+    'Nee',            // Brandvertragend
+    '—',              // Akoestiek klasse
+    'Nee',            // Verzwaaringskoord
+    '100% Linnen',    // Samenstelling
+    'Wit, Naturel, Beige, Zand, Taupe, Grijs', // Kleuren (komma- of puntkomma-gescheiden)
   ];
   const csv = [headers.join(';'), example.join(';')].join('\n');
   const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -731,8 +859,6 @@ function renderCell(key, val) {
       return `<span class="tag tag-yes">Ja</span>`;
     return `<span class="tag tag-no">Nee</span>`;
   }
-  if (key === 'kamerhoog' && (lower === 'ja' || lower === 'yes'))
-    return `<span class="tag tag-kh">KH</span>`;
   if (key === 'prijs_per_m1') {
     const n = parseFloat(val);
     return isNaN(n) ? val : `€ ${n.toFixed(2)}`;
@@ -806,6 +932,7 @@ async function refreshSaved() {
   const { data, error, source } = await dbLoadAll();
   _savedCache = data || {};
   await migrateGordijnType(_savedCache);
+  await seedKleuren(_savedCache);
   if (source === 'supabase') setDbStatus('ok');
   else if (!dbConfigured())  setDbStatus('local');
   else                        setDbStatus('error', error?.message);
@@ -891,6 +1018,15 @@ function renderSaved() {
     const n = parseFloat(v);
     return isNaN(n) || n === 0 ? `<span style="color:var(--muted)">—</span>` : `€ ${n.toFixed(2)}`;
   };
+  // Verkoop incl. btw = inkoop × 3, omhoog afgerond naar het eerstvolgende xx.95.
+  const verkoop95 = v => {
+    const n = parseFloat(v);
+    if (isNaN(n) || n <= 0) return `<span style="color:var(--muted)">—</span>`;
+    const x = n * 3;
+    const f = Math.floor(x);
+    const rounded = (x <= f + 0.95) ? f + 0.95 : f + 1.95;
+    return `<strong>€ ${rounded.toFixed(2)}</strong>`;
+  };
 
   list.innerHTML = `
   <div class="table-wrap">
@@ -903,7 +1039,8 @@ function renderSaved() {
           <th>H stof</th>
           <th>B stof</th>
           <th>Patroon</th>
-          <th>Prijs/m¹</th>
+          <th>Inkoop/m¹</th>
+          <th>Verkoop/m¹ incl. btw</th>
           <th>Krimp%</th>
           <th>KH</th>
           <th>Lichtdoorlatenheid</th>
@@ -915,6 +1052,7 @@ function renderSaved() {
           <th>Akoest.</th>
           <th>Verzw.</th>
           <th>Samenstelling</th>
+          <th>Kleuren</th>
           <th style="width:72px"></th>
         </tr>
       </thead>
@@ -929,6 +1067,7 @@ function renderSaved() {
             <td>${dash(a.breedte_stof)}</td>
             <td>${dash(a.patroon)}</td>
             <td>${price(a.prijs_per_m1)}</td>
+            <td>${verkoop95(a.prijs_per_m1)}</td>
             <td>${a.krimpercentage && a.krimpercentage !== '0' ? esc(a.krimpercentage)+'%' : dash('')}</td>
             <td>${yesNo(a.kamerhoog)}</td>
             <td style="white-space:normal;max-width:110px">${dash(a.lichtdoorlatenheid)}</td>
@@ -940,6 +1079,7 @@ function renderSaved() {
             <td>${dash(a.akoestiek)}</td>
             <td>${yesNo(a.verzwaaringskoord)}</td>
             <td style="white-space:normal;max-width:130px">${dash(a.samenstelling)}</td>
+            <td style="white-space:normal;max-width:180px">${dash(a.kleuren)}</td>
             <td style="white-space:nowrap">
               <button class="btn btn-outline btn-sm" onclick="openInConfigurator('${esc(nr)}')" title="Openen in configurator">↗</button>
               <button class="btn btn-danger btn-sm" onclick="deleteArticle('${esc(nr)}')" title="Verwijderen">✕</button>

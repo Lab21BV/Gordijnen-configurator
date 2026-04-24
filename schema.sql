@@ -4,6 +4,7 @@
 
 create table if not exists artikelen (
   artikelnummer        text primary key,
+  gordijn_type         text default '',
   omschrijving         text default '',
   hoogte_stof          text default '',
   breedte_stof         text default '',
@@ -24,6 +25,9 @@ create table if not exists artikelen (
   samenstelling        text default '',
   updated_at           timestamptz default now()
 );
+
+-- Voeg ontbrekende kolommen toe aan een bestaande tabel (veilig om opnieuw te draaien):
+alter table artikelen add column if not exists gordijn_type text default '';
 
 -- Auto-update updated_at bij elke wijziging
 create or replace function _set_updated_at()

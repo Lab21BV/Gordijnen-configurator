@@ -209,6 +209,16 @@
 
     .tag { display: inline-block; font-size: .68rem; font-weight: 700; padding: 2px 7px; border-radius: 20px; letter-spacing: .04em; }
     hr.sep { border: none; border-top: 1px solid var(--border); margin: 12px 0; grid-column: 1/-1; }
+
+    /* Artikel specificaties alleen-lezen */
+    aside .field input[readonly],
+    aside .field select:disabled {
+      background: #f8f9fb;
+      color: var(--text);
+      cursor: default;
+      opacity: 1;
+      border-color: var(--border);
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="supabase-config.js"></script>
@@ -226,7 +236,7 @@
     <path d="M6 18 Q9 20 12 18 Q15 16 18 18"/>
   </svg>
   <h1>Gordijn Configurator</h1>
-  <span>Overgordijn &middot; Vitrage &middot; Kamerhoog &amp; Breedtestof &mdash; V5</span>
+  <span>Overgordijn &middot; Vitrage &middot; Kamerhoog &amp; Banenstof &mdash; V5</span>
   <nav>
     <a href="import.html">&#128194; Artikel import</a>
   </nav>
@@ -340,13 +350,9 @@
             <input type="number" id="prijs_per_m1" value="0" min="0" step="0.01" />
           </div>
           <div class="field">
-            <label>Krimpercentage (%)</label>
-            <input type="number" id="krimpercentage" value="0" min="0" max="30" step="0.5" />
-          </div>
-          <div class="field">
             <label>Kamerhoog</label>
             <select id="kamerhoog">
-              <option value="Nee">Nee &mdash; Breedtestof</option>
+              <option value="Nee">Nee &mdash; Banenstof</option>
               <option value="Ja">Ja &mdash; Kamerhoog</option>
             </select>
           </div>
@@ -442,10 +448,11 @@
           <div class="field">
             <label>Plooi</label>
             <select id="plooi">
-              <option value="Single">Single plooi (&times;2.0)</option>
-              <option value="Double">Double plooi (&times;2.5)</option>
-              <option value="Wave">Wave plooi (&times;1.8)</option>
-              <option value="Retour">Retour / vlak (&times;1.0)</option>
+              <option value="Enkel">Enkel plooi (&times;1.80)</option>
+              <option value="Dubbel">Dubbel plooi (&times;2.35)</option>
+              <option value="Enkel retour">Enkel retour (&times;2.10)</option>
+              <option value="Dubbel retour">Dubbel retour (&times;2.50)</option>
+              <option value="Wave">Wave plooi (&times;2.00)</option>
             </select>
           </div>
           <div class="field">
@@ -487,23 +494,13 @@
               <option value="Ja">Ja</option>
             </select>
           </div>
-          <div class="field">
-            <label>Onderzoom (cm)</label>
-            <input type="number" id="onderzoom" value="20" min="0" step="1" />
-            <span class="unit">Standaard: 20 cm (0 bij lock)</span>
-          </div>
-          <div class="field">
-            <label>Zijzoom per zijde (cm)</label>
-            <input type="number" id="zijzoom" value="8" min="0" step="1" />
-            <span class="unit">Standaard: 8 cm (2&times; = 16 cm totaal)</span>
-          </div>
-
           <div class="section-label">Systeem &amp; Bevestiging</div>
           <div class="field">
             <label>Bevestiging</label>
             <select id="bevestiging">
-              <option>Plafond</option><option>Wand</option>
-              <option>Op de dag</option><option>In de dag</option>
+              <option>Plafond op de dag</option>
+              <option>Wand op de dag</option>
+              <option>In de dag</option>
             </select>
           </div>
           <div class="field">
@@ -517,11 +514,9 @@
           <div class="field">
             <label>Kleur</label>
             <select id="kleur">
-              <option>Wit</option><option>Naturel</option><option>Grijs</option>
-              <option>Lichtgrijs</option><option>Smoky</option><option>Eiken</option>
-              <option>Licht eiken</option><option>Donker eiken</option>
-              <option>Bruin</option><option>Zwart</option>
+              <option value="">&mdash; kies een artikel &mdash;</option>
             </select>
+            <span class="unit">Beschikbare kleuren per artikel</span>
           </div>
 
         </div>
@@ -536,7 +531,16 @@
 // Gordijn Configurator — V5
 // ============================================================
 
-const PLOOI = { Single: 2.0, Double: 2.5, Wave: 1.8, Retour: 1.0 };
+const PLOOI = {
+  'Enkel':         1.80,
+  'Dubbel':        2.35,
+  'Enkel retour':  2.10,
+  'Dubbel retour': 2.50,
+  'Wave':          2.00,
+};
+const DEFAULT_BAND_CHECK = 10;
+// Zijzoom: 24 cm stof per zijde → dubbele vouw → 3 cm zichtbare afwerking.
+const ZIJZOOM_CM = 24;
 
 let _gekozenType    = null;   // 'Overgordijn' | 'Inbetween'
 let _savedArtikelen = {};
@@ -546,31 +550,38 @@ function num(id, fallback = 0) {
   const v = parseFloat(document.getElementById(id)?.value);
   return isNaN(v) ? fallback : v;
 }
-function bandNum() { const n = parseInt(sel('band')); return isNaN(n) ? 10 : n; }
 function sel(id)  { return document.getElementById(id)?.value ?? ''; }
 function el(id)   { return document.getElementById(id); }
 function fmt(n, dec = 1) { return n.toFixed(dec); }
 function fmtEur(n) { return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(n); }
 function esc(s)   { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function ceilDec(v) { const fl = Math.floor(v); return v > fl ? fl + 1 : fl; }
+function isJa(v)  { return String(v ?? '').toLowerCase() === 'ja'; }
+
+// ── Coupageverlies hoogte (band + onderzoom) voor kamerhoog ──
+// Tabel: verzwaringskoord Ja → onderzoom 2 cm, Nee → onderzoom 15 cm.
+// Lock (afgelockt) overschrijft de onderzoom naar 0 cm.
+function onderzoomHoogte(verzwaringskoord, lock) {
+  if (isJa(lock)) return 0;
+  return isJa(verzwaringskoord) ? 2 : 15;
+}
 
 // ── Feasibility check ──────────────────────────────────────
+// Eerst controleren of de stof rechtop past. Past niet en is kantelbaar?
+// → nog steeds mogelijk, maar met melding dat gekanteld verwerkt moet worden.
 function checkFeasibility(a, klaarbreedte, klaarhoogte) {
   if (!klaarbreedte || !klaarhoogte || klaarbreedte <= 0 || klaarhoogte <= 0)
     return { mogelijk: null };
 
-  if (String(a.kamerhoog).toLowerCase() === 'ja') {
-    const krimp          = parseFloat(a.krimpercentage) || 0;
-    const effectieveH    = klaarhoogte * (1 + krimp / 100);
-    const DEFAULT_BAND   = 10;
-    const DEFAULT_ZOOM   = 20;
-    const vereist        = effectieveH + DEFAULT_BAND + DEFAULT_ZOOM;
-    const maxH           = parseFloat(a.hoogte_stof) || 0;
+  if (isJa(a.kamerhoog)) {
+    const onderzoom = onderzoomHoogte(a.verzwaaringskoord);
+    const vereist   = klaarhoogte + DEFAULT_BAND_CHECK + onderzoom;
+    const maxH      = parseFloat(a.hoogte_stof) || 0;
     if (maxH > 0 && vereist > maxH) {
-      return {
-        mogelijk: false,
-        reden: `Vereiste hoogte ${Math.ceil(vereist)} cm > stofhoogte ${maxH} cm`
-      };
+      const reden = `Vereiste hoogte ${Math.ceil(vereist)} cm > stofhoogte ${maxH} cm`;
+      if (isJa(a.kantelbaar)) {
+        return { mogelijk: true, kantelenVereist: true, reden };
+      }
+      return { mogelijk: false, reden };
     }
   }
   return { mogelijk: true };
@@ -615,6 +626,8 @@ function onMatenChange() {
     const f = checkFeasibility(_gekozenArtikel, b, h);
     if (f.mogelijk === false) {
       setBanner(`Opgelet: dit artikel is niet geschikt voor deze maten. ${f.reden}.`, 'warning');
+    } else if (f.kantelenVereist) {
+      setBanner(`Let op: ${f.reden}. Deze stof is kantelbaar — verwerk gekanteld.`, 'warning');
     } else {
       setBanner('', '');
     }
@@ -623,38 +636,36 @@ function onMatenChange() {
 }
 
 // ── STAP 3: render artikel lijst ───────────────────────────
-const DEFAULT_BAND_CHECK = 10;
-const DEFAULT_ZOOM_CHECK = 20;
-
 function buildCalcDetail(a, b, h) {
-  const isKH = String(a.kamerhoog).toLowerCase() === 'ja';
+  const isKH = isJa(a.kamerhoog);
   if (!h || h <= 0) {
     return { html: `<div class="calc-detail">Voer klaarhoogte in voor controle</div>`, ok: null };
   }
   if (!isKH) {
     return {
-      html: `<div class="calc-detail bst">Breedtestof &mdash; geen maximale hoogte vereist</div>`,
+      html: `<div class="calc-detail bst">Banenstof &mdash; geen maximale hoogte vereist</div>`,
       ok: true
     };
   }
-  const krimp    = parseFloat(a.krimpercentage) || 0;
-  const effH     = h * (1 + krimp / 100);
-  const vereist  = effH + DEFAULT_BAND_CHECK + DEFAULT_ZOOM_CHECK;
-  const maxH     = parseFloat(a.hoogte_stof) || 0;
-  const mogelijk = maxH > 0 ? vereist <= maxH : true;
+  const onderzoom = onderzoomHoogte(a.verzwaaringskoord);
+  const vereist   = h + DEFAULT_BAND_CHECK + onderzoom;
+  const maxH      = parseFloat(a.hoogte_stof) || 0;
+  const passt     = maxH > 0 ? vereist <= maxH : true;
+  const kantelbr  = isJa(a.kantelbaar);
 
-  const krimpStr = krimp > 0
-    ? `${h}&times;(1+${krimp}%) = ${effH.toFixed(1)}`
-    : `${h}`;
-  const formula  = `${krimpStr} + ${DEFAULT_BAND_CHECK} + ${DEFAULT_ZOOM_CHECK} = ${vereist.toFixed(1)} cm`;
+  const koordStr = isJa(a.verzwaaringskoord) ? ' (met verzwaringskoord)' : '';
+  const formula  = `${h} + ${DEFAULT_BAND_CHECK} + ${onderzoom}${koordStr} = ${vereist.toFixed(1)} cm`;
   const vergelijk = maxH > 0
-    ? ` ${mogelijk ? '&le;' : '&gt;'} ${maxH} cm ${mogelijk ? '&#10003;' : '&#10007;'}`
+    ? ` ${passt ? '&le;' : '&gt;'} ${maxH} cm ${passt ? '&#10003;' : '&#10007;'}`
     : '';
-  const cls = maxH > 0 ? (mogelijk ? 'ok' : 'nok') : '';
+  const kantelNote = (!passt && kantelbr)
+    ? `<div class="calc-detail" style="color:var(--warn)">&#8635; Kantelen vereist &mdash; stof past rechtop niet; verwerk gekanteld.</div>`
+    : '';
+  const cls = maxH > 0 ? (passt ? 'ok' : (kantelbr ? '' : 'nok')) : '';
 
   return {
-    html: `<div class="calc-detail ${cls}">${formula}${vergelijk}</div>`,
-    ok: maxH > 0 ? mogelijk : null
+    html: `<div class="calc-detail ${cls}">${formula}${vergelijk}</div>${kantelNote}`,
+    ok: maxH > 0 ? (passt || kantelbr) : null
   };
 }
 
@@ -663,11 +674,11 @@ function buildFilterUitleg(b, h) {
 
   let filter2 = hasMaten
     ? `<span class="fu-text">Hoogtegrens (Kamerhoog artikelen):
-        <span class="fu-formula">KlaarHoogte &times; (1 + krimp%) + ${DEFAULT_BAND_CHECK} + ${DEFAULT_ZOOM_CHECK} &le; Hoogte&nbsp;stof</span>
-        &mdash; met jouw maten: <span class="fu-formula">${h}&times;(1+krimp%) + ${DEFAULT_BAND_CHECK} + ${DEFAULT_ZOOM_CHECK}</span>
-        (Vliesband ${DEFAULT_BAND_CHECK}&nbsp;cm standaard, Onderzoom ${DEFAULT_ZOOM_CHECK}&nbsp;cm standaard).
-        Breedtestof-artikelen hebben geen hoogtebegrenzing.</span>`
-    : `<span class="fu-text">Vul klaarhoogte in (stap 2) om te zien welke artikelen geschikt zijn. <em>Kamerhoog-artikelen worden gecontroleerd op: KlaarHoogte + vliesband + onderzoom &le; hoogte stof.</em></span>`;
+        <span class="fu-formula">KlaarHoogte + Vliesband + Onderzoom &le; Hoogte&nbsp;stof</span>
+        &mdash; met jouw maten: <span class="fu-formula">${h} + ${DEFAULT_BAND_CHECK} + onderzoom</span>
+        (Vliesband ${DEFAULT_BAND_CHECK}&nbsp;cm standaard; Onderzoom&nbsp;= 2&nbsp;cm met verzwaringskoord, anders 15&nbsp;cm).
+        Banenstof-artikelen hebben geen hoogtebegrenzing.</span>`
+    : `<span class="fu-text">Vul klaarhoogte in (stap 2) om te zien welke artikelen geschikt zijn. <em>Kamerhoog-artikelen worden gecontroleerd op: KlaarHoogte + vliesband + onderzoom &le; hoogte stof (onderzoom = 2&nbsp;cm met verzwaringskoord, anders 15&nbsp;cm).</em></span>`;
 
   return `<div class="filter-uitleg">
     <div class="fu-title">Actieve filters &amp; berekeningsmethode</div>
@@ -714,14 +725,31 @@ function renderArtikelLijst() {
     const cd  = buildCalcDetail(a, b, h);
 
     let badge, rowClass = '';
-    if (f.mogelijk === true)  { badge = `<span class="feasible-badge ok">&#10003; Mogelijk</span>`; }
-    else if (f.mogelijk === false) { badge = `<span class="feasible-badge nok">&#10007; Niet mogelijk</span>`; rowClass = 'row-impossible'; }
-    else                      { badge = `<span class="feasible-badge unknown">— Voer maten in</span>`; }
+    if (f.mogelijk === true && f.kantelenVereist) {
+      badge = `<span class="feasible-badge" style="background:#fff3e0;color:var(--warn)">&#8635; Mogelijk (kantelen)</span>`;
+    } else if (f.mogelijk === true) {
+      badge = `<span class="feasible-badge ok">&#10003; Mogelijk</span>`;
+    } else if (f.mogelijk === false) {
+      badge = `<span class="feasible-badge nok">&#10007; Niet mogelijk</span>`;
+      rowClass = 'row-impossible';
+    } else {
+      badge = `<span class="feasible-badge unknown">— Voer maten in</span>`;
+    }
 
     const selected = _gekozenArtikel && _gekozenArtikel.artikelnummer === k ? 'row-selected' : '';
     const prijs    = parseFloat(a.prijs_per_m1);
     const prijsStr = !isNaN(prijs) && prijs > 0 ? `&euro;&nbsp;${prijs.toFixed(2)}` : '—';
-    const isKH     = String(a.kamerhoog).toLowerCase() === 'ja';
+    const isKH     = isJa(a.kamerhoog);
+    const verzwStr = isJa(a.verzwaaringskoord)
+      ? '<span class="tag" style="background:#e8f5e9;color:var(--success)">Ja</span>'
+      : '<span class="tag" style="background:#f5f5f5;color:var(--muted)">Nee</span>';
+    const kantelStr = isJa(a.kantelbaar)
+      ? '<span class="tag" style="background:#e8f5e9;color:var(--success)">Ja</span>'
+      : '<span class="tag" style="background:#f5f5f5;color:var(--muted)">Nee</span>';
+    const kleurenArr = parseKleuren(a.kleuren);
+    const kleurenStr = kleurenArr.length
+      ? kleurenArr.map(c => `<span class="tag" style="background:#f0f3f8;color:var(--accent-dk);margin:1px 2px">${esc(c)}</span>`).join('')
+      : '<span style="color:var(--muted)">—</span>';
 
     return `<tr class="${rowClass} ${selected}" onclick="selectArtikel('${esc(k)}', ${f.mogelijk === false})">
       <td>
@@ -734,10 +762,13 @@ function renderArtikelLijst() {
       <td>${esc(a.breedte_stof || '—')} cm</td>
       <td>${isKH
         ? '<span class="tag" style="background:#e8f0f8;color:var(--accent-dk)">Kamerhoog</span>'
-        : '<span class="tag" style="background:#f5f5f5;color:var(--muted)">Breedtestof</span>'}</td>
+        : '<span class="tag" style="background:#f5f5f5;color:var(--muted)">Banenstof</span>'}</td>
+      <td>${verzwStr}</td>
       <td>${esc(a.lichtdoorlatenheid || '—')}</td>
       <td>${prijsStr}</td>
       <td style="white-space:normal;max-width:150px">${esc(a.samenstelling || '—')}</td>
+      <td>${kantelStr}</td>
+      <td style="white-space:normal;min-width:260px;max-width:340px">${kleurenStr}</td>
     </tr>`;
   }).join('');
 
@@ -752,9 +783,12 @@ function renderArtikelLijst() {
             <th>H stof</th>
             <th>B stof</th>
             <th>Stoftype</th>
+            <th>Verzw.</th>
             <th>Licht</th>
             <th>Prijs/m&sup1;</th>
             <th>Samenstelling</th>
+            <th>Kantelbaar</th>
+            <th>Kleuren</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
@@ -812,7 +846,6 @@ function applyArtikel(a) {
   setVal('patroonhoogte',        a.patroonhoogte);
   setVal('patroonbreedte',       a.patroonbreedte);
   setVal('prijs_per_m1',         a.prijs_per_m1);
-  setVal('krimpercentage',       a.krimpercentage);
   setVal('kamerhoog',            a.kamerhoog);
   setVal('lichtdoorlatenheid',   a.lichtdoorlatenheid);
   setVal('voeren',               a.voeren);
@@ -828,13 +861,29 @@ function applyArtikel(a) {
   const f = checkFeasibility(a, num('klaarbreedte'), num('klaarhoogte'));
   if (f.mogelijk === false) {
     setBanner(`Opgelet: dit artikel is niet geschikt voor de ingevoerde maten. ${f.reden}.`, 'warning');
+  } else if (f.kantelenVereist) {
+    setBanner(`Let op: ${f.reden}. Deze stof is kantelbaar — verwerk gekanteld.`, 'warning');
   } else {
     setBanner('', '');
   }
 
   togglePatroon();
   toggleVoering();
+  toggleLoodveter();
+  populateKleurOpties(a);
   compute();
+}
+
+// Vul het Kleur-dropdown met de kleuren uit het geselecteerde artikel.
+function populateKleurOpties(a) {
+  const sel = el('kleur');
+  if (!sel) return;
+  const kleuren = parseKleuren(a && a.kleuren);
+  if (kleuren.length === 0) {
+    sel.innerHTML = '<option value="">&mdash; geen kleuren beschikbaar &mdash;</option>';
+    return;
+  }
+  sel.innerHTML = kleuren.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
 }
 
 // ── Calculation ────────────────────────────────────────────
@@ -860,12 +909,11 @@ function compute() {
   const voeren        = sel('voeren');
   const voering_prijs = num('voering_prijs_per_m1');
   const stuk          = sel('stuk');
-  const krimperc      = num('krimpercentage');
+  const verzwKeuze    = sel('verzwaaringskoord');
   const hoogte_stof   = num('hoogte_stof', 300);
   const breedte_stof  = num('breedte_stof', 140);
-  const onderzoom_in  = num('onderzoom', 20);
-  const band_in       = bandNum();
-  const zijzoom_in    = num('zijzoom', 8);
+  const band_in       = num('band', 10);
+  const onderzoom_cm  = onderzoomHoogte(verzwKeuze, lockKeuze);
 
   if (breedte_rail <= 0 || hoogte_rail <= 0) {
     setBanner('Voer een geldige breedte én hoogte in (> 0 cm).', 'error');
@@ -878,40 +926,68 @@ function compute() {
   if (!el('banner').className.includes('warning')) setBanner('', '');
 
   const effectieveBreedte = (stuk === 'Links' || stuk === 'Rechts') ? breedte_rail / 2 : breedte_rail;
-  const effectieveHoogte  = krimperc > 0 ? hoogte_rail * (1 + krimperc / 100) : hoogte_rail;
-  const effectieveOnderzoom = lockKeuze === 'Ja' ? 0 : onderzoom_in;
   const plooiFactor = PLOOI[plooiKeuze] ?? 2.0;
-  const benodigdeBreedte = (effectieveBreedte * plooiFactor) + (2 * zijzoom_in);
+  const benodigdeBreedte = (effectieveBreedte * plooiFactor) + (2 * ZIJZOOM_CM);
+  const koordLabel = isJa(verzwKeuze) ? ' (met verzwaringskoord)'
+                   : isJa(lockKeuze)  ? ' (afgelockt)'
+                   : ' (zonder verzwaringskoord)';
 
   let aantalBanen = 0, totaalMetrage = 0, totaalPrijs = 0, breakdownHTML = '';
 
   if (kamerhoog === 'Ja') {
-    const vereistTotaal = effectieveHoogte + band_in + effectieveOnderzoom;
-    if (vereistTotaal > hoogte_stof) {
+    const vereistTotaal = hoogte_rail + band_in + onderzoom_cm;
+    const kantelbaar    = _gekozenArtikel && isJa(_gekozenArtikel.kantelbaar);
+    const teHoog        = vereistTotaal > hoogte_stof;
+    const gekanteld     = teHoog && kantelbaar;
+
+    if (teHoog && !kantelbaar) {
       setBanner(`Hoogte overschreden: vereiste snijhoogte ${fmt(vereistTotaal)} cm > stofhoogte ${hoogte_stof} cm.`, 'error');
       el('out_banen').textContent = el('out_metrage').textContent = el('out_prijs').textContent = '—';
       el('breakdown').innerHTML = '&#10060; Hoogte overschrijdt maximum stofhoogte.';
       return;
     }
-    aantalBanen  = ceilDec(benodigdeBreedte / breedte_stof);
-    const mPerBaan = hoogte_stof / 100;
-    totaalMetrage  = parseFloat((aantalBanen * mPerBaan).toFixed(1));
-    breakdownHTML = `
-      <span class="step">Scenario A &mdash; Kamerhoog</span>
-      <b>Effectieve breedte:</b> ${fmt(effectieveBreedte,0)} cm ${stuk !== 'Single' ? '(halve rail: '+breedte_rail+'/2)' : ''}<br>
-      <b>Plooifactor:</b> ${plooiFactor} (${plooiKeuze})<br>
-      <b>Benodigd stofbreedte:</b> ${fmt(effectieveBreedte,0)} &times; ${plooiFactor} + 2&times;${zijzoom_in} = <b>${fmt(benodigdeBreedte)} cm</b><br>
-      <b>Banen:</b> &lceil;${fmt(benodigdeBreedte)} &divide; ${breedte_stof}&rceil; = <b>${aantalBanen} banen</b><br>
-      <b>Metrage/baan:</b> ${hoogte_stof} &divide; 100 = ${fmt(mPerBaan)} m<br>
-      <b>Totaal metrage:</b> ${aantalBanen} &times; ${fmt(mPerBaan)} = <b>${fmt(totaalMetrage)} m</b><br>
-      ${krimperc > 0 ? `<b>Krimptoeslag:</b> ${hoogte_rail} &times; (1+${krimperc}/100) = ${fmt(effectieveHoogte)} cm<br>` : ''}
-      <b>Vereiste snijhoogte:</b> ${fmt(effectieveHoogte)} + ${band_in} + ${effectieveOnderzoom} = <b>${fmt(vereistTotaal)} cm</b> &le; ${hoogte_stof} cm &#10003;`;
+    if (gekanteld) {
+      setBanner(`Let op: snijhoogte ${fmt(vereistTotaal)} cm > stofhoogte ${hoogte_stof} cm. Deze stof is kantelbaar — verwerk de stof gekanteld (breedte wordt hoogte).`, 'warning');
+    }
+
+    const snijCheck = teHoog
+      ? `<b>${fmt(vereistTotaal)} cm</b> &gt; ${hoogte_stof} cm &mdash; kantelen vereist &#8635;`
+      : `<b>${fmt(vereistTotaal)} cm</b> &le; ${hoogte_stof} cm &#10003;`;
+
+    if (gekanteld) {
+      // Gekanteld: stof wordt als banenstof verwerkt (meerdere banen naast elkaar).
+      aantalBanen    = Math.ceil(benodigdeBreedte / breedte_stof);
+      const mPerBaan = vereistTotaal / 100;
+      totaalMetrage  = parseFloat((aantalBanen * mPerBaan).toFixed(1));
+      breakdownHTML = `
+        <span class="step">Scenario A &mdash; Kamerhoog (gekanteld)</span>
+        <b>Effectieve breedte:</b> ${fmt(effectieveBreedte,0)} cm ${stuk !== 'Single' ? '(halve rail: '+breedte_rail+'/2)' : ''}<br>
+        <b>Plooifactor:</b> ${plooiFactor} (${plooiKeuze})<br>
+        <b>Benodigd stofbreedte:</b> ${fmt(effectieveBreedte,0)} &times; ${plooiFactor} + 2&times;${ZIJZOOM_CM} = <b>${fmt(benodigdeBreedte)} cm</b><br>
+        <b>Banen:</b> &lceil;${fmt(benodigdeBreedte)} &divide; ${breedte_stof}&rceil; = <b>${aantalBanen} banen</b><br>
+        <b>Hoogte per baan:</b> ${fmt(vereistTotaal)} cm (snijhoogte)<br>
+        <b>Metrage/baan:</b> ${fmt(vereistTotaal)} &divide; 100 = ${fmt(mPerBaan)} m<br>
+        <b>Totaal metrage:</b> ${aantalBanen} &times; ${fmt(mPerBaan)} = <b>${fmt(totaalMetrage)} m</b><br>
+        <b>Vereiste snijhoogte:</b> ${hoogte_rail} + ${band_in} + ${onderzoom_cm}${koordLabel} = ${snijCheck}`;
+    } else {
+      // Kamerhoog niet-gekanteld: één baan uit de rol gesneden; metrage = benodigde breedte.
+      aantalBanen   = 1;
+      totaalMetrage = parseFloat((benodigdeBreedte / 100).toFixed(2));
+      breakdownHTML = `
+        <span class="step">Scenario A &mdash; Kamerhoog</span>
+        <b>Effectieve breedte:</b> ${fmt(effectieveBreedte,0)} cm ${stuk !== 'Single' ? '(halve rail: '+breedte_rail+'/2)' : ''}<br>
+        <b>Plooifactor:</b> ${plooiFactor} (${plooiKeuze})<br>
+        <b>Benodigd stofbreedte:</b> ${fmt(effectieveBreedte,0)} &times; ${plooiFactor} + 2&times;${ZIJZOOM_CM} = <b>${fmt(benodigdeBreedte)} cm</b><br>
+        <b>Banen:</b> <b>1 baan</b> (kamerhoog: &eacute;&eacute;n stuk uit de rol gesneden)<br>
+        <b>Totaal metrage:</b> ${fmt(benodigdeBreedte)} &divide; 100 = <b>${fmt(totaalMetrage, 2)} m</b><br>
+        <b>Vereiste snijhoogte:</b> ${hoogte_rail} + ${band_in} + ${onderzoom_cm}${koordLabel} = ${snijCheck}`;
+    }
   } else {
-    aantalBanen = ceilDec(benodigdeBreedte / breedte_stof);
-    let hoogte_per_baan = effectieveHoogte + effectieveOnderzoom + band_in;
+    aantalBanen = Math.ceil(benodigdeBreedte / breedte_stof);
+    let hoogte_per_baan = hoogte_rail + onderzoom_cm + band_in;
     let patroonNote = '';
     if (patroonType === 'Patroon' && patroonHoogte > 0) {
-      const rapporten = ceilDec(hoogte_per_baan / patroonHoogte);
+      const rapporten = Math.ceil(hoogte_per_baan / patroonHoogte);
       const hoogteMet = rapporten * patroonHoogte;
       patroonNote = `<b>Patroon rapport:</b> &lceil;${fmt(hoogte_per_baan)} &divide; ${patroonHoogte}&rceil; = ${rapporten} &rarr; ${fmt(hoogteMet)} cm<br>`;
       hoogte_per_baan = hoogteMet;
@@ -919,16 +995,15 @@ function compute() {
     const mPerBaan = hoogte_per_baan / 100;
     totaalMetrage  = parseFloat((aantalBanen * mPerBaan).toFixed(1));
     breakdownHTML = `
-      <span class="step">Scenario B &mdash; Breedtestof</span>
+      <span class="step">Scenario B &mdash; Banenstof</span>
       <b>Effectieve breedte:</b> ${fmt(effectieveBreedte,0)} cm ${stuk !== 'Single' ? '(halve rail: '+breedte_rail+'/2)' : ''}<br>
       <b>Plooifactor:</b> ${plooiFactor} (${plooiKeuze})<br>
-      <b>Benodigd stofbreedte:</b> ${fmt(effectieveBreedte,0)} &times; ${plooiFactor} + 2&times;${zijzoom_in} = <b>${fmt(benodigdeBreedte)} cm</b><br>
+      <b>Benodigd stofbreedte:</b> ${fmt(effectieveBreedte,0)} &times; ${plooiFactor} + 2&times;${ZIJZOOM_CM} = <b>${fmt(benodigdeBreedte)} cm</b><br>
       <b>Banen:</b> &lceil;${fmt(benodigdeBreedte)} &divide; ${breedte_stof}&rceil; = <b>${aantalBanen} banen</b><br>
-      <b>Hoogte per baan:</b> ${fmt(effectieveHoogte)} + ${effectieveOnderzoom} + ${band_in} = ${fmt(hoogte_per_baan)} cm<br>
+      <b>Hoogte per baan:</b> ${hoogte_rail} + ${onderzoom_cm}${koordLabel} + ${band_in} = ${fmt(hoogte_per_baan)} cm<br>
       ${patroonNote}
       <b>Metrage/baan:</b> ${fmt(hoogte_per_baan)} &divide; 100 = ${fmt(mPerBaan)} m<br>
-      <b>Totaal metrage:</b> ${aantalBanen} &times; ${fmt(mPerBaan)} = <b>${fmt(totaalMetrage)} m</b><br>
-      ${krimperc > 0 ? `<b>Krimptoeslag:</b> ${hoogte_rail} &times; (1+${krimperc}/100) = ${fmt(effectieveHoogte)} cm<br>` : ''}`;
+      <b>Totaal metrage:</b> ${aantalBanen} &times; ${fmt(mPerBaan)} = <b>${fmt(totaalMetrage)} m</b><br>`;
   }
 
   let prijsBreakdown = '';
@@ -951,7 +1026,7 @@ function compute() {
   el('breakdown').innerHTML     = breakdownHTML + prijsBreakdown;
 
   if (!el('banner').className.includes('error') && !el('banner').className.includes('warning')) {
-    setBanner(`Berekening voltooid &mdash; ${kamerhoog === 'Ja' ? 'Kamerhoog' : 'Breedtestof'} scenario`, 'info');
+    setBanner(`Berekening voltooid &mdash; ${kamerhoog === 'Ja' ? 'Kamerhoog' : 'Banenstof'} scenario`, 'info');
   }
 }
 
@@ -963,25 +1038,63 @@ function togglePatroon() {
 function toggleVoering() {
   el('wrap_voering_prijs').style.display = sel('voeren') === 'Ja' ? '' : 'none';
 }
+// Bij verzwaringskoord is loodveter nooit nodig — forceer Nee en disable het veld.
+function toggleLoodveter() {
+  const lv = el('loodveter');
+  if (!lv) return;
+  if (isJa(sel('verzwaaringskoord'))) {
+    lv.value = 'Nee';
+    lv.disabled = true;
+  } else {
+    lv.disabled = false;
+  }
+}
 
 // ── Config field listeners ─────────────────────────────────
 ['kamerhoog','plooi','patroon','patroonhoogte','patroonbreedte','prijs_per_m1',
- 'krimpercentage','lock','voeren','voering_prijs_per_m1','stuk',
- 'hoogte_stof','breedte_stof','onderzoom','band','loodveter','zijzoom'
+ 'lock','voeren','voering_prijs_per_m1','stuk',
+ 'hoogte_stof','breedte_stof','band','loodveter',
+ 'verzwaaringskoord'
 ].forEach(id => {
   const n = el(id);
   if (n) { n.addEventListener('input', compute); n.addEventListener('change', compute); }
 });
 el('patroon').addEventListener('change', togglePatroon);
 el('voeren').addEventListener('change',  toggleVoering);
+el('verzwaaringskoord').addEventListener('change', toggleLoodveter);
+
+// Artikel specificaties (linker aside) is alleen-lezen voor de eindgebruiker.
+document.querySelectorAll('aside input').forEach(n => { n.readOnly = true; });
+document.querySelectorAll('aside select').forEach(n => { n.disabled = true; });
 
 // ── Init ──────────────────────────────────────────────────
 togglePatroon();
 toggleVoering();
+toggleLoodveter();
+
+// Fictieve kantelbaar-waarden toekennen aan artikelen die nog geen waarde hebben,
+// zodat de kolom in de lijst meteen is ingevuld. Persisteert via dbUpsertArticles.
+async function seedKantelbaar(saved) {
+  const toUpdate = [];
+  let i = 0;
+  Object.keys(saved).sort().forEach(nr => {
+    const v = String(saved[nr].kantelbaar || '').trim().toLowerCase();
+    if (v !== 'ja' && v !== 'nee') {
+      saved[nr].kantelbaar = (i % 2 === 0) ? 'Ja' : 'Nee';
+      i++;
+      toUpdate.push(saved[nr]);
+    }
+  });
+  if (toUpdate.length > 0) await dbUpsertArticles(toUpdate);
+}
+
+// KLEUR_POOLS, parseKleuren en seedKleuren staan in db.js (gedeeld met import.html).
 
 (async () => {
   const { data } = await dbLoadAll();
   _savedArtikelen = data || {};
+  await seedKantelbaar(_savedArtikelen);
+  await seedKleuren(_savedArtikelen);
 
   // Auto-load if redirected from import page
   const LS_LOAD = 'gordijn_load_artikel';
