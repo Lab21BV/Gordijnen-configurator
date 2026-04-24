@@ -539,8 +539,11 @@ const PLOOI = {
   'Wave':          2.00,
 };
 const DEFAULT_BAND_CHECK = 10;
-// Zijzoom: 24 cm stof per zijde → dubbele vouw → 3 cm zichtbare afwerking.
-const ZIJZOOM_CM = 24;
+// Zijzoom: 12 cm stof per zijde → dubbele vouw → 3 cm zichtbare afwerking.
+// Totaal per gordijn: 2 × 12 = 24 cm extra stofbreedte voor beide zijzomen.
+const ZIJZOOM_CM = 12;
+// Maximale breedte per stuk gordijn (klaarmaat). Daarboven: waarschuwing + delen.
+const MAX_STUK_BREEDTE_CM = 600;
 
 let _gekozenType    = null;   // 'Overgordijn' | 'Inbetween'
 let _savedArtikelen = {};
@@ -819,11 +822,12 @@ function selectArtikel(nr, isNietMogelijk) {
   // Re-render table so selected row is highlighted
   renderArtikelLijst();
 
-  // Apply artikel to spec fields
+  // Show main layout BEFORE applyArtikel zodat compute() niet early-returnt.
+  el('mainLayout').style.display = '';
+
+  // Apply artikel to spec fields (en compute())
   applyArtikel(a);
 
-  // Show main layout
-  el('mainLayout').style.display = '';
   el('mainLayout').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -923,15 +927,19 @@ function compute() {
     el('breakdown').innerHTML     = 'Vul de klaarmaten in om de berekening te zien.';
     return;
   }
-  if (!el('banner').className.includes('warning')) setBanner('', '');
 
   const effectieveBreedte = (stuk === 'Links' || stuk === 'Rechts') ? breedte_rail / 2 : breedte_rail;
   const plooiFactor = PLOOI[plooiKeuze] ?? 2.0;
-  const benodigdeBreedte = (effectieveBreedte * plooiFactor) + (2 * ZIJZOOM_CM);
+  const baseBreedte = effectieveBreedte * plooiFactor;
+  // Kamerhoog: +24 cm stof voor beide zijzomen. Banenstof: geen zijzoomtoeslag in breedte.
+  const benodigdeBreedte = (kamerhoog === 'Ja')
+    ? baseBreedte + (2 * ZIJZOOM_CM)
+    : baseBreedte;
   const koordLabel = isJa(verzwKeuze) ? ' (met verzwaringskoord)'
                    : isJa(lockKeuze)  ? ' (afgelockt)'
                    : ' (zonder verzwaringskoord)';
 
+  const warnings = [];
   let aantalBanen = 0, totaalMetrage = 0, totaalPrijs = 0, breakdownHTML = '';
 
   if (kamerhoog === 'Ja') {
@@ -947,7 +955,7 @@ function compute() {
       return;
     }
     if (gekanteld) {
-      setBanner(`Let op: snijhoogte ${fmt(vereistTotaal)} cm > stofhoogte ${hoogte_stof} cm. Deze stof is kantelbaar — verwerk de stof gekanteld (breedte wordt hoogte).`, 'warning');
+      warnings.push(`snijhoogte ${fmt(vereistTotaal)} cm > stofhoogte ${hoogte_stof} cm. Deze stof is kantelbaar — verwerk de stof gekanteld (breedte wordt hoogte).`);
     }
 
     const snijCheck = teHoog
@@ -963,7 +971,7 @@ function compute() {
         <span class="step">Scenario A &mdash; Kamerhoog (gekanteld)</span>
         <b>Effectieve breedte:</b> ${fmt(effectieveBreedte,0)} cm ${stuk !== 'Single' ? '(halve rail: '+breedte_rail+'/2)' : ''}<br>
         <b>Plooifactor:</b> ${plooiFactor} (${plooiKeuze})<br>
-        <b>Benodigd stofbreedte:</b> ${fmt(effectieveBreedte,0)} &times; ${plooiFactor} + 2&times;${ZIJZOOM_CM} = <b>${fmt(benodigdeBreedte)} cm</b><br>
+        <b>Benodigd stofbreedte:</b> ${fmt(effectieveBreedte,0)} &times; ${plooiFactor} + 1&times;${2 * ZIJZOOM_CM} = <b>${fmt(benodigdeBreedte)} cm</b><br>
         <b>Banen:</b> &lceil;${fmt(benodigdeBreedte)} &divide; ${breedte_stof}&rceil; = <b>${aantalBanen} banen</b><br>
         <b>Hoogte per baan:</b> ${fmt(vereistTotaal)} cm (snijhoogte)<br>
         <b>Metrage/baan:</b> ${fmt(vereistTotaal)} &divide; 100 = ${fmt(mPerBaan)} m<br>
@@ -977,14 +985,15 @@ function compute() {
         <span class="step">Scenario A &mdash; Kamerhoog</span>
         <b>Effectieve breedte:</b> ${fmt(effectieveBreedte,0)} cm ${stuk !== 'Single' ? '(halve rail: '+breedte_rail+'/2)' : ''}<br>
         <b>Plooifactor:</b> ${plooiFactor} (${plooiKeuze})<br>
-        <b>Benodigd stofbreedte:</b> ${fmt(effectieveBreedte,0)} &times; ${plooiFactor} + 2&times;${ZIJZOOM_CM} = <b>${fmt(benodigdeBreedte)} cm</b><br>
+        <b>Benodigd stofbreedte:</b> ${fmt(effectieveBreedte,0)} &times; ${plooiFactor} + 1&times;${2 * ZIJZOOM_CM} = <b>${fmt(benodigdeBreedte)} cm</b><br>
         <b>Banen:</b> <b>1 baan</b> (kamerhoog: &eacute;&eacute;n stuk uit de rol gesneden)<br>
         <b>Totaal metrage:</b> ${fmt(benodigdeBreedte)} &divide; 100 = <b>${fmt(totaalMetrage, 2)} m</b><br>
         <b>Vereiste snijhoogte:</b> ${hoogte_rail} + ${band_in} + ${onderzoom_cm}${koordLabel} = ${snijCheck}`;
     }
   } else {
     aantalBanen = Math.ceil(benodigdeBreedte / breedte_stof);
-    let hoogte_per_baan = hoogte_rail + onderzoom_cm + band_in;
+    const coupageVerlies = band_in + onderzoom_cm;
+    let hoogte_per_baan = hoogte_rail + coupageVerlies;
     let patroonNote = '';
     if (patroonType === 'Patroon' && patroonHoogte > 0) {
       const rapporten = Math.ceil(hoogte_per_baan / patroonHoogte);
@@ -998,9 +1007,10 @@ function compute() {
       <span class="step">Scenario B &mdash; Banenstof</span>
       <b>Effectieve breedte:</b> ${fmt(effectieveBreedte,0)} cm ${stuk !== 'Single' ? '(halve rail: '+breedte_rail+'/2)' : ''}<br>
       <b>Plooifactor:</b> ${plooiFactor} (${plooiKeuze})<br>
-      <b>Benodigd stofbreedte:</b> ${fmt(effectieveBreedte,0)} &times; ${plooiFactor} + 2&times;${ZIJZOOM_CM} = <b>${fmt(benodigdeBreedte)} cm</b><br>
+      <b>Benodigd stofbreedte:</b> ${fmt(effectieveBreedte,0)} &times; ${plooiFactor} = <b>${fmt(benodigdeBreedte)} cm</b><br>
       <b>Banen:</b> &lceil;${fmt(benodigdeBreedte)} &divide; ${breedte_stof}&rceil; = <b>${aantalBanen} banen</b><br>
-      <b>Hoogte per baan:</b> ${hoogte_rail} + ${onderzoom_cm}${koordLabel} + ${band_in} = ${fmt(hoogte_per_baan)} cm<br>
+      <b>Coupageverlies:</b> vliesband ${band_in} + onderzoom ${onderzoom_cm}${koordLabel} = ${coupageVerlies} cm per baan<br>
+      <b>Hoogte per baan:</b> ${hoogte_rail} + ${coupageVerlies} = ${fmt(hoogte_per_baan)} cm<br>
       ${patroonNote}
       <b>Metrage/baan:</b> ${fmt(hoogte_per_baan)} &divide; 100 = ${fmt(mPerBaan)} m<br>
       <b>Totaal metrage:</b> ${aantalBanen} &times; ${fmt(mPerBaan)} = <b>${fmt(totaalMetrage)} m</b><br>`;
@@ -1025,7 +1035,13 @@ function compute() {
   el('out_prijs').textContent   = prijs_per_m1 > 0 ? fmtEur(totaalPrijs) : '—';
   el('breakdown').innerHTML     = breakdownHTML + prijsBreakdown;
 
-  if (!el('banner').className.includes('error') && !el('banner').className.includes('warning')) {
+  if (effectieveBreedte > MAX_STUK_BREEDTE_CM) {
+    warnings.push(`breedte per stuk gordijn is ${fmt(effectieveBreedte,0)} cm (> ${MAX_STUK_BREEDTE_CM/100} m) — verdeel het gordijn in meerdere stukken (&quot;Stuk&quot; op Links + Rechts).`);
+  }
+
+  if (warnings.length > 0) {
+    setBanner('Let op: ' + warnings.join(' '), 'warning');
+  } else {
     setBanner(`Berekening voltooid &mdash; ${kamerhoog === 'Ja' ? 'Kamerhoog' : 'Banenstof'} scenario`, 'info');
   }
 }
