@@ -1160,9 +1160,7 @@ function toggleHint() {
     : '💡 Hoe moet mijn bestand eruit zien?';
 }
 
-function esc(str) {
-  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+// esc() staat in db.js (gedeeld met index.html).
 
 // ── Init ──
 refreshSaved();

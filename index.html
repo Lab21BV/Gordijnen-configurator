@@ -557,8 +557,15 @@ function sel(id)  { return document.getElementById(id)?.value ?? ''; }
 function el(id)   { return document.getElementById(id); }
 function fmt(n, dec = 1) { return n.toFixed(dec); }
 function fmtEur(n) { return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(n); }
-function esc(s)   { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function isJa(v)  { return String(v ?? '').toLowerCase() === 'ja'; }
+// esc() staat in db.js (gedeeld met import.html).
+
+// Ja/Nee tag in dezelfde stijl als de feasibility badges.
+function jaNeeTag(v) {
+  return isJa(v)
+    ? '<span class="tag" style="background:#e8f5e9;color:var(--success)">Ja</span>'
+    : '<span class="tag" style="background:#f5f5f5;color:var(--muted)">Nee</span>';
+}
 
 // ── Coupageverlies hoogte (band + onderzoom) voor kamerhoog ──
 // Tabel: verzwaringskoord Ja → onderzoom 2 cm, Nee → onderzoom 15 cm.
@@ -743,12 +750,8 @@ function renderArtikelLijst() {
     const prijs    = parseFloat(a.prijs_per_m1);
     const prijsStr = !isNaN(prijs) && prijs > 0 ? `&euro;&nbsp;${prijs.toFixed(2)}` : '—';
     const isKH     = isJa(a.kamerhoog);
-    const verzwStr = isJa(a.verzwaaringskoord)
-      ? '<span class="tag" style="background:#e8f5e9;color:var(--success)">Ja</span>'
-      : '<span class="tag" style="background:#f5f5f5;color:var(--muted)">Nee</span>';
-    const kantelStr = isJa(a.kantelbaar)
-      ? '<span class="tag" style="background:#e8f5e9;color:var(--success)">Ja</span>'
-      : '<span class="tag" style="background:#f5f5f5;color:var(--muted)">Nee</span>';
+    const verzwStr  = jaNeeTag(a.verzwaaringskoord);
+    const kantelStr = jaNeeTag(a.kantelbaar);
     const kleurenArr = parseKleuren(a.kleuren);
     const kleurenStr = kleurenArr.length
       ? kleurenArr.map(c => `<span class="tag" style="background:#f0f3f8;color:var(--accent-dk);margin:1px 2px">${esc(c)}</span>`).join('')

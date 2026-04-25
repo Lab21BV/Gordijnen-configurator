@@ -1,59 +1,57 @@
 // ============================================================
 // GORDIJN CONFIGURATOR — Zoho Creator Deluge Script
 // Versie: V5 | Sleutel: L@b21#2026!
+// In sync met index.html (V5) — wijzig altijd beide tegelijk.
+// ------------------------------------------------------------
 // Trigger: On User Input
-//   Velden: KlaarBreedte, KlaarHoogte, Plooi, Kamehoog, Artikel
-// Formulier: Overgordijn / Vitrage — Kamerhoog & Breedtestof
+// Verwachte formuliervelden:
+//   KlaarBreedte, KlaarHoogte, Plooi, Kamehoog, Stuk, Lock,
+//   Patroon, Voeren, Verzwaaringskoord, Kantelbaar,
+//   Hoogte_stof, breedte_stof, Patroonhoogte,
+//   prijs_per_m1, voering_prijs_per_m1, Band
+//   Output: Aantal_Banen, Totaal_Metrage, Totaal_Prijs
 // ============================================================
 
-// ============================================================
-// SECTIE 1: PLOOIFACTOREN & STANDAARD ZOOMWAARDEN
-// ============================================================
+// ------------------------------------------------------------
+// SECTIE 1: CONSTANTEN (gespiegeld uit index.html)
+// ------------------------------------------------------------
+ZIJZOOM_CM          = 12.0;   // cm per zijde — alleen kamerhoog (2 × 12 = 24 cm)
+DEFAULT_BAND        = 10.0;   // cm vliesband (bovenzoom)
+DEFAULT_STOFBREEDTE = 140.0;  // cm rolbreedte fallback
+MAX_STUK_BREEDTE    = 600.0;  // cm — daarboven: verdeel in Links + Rechts
 
-plooiFactor_Single = 2.0;    // Enkelvoudige plooi
-plooiFactor_Double = 2.5;    // Dubbele plooi
-plooiFactor_Wave   = 1.8;    // Wave-plooi (golfplooi)
-plooiFactor_Retour = 1.0;    // Retour / vlak (geen plooi)
+plooi_Enkel        = 1.80;
+plooi_Dubbel       = 2.35;
+plooi_EnkelRetour  = 2.10;
+plooi_DubbelRetour = 2.50;
+plooi_Wave         = 2.00;
 
-// Standaard valbehoud — worden overschreven door artikelwaarden indien ingevuld
-default_Onderzoom  = 20.0;   // cm onderzoom
-default_Band       = 10.0;   // cm bovenzoom / band (haak-opsteek toeslag)
-default_Zijzoom    = 8.0;    // cm per zijde (links + rechts = 2×)
-default_StofBreedte = 140.0; // cm standaard breedtestof breedte
-
-// ============================================================
+// ------------------------------------------------------------
 // SECTIE 2: FORMULIERVELDEN UITLEZEN
-// ============================================================
-// Opmerking: veldnamen zijn de API-namen in Zoho Creator.
-// "Kamehoog" volgt de spelwijze uit het formulier (zie veldtabel).
+// ------------------------------------------------------------
+// "Kamehoog" volgt de spelwijze uit het formulier.
+breedte_rail  = ifnull(input.KlaarBreedte, 0).toDecimal();
+hoogte_rail   = ifnull(input.KlaarHoogte, 0).toDecimal();
+isKamerhoog   = input.Kamehoog;             // "Ja" | "Nee"
+plooiKeuze    = input.Plooi;
+patroonType   = input.Patroon;              // "Uni" | "Patroon"
+stuk          = input.Stuk;                 // "Single" | "Links" | "Rechts"
+lockKeuze     = input.Lock;                 // "Ja" | "Nee"
+verzwKeuze    = input.Verzwaaringskoord;    // "Ja" | "Nee"
+kantelbaar    = input.Kantelbaar;           // "Ja" | "Nee"
+voeren        = input.Voeren;               // "Ja" | "Nee"
 
-breedte_rail    = ifnull(input.KlaarBreedte, 0).toDecimal();    // cm — breedte van de rail/roede
-hoogte_rail     = ifnull(input.KlaarHoogte, 0).toDecimal();     // cm — gewenste klaarmaat hoogte
-isKamerhoog     = input.Kamehoog;                                // "Ja" of "Nee"
-plooiKeuze      = input.Plooi;                                   // "Single" | "Double" | "Wave" | "Retour"
-patroonType     = input.Patroon;                                 // "Uni" | "Patroon"
-stuk            = input.Stuk;                                    // "Single" | "Links" | "Rechts"
-lockKeuze       = input.Lock;                                    // "Ja" | "Nee"
-voeren          = input.Voeren;                                  // "Ja" | "Nee"
+hoogte_stof   = ifnull(input.Hoogte_stof, 300.0).toDecimal();
+breedte_stof  = ifnull(input.breedte_stof, DEFAULT_STOFBREEDTE).toDecimal();
+patroonHoogte = ifnull(input.Patroonhoogte, 0).toDecimal();
+prijs_per_m1  = ifnull(input.prijs_per_m1, 0).toDecimal();
+voering_m1    = ifnull(input.voering_prijs_per_m1, 0).toDecimal();
+band_cm       = ifnull(input.Band, DEFAULT_BAND).toDecimal();
 
-// Artikelspecifieke waarden (gekoppeld aan het gekozen stof-artikel)
-hoogte_stof      = ifnull(input.Hoogte_stof, 300.0).toDecimal();      // cm — max stofhoogte (artikel)
-breedte_stof     = ifnull(input.breedte_stof, default_StofBreedte).toDecimal(); // cm — stofbreedte (artikel)
-krimpercentage   = ifnull(input.Krimpercentage, 0).toDecimal();       // % — krimpfactor stof
-patroonHoogte_cm = ifnull(input.Patroonhoogte, 0).toDecimal();        // cm — rapportmaat patroon
-prijs_per_m1     = ifnull(input.prijs_per_m1, 0).toDecimal();         // € per lopende meter
-
-// Zoomwaarden — uit Config-kolom van het formulier (overschrijven standaarden)
-onderzoom_cm = ifnull(input.Onderzoom, default_Onderzoom).toDecimal(); // cm
-band_cm      = ifnull(input.Band, default_Band).toDecimal();           // cm (bovenzoom)
-zijzoom_cm   = ifnull(input.zijzoom, default_Zijzoom).toDecimal();    // cm per zijde
-
-// ============================================================
-// SECTIE 3: VALIDATIE INVOER
-// ============================================================
-
+// ------------------------------------------------------------
+// SECTIE 3: VALIDATIE
+// ------------------------------------------------------------
 foutmelding = "";
-
 if (breedte_rail <= 0)
 {
     foutmelding = "Voer een geldige breedte in (meer dan 0 cm).";
@@ -67,181 +65,173 @@ else if (breedte_stof <= 0)
     foutmelding = "Stofbreedte uit het artikel ontbreekt of is ongeldig.";
 }
 
-// ============================================================
-// SECTIE 4: CORRECTIES OP INVOER
-// ============================================================
-
-// 4a. Stuk-correctie: bij Links of Rechts is de effectieve breedte de helft van de rail
+// ------------------------------------------------------------
+// SECTIE 4: AFGELEIDE WAARDEN
+// ------------------------------------------------------------
+// 4a. Effectieve breedte — halve rail bij Links/Rechts.
 effectieveBreedte = breedte_rail;
 if (stuk == "Links" || stuk == "Rechts")
 {
     effectieveBreedte = breedte_rail / 2;
 }
 
-// 4b. Krimptoeslag op hoogte (vóór berekening al verwerkt)
-//     Formule: benodigde snijhoogte = klaarmaat / (1 - krimp%)
-//     Vereenvoudigd: snijhoogte ≈ klaarmaat × (1 + krimp / 100)
-effectieveHoogte = hoogte_rail;
-if (krimpercentage > 0)
-{
-    effectieveHoogte = hoogte_rail * (1 + krimpercentage / 100);
-}
-
-// 4c. Lock-correctie: afgelockte onderkant = geen klassieke onderzoom
-effectieveOnderzoom = onderzoom_cm;
+// 4b. Onderzoom — Lock=Ja → 0; Verzwaaringskoord=Ja → 2; anders 15.
+onderzoom_cm = 15.0;
 if (lockKeuze == "Ja")
 {
-    effectieveOnderzoom = 0; // locken vervangt de gestoomde zoom
+    onderzoom_cm = 0.0;
+}
+else if (verzwKeuze == "Ja")
+{
+    onderzoom_cm = 2.0;
 }
 
-// ============================================================
-// SECTIE 5: PLOOIFACTOR BEPALEN
-// ============================================================
-
-plooiFactor = plooiFactor_Single; // standaard fallback
-
-if (plooiKeuze == "Double")
+// 4c. Plooifactor — fallback 2.0 (zoals in index.html).
+plooiFactor = 2.0;
+if (plooiKeuze == "Enkel")
 {
-    plooiFactor = plooiFactor_Double;
+    plooiFactor = plooi_Enkel;
+}
+else if (plooiKeuze == "Dubbel")
+{
+    plooiFactor = plooi_Dubbel;
+}
+else if (plooiKeuze == "Enkel retour")
+{
+    plooiFactor = plooi_EnkelRetour;
+}
+else if (plooiKeuze == "Dubbel retour")
+{
+    plooiFactor = plooi_DubbelRetour;
 }
 else if (plooiKeuze == "Wave")
 {
-    plooiFactor = plooiFactor_Wave;
+    plooiFactor = plooi_Wave;
 }
-else if (plooiKeuze == "Retour")
+
+// 4d. Benodigde stofbreedte — kamerhoog krijgt 2× zijzoom toeslag.
+benodigdeBreedte_cm = effectieveBreedte * plooiFactor;
+if (isKamerhoog == "Ja")
 {
-    plooiFactor = plooiFactor_Retour;
+    benodigdeBreedte_cm = benodigdeBreedte_cm + (2 * ZIJZOOM_CM);
 }
-// "Single" → blijft 2.0
 
-// ============================================================
-// SECTIE 6: KERNBEREKENING
-// ============================================================
-
-aantalBanen    = 0;
-totaalMetrage  = 0.0;
-totaalPrijs    = 0.0;
+// ------------------------------------------------------------
+// SECTIE 5: KERNBEREKENING
+// ------------------------------------------------------------
+aantalBanen   = 0;
+totaalMetrage = 0.0;
+totaalPrijs   = 0.0;
+waarschuwing  = "";
 
 if (foutmelding == "")
 {
-    // Benodigde stofbreedte na opplooi + zijzomen (beide zijden)
-    benodigdeBreedte_cm = (effectieveBreedte * plooiFactor) + (2 * zijzoom_cm);
-
     if (isKamerhoog == "Ja")
     {
-        // --------------------------------------------------------
-        // SCENARIO A: KAMERHOOG STOF
-        // De breedte van de rol = hoogte van het gordijn (rot niet in banen)
-        // Je koopt lopende meters van een kamerhoge rol
-        // --------------------------------------------------------
+        // ----- Scenario A: Kamerhoog -----
+        vereisteHoogte_cm = hoogte_rail + band_cm + onderzoom_cm;
+        teHoog            = vereisteHoogte_cm > hoogte_stof;
+        gekanteld         = teHoog && (kantelbaar == "Ja");
 
-        // Validatie: vereiste afwerkhoogte moet passen binnen de stofhoogte
-        vereisteTotaalHoogte = effectieveHoogte + band_cm + effectieveOnderzoom;
-
-        if (vereisteTotaalHoogte > hoogte_stof)
+        if (teHoog && kantelbaar != "Ja")
         {
-            foutmelding = "Hoogte overschreden: de vereiste snijhoogte ("
-                          + vereisteTotaalHoogte.round(1).toString()
-                          + " cm incl. zomen) is groter dan de maximale stofhoogte ("
+            foutmelding = "Hoogte overschreden: vereiste snijhoogte ("
+                          + vereisteHoogte_cm.round(1).toString()
+                          + " cm) > stofhoogte ("
                           + hoogte_stof.toString()
-                          + " cm). Kies een lagere klaarmaat of een andere stof.";
+                          + " cm). Kies lagere klaarmaat of kantelbare stof.";
+        }
+        else if (gekanteld)
+        {
+            // Stof gekanteld verwerken — banen naast elkaar, hoogte = snijhoogte.
+            banen_dec   = benodigdeBreedte_cm / breedte_stof;
+            aantalBanen = banen_dec.toLong();
+            if (banen_dec > aantalBanen.toDecimal())
+            {
+                aantalBanen = aantalBanen + 1;
+            }
+            mPerBaan      = vereisteHoogte_cm / 100;
+            totaalMetrage = (aantalBanen.toDecimal() * mPerBaan).round(1);
+            waarschuwing  = "Kantelen vereist — snijhoogte "
+                            + vereisteHoogte_cm.round(1).toString()
+                            + " cm > stofhoogte " + hoogte_stof.toString()
+                            + " cm. Verwerk gekanteld.";
         }
         else
         {
-            // Aantal banen = hoeveel stofbreedtes (lopende meters) nodig
-            // Elke lopende meter uit de kamerhoge rol = 1 'baan' van breedte_stof breed
-            aantalBanen_dec = benodigdeBreedte_cm / breedte_stof;
-
-            // Naar boven afronden (altijd gehele banen)
-            aantalBanen_heel = aantalBanen_dec.toLong();
-            if (aantalBanen_dec > aantalBanen_heel.toDecimal())
-            {
-                aantalBanen_heel = aantalBanen_heel + 1;
-            }
-            aantalBanen = aantalBanen_heel;
-
-            // Metrage = aantal banen × hoogte_stof (in lopende meters van de kamerhoge rol)
-            metrage_per_baan_m = hoogte_stof / 100;
-            totaalMetrage = (aantalBanen.toDecimal() * metrage_per_baan_m).round(1);
+            // Past rechtop: één baan uit de rol gesneden.
+            aantalBanen   = 1;
+            totaalMetrage = (benodigdeBreedte_cm / 100).round(2);
         }
     }
     else
     {
-        // --------------------------------------------------------
-        // SCENARIO B: BREEDTESTOF (standaard rolbreedte, bijv. 140 cm)
-        // Stof heeft een vaste breedte; je stapelt banen naast elkaar
-        // --------------------------------------------------------
-
-        // Stap 1: Aantal banen berekenen
-        aantalBanen_dec = benodigdeBreedte_cm / breedte_stof;
-
-        aantalBanen_heel = aantalBanen_dec.toLong();
-        if (aantalBanen_dec > aantalBanen_heel.toDecimal())
+        // ----- Scenario B: Banenstof -----
+        banen_dec   = benodigdeBreedte_cm / breedte_stof;
+        aantalBanen = banen_dec.toLong();
+        if (banen_dec > aantalBanen.toDecimal())
         {
-            aantalBanen_heel = aantalBanen_heel + 1;
+            aantalBanen = aantalBanen + 1;
         }
-        aantalBanen = aantalBanen_heel;
 
-        // Stap 2: Hoogte per baan inclusief zomen en krimptoeslag
-        hoogte_per_baan_cm = effectieveHoogte + effectieveOnderzoom + band_cm;
+        coupageVerlies_cm = band_cm + onderzoom_cm;
+        hoogte_per_baan   = hoogte_rail + coupageVerlies_cm;
 
-        // Patroon: hoogte opronden naar volledig rapport (patroonherhaling)
-        if (patroonType == "Patroon" && patroonHoogte_cm > 0)
+        // Patroon: rond op naar volledige rapporten.
+        if (patroonType == "Patroon" && patroonHoogte > 0)
         {
-            rapportAantal_dec = hoogte_per_baan_cm / patroonHoogte_cm;
-            rapportAantal = rapportAantal_dec.toLong();
-            if (rapportAantal_dec > rapportAantal.toDecimal())
+            rapporten_dec = hoogte_per_baan / patroonHoogte;
+            rapporten     = rapporten_dec.toLong();
+            if (rapporten_dec > rapporten.toDecimal())
             {
-                rapportAantal = rapportAantal + 1;
+                rapporten = rapporten + 1;
             }
-            hoogte_per_baan_cm = rapportAantal.toDecimal() * patroonHoogte_cm;
+            hoogte_per_baan = rapporten.toDecimal() * patroonHoogte;
         }
 
-        // Metrage per baan in lopende meters
-        metrage_per_baan_m = hoogte_per_baan_cm / 100;
-
-        // Totaal metrage (afgerond op 1 decimaal)
-        totaalMetrage = (aantalBanen.toDecimal() * metrage_per_baan_m).round(1);
+        mPerBaan      = hoogte_per_baan / 100;
+        totaalMetrage = (aantalBanen.toDecimal() * mPerBaan).round(1);
     }
 
-    // --------------------------------------------------------
-    // SECTIE 7: PRIJSBEREKENING
-    // --------------------------------------------------------
-
-    if (totaalMetrage > 0 && prijs_per_m1 > 0 && foutmelding == "")
+    // ----- Prijs (stof + optionele voering @ 60% fallback) -----
+    if (totaalMetrage > 0 && prijs_per_m1 > 0)
     {
-        totaalPrijs = (totaalMetrage * prijs_per_m1).round(2);
-
-        // Voering: aparte berekening indien van toepassing
-        // Voeringsmetrage = gelijk aan gordijnmetrage (geen extra plooi)
-        // Voeringsartikelprijs apart inrichten — hier indicatief 60% van stofdprijs
-        // Pas aan zodra voeringsartikelen een eigen prijs_per_m1 hebben
+        totaalPrijs = totaalMetrage * prijs_per_m1;
         if (voeren == "Ja")
         {
-            voering_m = totaalMetrage;
-            voering_prijs_per_m1 = prijs_per_m1 * 0.60;
-            totaalPrijs = (totaalPrijs + voering_m * voering_prijs_per_m1).round(2);
+            voering_m1_eff = voering_m1;
+            if (voering_m1_eff <= 0)
+            {
+                voering_m1_eff = prijs_per_m1 * 0.60;
+            }
+            totaalPrijs = totaalPrijs + (totaalMetrage * voering_m1_eff);
         }
+        totaalPrijs = totaalPrijs.round(2);
+    }
+
+    // ----- Breedte-waarschuwing per stuk -----
+    if (effectieveBreedte > MAX_STUK_BREEDTE)
+    {
+        if (waarschuwing != "")
+        {
+            waarschuwing = waarschuwing + " ";
+        }
+        waarschuwing = waarschuwing + "Breedte per stuk "
+                       + effectieveBreedte.round(0).toString()
+                       + " cm > "
+                       + (MAX_STUK_BREEDTE / 100).toString()
+                       + " m — verdeel in Links + Rechts.";
     }
 }
 
-// ============================================================
-// SECTIE 8: VELDEN BIJWERKEN
-// ============================================================
-
+// ------------------------------------------------------------
+// SECTIE 6: VELDEN BIJWERKEN
+// ------------------------------------------------------------
 if (foutmelding != "")
 {
-    // Wis berekende velden bij een fout
     input.Aantal_Banen   = 0;
     input.Totaal_Metrage = 0;
     input.Totaal_Prijs   = 0;
-
-    // Log foutmelding (pas dit aan naar het meldingsveld in jouw formulier)
-    // Optie A — alert (werkt in formulier-context):
-    // alert foutmelding;
-    // Optie B — schrijf naar een tekstveld "Melding" in het formulier:
-    // input.Melding = foutmelding;
-    // Optie C — info voor debug:
     info foutmelding;
 }
 else
@@ -249,4 +239,8 @@ else
     input.Aantal_Banen   = aantalBanen;
     input.Totaal_Metrage = totaalMetrage;
     input.Totaal_Prijs   = totaalPrijs;
+    if (waarschuwing != "")
+    {
+        info waarschuwing;
+    }
 }

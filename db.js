@@ -141,6 +141,11 @@ function parseKleuren(str) {
     .filter(Boolean);
 }
 
+// HTML-escape utility — gedeeld door index.html en import.html.
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 // Vul fictieve kleuren aan (14–16 per artikel) voor artikelen met < 10 kleuren.
 // Kleuren leven alleen in localStorage (geen Supabase-kolom).
 async function seedKleuren(saved) {
