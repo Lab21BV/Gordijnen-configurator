@@ -146,6 +146,38 @@ function esc(s) {
   return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// Verkoopprijs incl. btw = inkoop × 3, omhoog afgerond naar het eerstvolgende xx.95.
+// Geeft null wanneer de inkoopprijs ontbreekt of 0 is.
+function verkoopPrijs95(inkoop) {
+  const n = parseFloat(inkoop);
+  if (isNaN(n) || n <= 0) return null;
+  const x = n * 3;
+  const f = Math.floor(x);
+  return (x <= f + 0.95) ? f + 0.95 : f + 1.95;
+}
+
+// Stof-afmetingen normaliseren met placeholder 10000 (= "onbeperkt"):
+//   Kamerhoog (Ja): breedte_stof  is rolengte → onbeperkt → 10000.
+//   Banenstof (Nee): hoogte_stof  is rolengte → onbeperkt → 10000.
+async function seedAfmetingenPlaceholders(saved) {
+  const toUpdate = [];
+  Object.keys(saved).forEach(nr => {
+    const a = saved[nr];
+    const isKH = String(a.kamerhoog || '').toLowerCase() === 'ja';
+    let changed = false;
+    if (isKH && String(a.breedte_stof) !== '10000') {
+      a.breedte_stof = '10000';
+      changed = true;
+    }
+    if (!isKH && String(a.hoogte_stof) !== '10000') {
+      a.hoogte_stof = '10000';
+      changed = true;
+    }
+    if (changed) toUpdate.push(a);
+  });
+  if (toUpdate.length > 0) await dbUpsertArticles(toUpdate);
+}
+
 // Vul fictieve kleuren aan (14–16 per artikel) voor artikelen met < 10 kleuren.
 // Kleuren leven alleen in localStorage (geen Supabase-kolom).
 async function seedKleuren(saved) {

@@ -143,8 +143,17 @@ if (foutmelding == "")
         }
         else if (gekanteld)
         {
-            // Stof gekanteld verwerken — banen naast elkaar, hoogte = snijhoogte.
-            banen_dec   = benodigdeBreedte_cm / breedte_stof;
+            // Stof 90° gedraaid: hoogte_stof wordt baan-breedte; de oorspronkelijke
+            // breedte_stof = lengte van de rol en is in principe onbeperkt.
+            // Met verzwaringskoord: koord wegsnijden = -2 cm in baan-breedte.
+            koordVerlies     = 0.0;
+            if (verzwKeuze == "Ja")
+            {
+                koordVerlies = 2.0;
+            }
+            baanBreedte_eff = hoogte_stof - koordVerlies;
+
+            banen_dec   = benodigdeBreedte_cm / baanBreedte_eff;
             aantalBanen = banen_dec.toLong();
             if (banen_dec > aantalBanen.toDecimal())
             {

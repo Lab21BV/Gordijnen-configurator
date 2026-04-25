@@ -932,6 +932,7 @@ async function refreshSaved() {
   const { data, error, source } = await dbLoadAll();
   _savedCache = data || {};
   await migrateGordijnType(_savedCache);
+  await seedAfmetingenPlaceholders(_savedCache);
   await seedKleuren(_savedCache);
   if (source === 'supabase') setDbStatus('ok');
   else if (!dbConfigured())  setDbStatus('local');
@@ -1039,6 +1040,7 @@ function renderSaved() {
           <th>H stof</th>
           <th>B stof</th>
           <th>Patroon</th>
+          <th>Patroonhoogte</th>
           <th>Inkoop/m¹</th>
           <th>Verkoop/m¹ incl. btw</th>
           <th>Krimp%</th>
@@ -1066,6 +1068,9 @@ function renderSaved() {
             <td>${dash(a.hoogte_stof)}</td>
             <td>${dash(a.breedte_stof)}</td>
             <td>${dash(a.patroon)}</td>
+            <td>${String(a.patroon||'').toLowerCase() === 'uni'
+              ? '0'
+              : (() => { const n = parseFloat(a.patroonhoogte); return isNaN(n) ? '0' : esc(String(n)); })()}</td>
             <td>${price(a.prijs_per_m1)}</td>
             <td>${verkoop95(a.prijs_per_m1)}</td>
             <td>${a.krimpercentage && a.krimpercentage !== '0' ? esc(a.krimpercentage)+'%' : dash('')}</td>

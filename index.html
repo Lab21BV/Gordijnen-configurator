@@ -210,7 +210,8 @@
     .tag { display: inline-block; font-size: .68rem; font-weight: 700; padding: 2px 7px; border-radius: 20px; letter-spacing: .04em; }
     hr.sep { border: none; border-top: 1px solid var(--border); margin: 12px 0; grid-column: 1/-1; }
 
-    /* Artikel specificaties alleen-lezen */
+    /* Artikel specificaties alleen-lezen — vaste waarden uit gekozen artikel.
+       Selects krijgen geen dropdown-pijl meer; leest als platte tekstwaarde. */
     aside .field input[readonly],
     aside .field select:disabled {
       background: #f8f9fb;
@@ -219,6 +220,14 @@
       opacity: 1;
       border-color: var(--border);
     }
+    aside .field select:disabled {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: none;
+      padding-right: 10px;
+    }
+    aside .field select:disabled::-ms-expand { display: none; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="supabase-config.js"></script>
@@ -315,16 +324,40 @@
       <div class="card-header">Artikel specificaties</div>
       <div class="card-body">
         <div class="fg s1">
+          <!-- prijs_per_m1 blijft in DOM (compute() leest het), maar niet zichtbaar voor de eindgebruiker. -->
+          <input type="hidden" id="prijs_per_m1" value="0" />
+
+          <div class="section-label">Identificatie</div>
+          <div class="field">
+            <label>Artikelnummer</label>
+            <input type="text" id="artikelnummer" />
+          </div>
+          <div class="field">
+            <label>Gordijn type</label>
+            <input type="text" id="gordijn_type" />
+          </div>
+          <div class="field">
+            <label>Omschrijving</label>
+            <input type="text" id="omschrijving" />
+          </div>
+          <div class="field">
+            <label>Verkoopprijs per m&sup1; incl. btw (&euro;)</label>
+            <input type="text" id="verkoopprijs_m1" />
+            <span class="unit">Inkoop &times; 3, afgerond naar xx.95</span>
+          </div>
+
           <div class="section-label">Afmetingen stof</div>
           <div class="field">
             <label>Hoogte stof (cm)</label>
             <input type="number" id="hoogte_stof" value="300" min="1" step="1" />
-            <span class="unit">Maximale kamerhoge hoogte van de rol</span>
+            <input type="text" id="hoogte_stof_nvt" value="Niet relevant" readonly style="display:none" />
+            <span class="unit" id="hoogte_stof_unit">Maximale kamerhoge hoogte van de rol</span>
           </div>
           <div class="field">
             <label>Breedte stof (cm)</label>
             <input type="number" id="breedte_stof" value="140" min="1" step="1" />
-            <span class="unit">Standaard rolbreedte</span>
+            <input type="text" id="breedte_stof_nvt" value="Niet relevant" readonly style="display:none" />
+            <span class="unit" id="breedte_stof_unit">Standaard rolbreedte</span>
           </div>
 
           <div class="section-label">Patroon</div>
@@ -335,20 +368,17 @@
               <option value="Patroon">Patroon</option>
             </select>
           </div>
-          <div class="field" id="wrap_patroonhoogte" style="display:none">
+          <div class="field" id="wrap_patroonhoogte">
             <label>Patroonhoogte / rapport (cm)</label>
             <input type="number" id="patroonhoogte" value="0" min="0" step="1" />
+            <input type="text" id="patroonhoogte_nvt" value="Niet relevant" readonly style="display:none" />
           </div>
           <div class="field" id="wrap_patroonbreedte" style="display:none">
             <label>Patroonbreedte (cm)</label>
             <input type="number" id="patroonbreedte" value="0" min="0" step="1" />
           </div>
 
-          <div class="section-label">Prijs &amp; Eigenschappen</div>
-          <div class="field">
-            <label>Prijs per m&sup1; (&euro;)</label>
-            <input type="number" id="prijs_per_m1" value="0" min="0" step="0.01" />
-          </div>
+          <div class="section-label">Eigenschappen</div>
           <div class="field">
             <label>Kamerhoog</label>
             <select id="kamerhoog">
@@ -367,16 +397,9 @@
             </select>
           </div>
           <div class="field">
-            <label>Voeren</label>
-            <select id="voeren">
-              <option value="Nee">Nee</option>
-              <option value="Ja">Ja</option>
-            </select>
-          </div>
-          <div class="field" id="wrap_voering_prijs" style="display:none">
-            <label>Voering prijs per m&sup1; (&euro;)</label>
-            <input type="number" id="voering_prijs_per_m1" value="0" min="0" step="0.01" />
-            <span class="unit">Laat 0 voor 60%-schatting</span>
+            <label>Krimpercentage (%)</label>
+            <input type="number" id="krimpercentage" value="0" min="0" step="0.1" />
+            <span class="unit">Informatief — niet in berekening</span>
           </div>
 
           <div class="section-label">Overige kenmerken</div>
@@ -395,10 +418,6 @@
           <div class="field">
             <label>Akoestiek klasse</label>
             <select id="akoestiek"><option>—</option><option>A</option><option>B</option></select>
-          </div>
-          <div class="field">
-            <label>Verzwaaringskoord</label>
-            <select id="verzwaaringskoord"><option>Nee</option><option>Ja</option></select>
           </div>
           <div class="field">
             <label>Samenstelling</label>
@@ -438,21 +457,44 @@
       </div>
     </div>
 
-    <!-- Configuration -->
+    <!-- Configuration — volgorde gespiegeld op Veneta product-flow:
+         Kleur → Bevestiging → Plooi → Bediening → Voering → Afwerking. -->
     <div class="card">
       <div class="card-header">Configuratie</div>
       <div class="card-body">
         <div class="fg">
 
-          <div class="section-label">Plooi &amp; Afwerking</div>
+          <!-- 1. Kleur (Veneta start: kleurkeuze op gekozen stof) -->
+          <div class="section-label">Kleur</div>
+          <div class="field">
+            <label>Kleur</label>
+            <select id="kleur">
+              <option value="">&mdash; kies een artikel &mdash;</option>
+            </select>
+            <span class="unit">Beschikbare kleuren per artikel</span>
+          </div>
+
+          <!-- 2. Bevestiging -->
+          <div class="section-label">Bevestiging</div>
+          <div class="field">
+            <label>Bevestiging</label>
+            <select id="bevestiging">
+              <option>Plafond op de dag</option>
+              <option>Wand op de dag</option>
+              <option>In de dag</option>
+            </select>
+          </div>
+
+          <!-- 3. Plooi & verdeling (Veneta: plooi-keuze; aangevuld met onze Stuk/Vaste kant) -->
+          <div class="section-label">Plooi &amp; verdeling</div>
           <div class="field">
             <label>Plooi</label>
             <select id="plooi">
-              <option value="Enkel">Enkel plooi (&times;1.80)</option>
-              <option value="Dubbel">Dubbel plooi (&times;2.35)</option>
-              <option value="Enkel retour">Enkel retour (&times;2.10)</option>
+              <option value="Wave" selected>Wave plooi (&times;2.00)</option>
               <option value="Dubbel retour">Dubbel retour (&times;2.50)</option>
-              <option value="Wave">Wave plooi (&times;2.00)</option>
+              <option value="Enkel retour">Enkel retour (&times;2.10)</option>
+              <option value="Dubbel">Dubbel plooi (&times;2.35)</option>
+              <option value="Enkel">Enkel plooi (&times;1.80)</option>
             </select>
           </div>
           <div class="field">
@@ -469,6 +511,28 @@
               <option>—</option><option>Links</option><option>Rechts</option>
             </select>
           </div>
+
+          <!-- 4. Voering (Veneta: aparte stap voor voering ja/nee + type) -->
+          <div class="section-label">Voering</div>
+          <div class="field">
+            <label>Voeren</label>
+            <select id="voeren">
+              <option value="Nee">Nee</option>
+              <option value="Ja">Ja</option>
+            </select>
+          </div>
+          <div class="field" id="wrap_voering_prijs" style="display:none">
+            <label>Voering prijs per m&sup1; (&euro;)</label>
+            <input type="number" id="voering_prijs_per_m1" value="0" min="0" step="0.01" />
+            <span class="unit">Laat 0 voor 60%-schatting</span>
+          </div>
+
+          <!-- 5. Afwerking & toeslagen (onze extra variabelen) -->
+          <div class="section-label">Afwerking &amp; toeslagen</div>
+          <div class="field">
+            <label>Verzwaaringskoord</label>
+            <select id="verzwaaringskoord"><option>Nee</option><option>Ja</option></select>
+          </div>
           <div class="field">
             <label>Lock</label>
             <select id="lock">
@@ -476,8 +540,6 @@
               <option value="Ja">Ja &mdash; afgelockt (geen zoom)</option>
             </select>
           </div>
-
-          <div class="section-label">Zomen &amp; Toeslagen (cm)</div>
           <div class="field">
             <label>Vliesband (cm)</label>
             <select id="band">
@@ -494,15 +556,9 @@
               <option value="Ja">Ja</option>
             </select>
           </div>
-          <div class="section-label">Systeem &amp; Bevestiging</div>
-          <div class="field">
-            <label>Bevestiging</label>
-            <select id="bevestiging">
-              <option>Plafond op de dag</option>
-              <option>Wand op de dag</option>
-              <option>In de dag</option>
-            </select>
-          </div>
+
+          <!-- 6. Bediening (laatste stap) -->
+          <div class="section-label">Bediening</div>
           <div class="field">
             <label>Bediening</label>
             <select id="bediening">
@@ -510,13 +566,6 @@
               <option>Tuimelen links</option><option>Tuimelen rechts</option>
               <option>Middenstroom</option><option>Koordloos</option>
             </select>
-          </div>
-          <div class="field">
-            <label>Kleur</label>
-            <select id="kleur">
-              <option value="">&mdash; kies een artikel &mdash;</option>
-            </select>
-            <span class="unit">Beschikbare kleuren per artikel</span>
           </div>
 
         </div>
@@ -685,10 +734,9 @@ function buildFilterUitleg(b, h) {
   let filter2 = hasMaten
     ? `<span class="fu-text">Hoogtegrens (Kamerhoog artikelen):
         <span class="fu-formula">KlaarHoogte + Vliesband + Onderzoom &le; Hoogte&nbsp;stof</span>
-        &mdash; met jouw maten: <span class="fu-formula">${h} + ${DEFAULT_BAND_CHECK} + onderzoom</span>
-        (Vliesband ${DEFAULT_BAND_CHECK}&nbsp;cm standaard; Onderzoom&nbsp;= 2&nbsp;cm met verzwaringskoord, anders 15&nbsp;cm).
-        Banenstof-artikelen hebben geen hoogtebegrenzing.</span>`
-    : `<span class="fu-text">Vul klaarhoogte in (stap 2) om te zien welke artikelen geschikt zijn. <em>Kamerhoog-artikelen worden gecontroleerd op: KlaarHoogte + vliesband + onderzoom &le; hoogte stof (onderzoom = 2&nbsp;cm met verzwaringskoord, anders 15&nbsp;cm).</em></span>`;
+        &mdash; met jouw maten: <span class="fu-formula">${h} + ${DEFAULT_BAND_CHECK} + onderzoom</span>.
+        Vliesband ${DEFAULT_BAND_CHECK}&nbsp;cm standaard. Banenstof-artikelen hebben geen hoogtebegrenzing.</span>`
+    : `<span class="fu-text">Vul klaarhoogte in (stap 2) om te zien welke artikelen geschikt zijn. <em>Kamerhoog-artikelen worden gecontroleerd op KlaarHoogte + vliesband + onderzoom &le; hoogte stof.</em></span>`;
 
   return `<div class="filter-uitleg">
     <div class="fu-title">Actieve filters &amp; berekeningsmethode</div>
@@ -701,6 +749,15 @@ function buildFilterUitleg(b, h) {
     <div class="fu-row">
       <span class="fu-num">2</span>
       ${filter2}
+    </div>
+    <div class="fu-row">
+      <span class="fu-num">3</span>
+      <span class="fu-text">Verzw. (verzwaringskoord) per artikel bepaalt de onderzoom:
+        <span class="fu-formula">Ja &rarr; 2&nbsp;cm</span> (koord in onderzoom verwerkt) of
+        <span class="fu-formula">Nee &rarr; 15&nbsp;cm</span> (gestoomde onderzoom).
+        Bij <em>Lock = Ja</em> vervalt de onderzoom (0&nbsp;cm).
+        Voor gekanteld kamerhoog stof met verzwaringskoord: koord wordt weggesneden &rarr;
+        baan-breedte = <span class="fu-formula">Hoogte&nbsp;stof &minus; 2</span>&nbsp;cm.</span>
     </div>
   </div>`;
 }
@@ -757,6 +814,15 @@ function renderArtikelLijst() {
       ? kleurenArr.map(c => `<span class="tag" style="background:#f0f3f8;color:var(--accent-dk);margin:1px 2px">${esc(c)}</span>`).join('')
       : '<span style="color:var(--muted)">—</span>';
 
+    const patroonRaw = String(a.patroon || '').trim();
+    const isPatroon  = patroonRaw.toLowerCase() === 'patroon';
+    const rapport    = parseFloat(a.patroonhoogte);
+    const patroonStr = !patroonRaw
+      ? '<span style="color:var(--muted)">—</span>'
+      : isPatroon
+        ? `<span class="tag" style="background:#e8f0f8;color:var(--accent-dk)">Patroon${!isNaN(rapport) && rapport > 0 ? ' &middot; ' + rapport + '&nbsp;cm' : ''}</span>`
+        : `<span class="tag" style="background:#f5f5f5;color:var(--muted)">Uni</span>`;
+
     return `<tr class="${rowClass} ${selected}" onclick="selectArtikel('${esc(k)}', ${f.mogelijk === false})">
       <td>
         ${badge}
@@ -769,6 +835,7 @@ function renderArtikelLijst() {
       <td>${isKH
         ? '<span class="tag" style="background:#e8f0f8;color:var(--accent-dk)">Kamerhoog</span>'
         : '<span class="tag" style="background:#f5f5f5;color:var(--muted)">Banenstof</span>'}</td>
+      <td>${patroonStr}</td>
       <td>${verzwStr}</td>
       <td>${esc(a.lichtdoorlatenheid || '—')}</td>
       <td>${prijsStr}</td>
@@ -789,6 +856,7 @@ function renderArtikelLijst() {
             <th>H stof</th>
             <th>B stof</th>
             <th>Stoftype</th>
+            <th>Patroon</th>
             <th>Verzw.</th>
             <th>Licht</th>
             <th>Prijs/m&sup1;</th>
@@ -847,6 +915,12 @@ function setVal(id, val) {
 }
 
 function applyArtikel(a) {
+  setVal('artikelnummer',        a.artikelnummer);
+  setVal('gordijn_type',         a.gordijn_type);
+  setVal('omschrijving',         a.omschrijving);
+  const verkoop = verkoopPrijs95(a.prijs_per_m1);
+  setVal('verkoopprijs_m1',      verkoop !== null ? '€ ' + verkoop.toFixed(2) : '—');
+  setVal('krimpercentage',       a.krimpercentage);
   setVal('hoogte_stof',          a.hoogte_stof);
   setVal('breedte_stof',         a.breedte_stof);
   setVal('patroon',              a.patroon);
@@ -877,6 +951,7 @@ function applyArtikel(a) {
   togglePatroon();
   toggleVoering();
   toggleLoodveter();
+  toggleBreedteStof();
   populateKleurOpties(a);
   compute();
 }
@@ -966,16 +1041,25 @@ function compute() {
       : `<b>${fmt(vereistTotaal)} cm</b> &le; ${hoogte_stof} cm &#10003;`;
 
     if (gekanteld) {
-      // Gekanteld: stof wordt als banenstof verwerkt (meerdere banen naast elkaar).
-      aantalBanen    = Math.ceil(benodigdeBreedte / breedte_stof);
+      // Gekanteld: stof wordt 90° gedraaid. De originele hoogte_stof wordt nu de
+      // baan-breedte (de begrensde dimensie); breedte_stof is de roleinden-richting
+      // en is in principe onbeperkt.
+      // Met verzwaringskoord: koord moet weggesneden worden (-2 cm in oorspronkelijke
+      // hoogte = -2 cm in baan-breedte na kanteling).
+      const koordVerlies   = isJa(verzwKeuze) ? 2 : 0;
+      const baanBreedteEff = hoogte_stof - koordVerlies;
+      aantalBanen    = Math.ceil(benodigdeBreedte / baanBreedteEff);
       const mPerBaan = vereistTotaal / 100;
       totaalMetrage  = parseFloat((aantalBanen * mPerBaan).toFixed(1));
+      const koordRegel = koordVerlies > 0
+        ? `<b>Verzwaringskoord weggesneden:</b> ${hoogte_stof} &minus; 2 = <b>${baanBreedteEff} cm</b> baan-breedte<br>`
+        : '';
       breakdownHTML = `
         <span class="step">Scenario A &mdash; Kamerhoog (gekanteld)</span>
         <b>Effectieve breedte:</b> ${fmt(effectieveBreedte,0)} cm ${stuk !== 'Single' ? '(halve rail: '+breedte_rail+'/2)' : ''}<br>
         <b>Plooifactor:</b> ${plooiFactor} (${plooiKeuze})<br>
         <b>Benodigd stofbreedte:</b> ${fmt(effectieveBreedte,0)} &times; ${plooiFactor} + 1&times;${2 * ZIJZOOM_CM} = <b>${fmt(benodigdeBreedte)} cm</b><br>
-        <b>Banen:</b> &lceil;${fmt(benodigdeBreedte)} &divide; ${breedte_stof}&rceil; = <b>${aantalBanen} banen</b><br>
+        ${koordRegel}<b>Banen (na kanteling):</b> &lceil;${fmt(benodigdeBreedte)} &divide; ${baanBreedteEff}&rceil; = <b>${aantalBanen} banen</b><br>
         <b>Hoogte per baan:</b> ${fmt(vereistTotaal)} cm (snijhoogte)<br>
         <b>Metrage/baan:</b> ${fmt(vereistTotaal)} &divide; 100 = ${fmt(mPerBaan)} m<br>
         <b>Totaal metrage:</b> ${aantalBanen} &times; ${fmt(mPerBaan)} = <b>${fmt(totaalMetrage)} m</b><br>
@@ -1050,9 +1134,29 @@ function compute() {
 }
 
 function togglePatroon() {
-  const show = sel('patroon') === 'Patroon';
-  el('wrap_patroonhoogte').style.display = show ? '' : 'none';
-  el('wrap_patroonbreedte').style.display = show ? '' : 'none';
+  const isPatroon = sel('patroon') === 'Patroon';
+  // Patroonhoogte: altijd zichtbaar — getalveld bij Patroon, "Niet relevant" bij Uni.
+  el('patroonhoogte').style.display     = isPatroon ? '' : 'none';
+  el('patroonhoogte_nvt').style.display = isPatroon ? 'none' : '';
+  // Patroonbreedte (informatief): alleen relevant bij Patroon.
+  el('wrap_patroonbreedte').style.display = isPatroon ? '' : 'none';
+}
+// Stof-afmetingen tonen "Niet relevant" voor de onbeperkte rol-richting:
+//   Kamerhoog (Ja): breedte_stof  = lengte van de rol → onbeperkt.
+//   Banenstof (Nee): hoogte_stof  = lengte van de rol → onbeperkt.
+// De numerieke inputs blijven in de DOM zodat compute() er nog bij kan.
+function toggleBreedteStof() {
+  const kh = isJa(sel('kamerhoog'));
+  el('breedte_stof').style.display     = kh ? 'none' : '';
+  el('breedte_stof_nvt').style.display = kh ? '' : 'none';
+  el('breedte_stof_unit').textContent  = kh
+    ? 'Bij kamerhoog = lengte van de rol (onbeperkt)'
+    : 'Standaard rolbreedte';
+  el('hoogte_stof').style.display      = kh ? '' : 'none';
+  el('hoogte_stof_nvt').style.display  = kh ? 'none' : '';
+  el('hoogte_stof_unit').textContent   = kh
+    ? 'Maximale kamerhoge hoogte van de rol'
+    : 'Bij banenstof = lengte van de rol (onbeperkt)';
 }
 function toggleVoering() {
   el('wrap_voering_prijs').style.display = sel('voeren') === 'Ja' ? '' : 'none';
@@ -1113,6 +1217,7 @@ async function seedKantelbaar(saved) {
   const { data } = await dbLoadAll();
   _savedArtikelen = data || {};
   await seedKantelbaar(_savedArtikelen);
+  await seedAfmetingenPlaceholders(_savedArtikelen);
   await seedKleuren(_savedArtikelen);
 
   // Auto-load if redirected from import page
