@@ -273,12 +273,29 @@
     }
     .veld-uitleg .veld {
       display: grid;
-      grid-template-columns: 190px 1fr;
+      grid-template-columns: 190px 1fr 160px;
       gap: 10px;
       align-items: baseline;
       padding: 6px 0;
       border-bottom: 1px dashed var(--border);
       font-size: .83rem;
+    }
+    .veld-uitleg .zoho-api {
+      font-family: 'Courier New', monospace;
+      font-size: .75rem;
+      color: var(--accent);
+      background: var(--accent-lt);
+      padding: 2px 7px;
+      border-radius: 4px;
+      text-align: right;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .veld-uitleg .zoho-api.local {
+      color: var(--muted);
+      background: #f5f5f5;
+      font-style: italic;
     }
     .veld-uitleg .veld:last-child { border-bottom: none; }
     .veld-uitleg dt {
@@ -295,8 +312,9 @@
       color: var(--muted);
       font-style: normal;
     }
-    @media (max-width: 540px) {
+    @media (max-width: 720px) {
       .veld-uitleg .veld { grid-template-columns: 1fr; gap: 2px; }
+      .veld-uitleg .zoho-api { text-align: left; display: inline-block; }
     }
   </style>
 </head>
@@ -313,6 +331,7 @@
   </svg>
   <h1>Gordijn Configurator — Artikel Import</h1>
   <nav>
+    <a href="berekeningsregels.html" target="_blank" rel="noopener">📘 Berekeningsregels</a>
     <a href="index.html">← Terug naar configurator</a>
   </nav>
 </header>
@@ -422,33 +441,10 @@
             </table>
           </div>
 
-          <!-- Field reference list -->
+          <!-- Field reference list — auto-gegenereerd uit ARTIKEL_FIELDS -->
           <p style="font-size:.78rem;font-weight:700;color:var(--accent-dk);margin-bottom:6px">Alle beschikbare velden:</p>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:4px 12px">
-            <span class="hint-field"><span class="req">★</span> Artikelnummer</span>
-            <span class="hint-field">Gordijn type <em>(Overgordijn / Inbetween)</em></span>
-            <span class="hint-field">Omschrijving</span>
-            <span class="hint-field">Hoogte stof (cm)</span>
-            <span class="hint-field">Breedte stof (cm)</span>
-            <span class="hint-field">Patroon <em>(Uni / Patroon)</em></span>
-            <span class="hint-field">Patroonhoogte (cm)</span>
-            <span class="hint-field">Patroonbreedte (cm)</span>
-            <span class="hint-field">Inkoopprijs per m¹ (€)</span>
-            <span class="hint-field">Krimpercentage (%) <em>(informatief)</em></span>
-            <span class="hint-field">Kamerhoog <em>(Ja / Nee)</em></span>
-            <span class="hint-field">Lichtdoorlatenheid</span>
-            <span class="hint-field">Voeren <em>(Ja / Nee)</em></span>
-            <span class="hint-field">Voering prijs per m¹ (€)</span>
-            <span class="hint-field">Kantelbaar <em>(Ja / Nee)</em></span>
-            <span class="hint-field">Doubleface <em>(Ja / Nee)</em></span>
-            <span class="hint-field">Brandvertragend <em>(Ja / Nee)</em></span>
-            <span class="hint-field">Akoestiek klasse <em>(— / A / B)</em></span>
-            <span class="hint-field">Verzwaaringskoord <em>(Ja / Nee)</em></span>
-            <span class="hint-field">Samenstelling</span>
-            <span class="hint-field">Kleuren <em>(komma- of puntkomma-gescheiden)</em></span>
-          </div>
-          <p style="font-size:.73rem;color:var(--muted);margin-top:8px"><span class="req">★</span> = verplicht veld. Alle overige velden zijn optioneel.
-          Verkoopprijs wordt automatisch berekend (<em>inkoopprijs × 3</em>, afgerond op <em>xx.95</em>) en is dus geen importveld.</p>
+          <div id="hintFieldList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:4px 12px"></div>
+          <p style="font-size:.73rem;color:var(--muted);margin-top:8px"><span class="req">★</span> = verplicht veld. Alle overige velden zijn optioneel. Verkoopprijs valt terug op <em>inkoop × 3 → xx.95</em> als het veld leeg is (testartikelen).</p>
         </div>
       </div>
 
@@ -506,58 +502,16 @@
     </div>
   </div>
 
-  <!-- ── Veld uitleg ── -->
+  <!-- ── Veld uitleg — auto-gegenereerd uit ARTIKEL_FIELDS ── -->
   <div class="card" id="veldUitlegCard">
     <div class="card-header">
       <span>Uitleg artikelvelden</span>
     </div>
     <div class="card-body">
-      <dl class="veld-uitleg">
-        <div class="veld"><dt>Artikelnummer <span class="req">★</span></dt>
-          <dd>Unieke code die dit artikel identificeert (bijv. <em>ART-001</em>). Verplicht veld.</dd></div>
-        <div class="veld"><dt>Gordijn type</dt>
-          <dd><em>Overgordijn</em> (zwaar, decoratief, verduisterend/semi-transparant) of <em>Inbetween</em> (licht en lichtdoorlatend). Bepaalt welk tabblad in de configurator het artikel toont.</dd></div>
-        <div class="veld"><dt>Omschrijving</dt>
-          <dd>Vrije naam of beschrijving van de stof, bijv. <em>"Linnen naturel"</em> of <em>"Velvet donkerblauw"</em>.</dd></div>
-        <div class="veld"><dt>Hoogte stof (cm)</dt>
-          <dd>Maximale hoogte van de stofrol. Bepaalt of een kamerhoge uitvoering haalbaar is: <em>KlaarHoogte + vliesband + onderzoom ≤ Hoogte stof</em>.</dd></div>
-        <div class="veld"><dt>Breedte stof (cm)</dt>
-          <dd>Rolbreedte van de stof. Bepaalt hoeveel banen nodig zijn: <em>⌈benodigde breedte ÷ breedte stof⌉</em>.</dd></div>
-        <div class="veld"><dt>Patroon</dt>
-          <dd><em>Uni</em> (egaal) of <em>Patroon</em> (met herhaling). Bij patroon wordt de snijhoogte afgerond op hele rapporten.</dd></div>
-        <div class="veld"><dt>Patroonhoogte (cm)</dt>
-          <dd>Verticale rapporthoogte (afstand tussen herhalingen). Alleen relevant wanneer <em>Patroon</em> is gekozen.</dd></div>
-        <div class="veld"><dt>Patroonbreedte (cm)</dt>
-          <dd>Horizontale rapportbreedte. Informatief; wordt momenteel niet in de berekening gebruikt.</dd></div>
-        <div class="veld"><dt>Inkoopprijs per m¹ (€)</dt>
-          <dd>De <strong>inkoopprijs</strong> per lopende meter stof. Wordt gebruikt voor de metrage-berekening en dient als basis voor de automatische verkoopprijs.</dd></div>
-        <div class="veld"><dt>Verkoopprijs per m¹ incl. btw <em>(berekend)</em></dt>
-          <dd>Géén importveld. Wordt automatisch afgeleid uit de inkoopprijs: <em>verkoop = inkoop × 3</em>, omhoog afgerond naar het eerstvolgende <em>xx.95</em> (bijv. <em>inkoop € 12,34 → verkoop € 37,95</em>). Zichtbaar in de kolom <strong>Verkoop/m¹ incl. btw</strong>.</dd></div>
-        <div class="veld"><dt>Krimpercentage (%)</dt>
-          <dd>Verwachte krimp na wasbeurt. <em>Informatief</em> — wordt niet meer in de berekening gebruikt.</dd></div>
-        <div class="veld"><dt>Kamerhoog</dt>
-          <dd><em>Ja</em> = kamerhoge verwerking: één baan uit de rolbreedte gesneden; hoogtebeperking <em>KlaarHoogte + vliesband + onderzoom ≤ Hoogte stof</em> geldt. <em>Nee</em> = banenstof: meerdere banen naast elkaar, geen hoogtebegrenzing.</dd></div>
-        <div class="veld"><dt>Lichtdoorlatenheid</dt>
-          <dd>Lichtklasse: <em>Transparant</em>, <em>Semi transparant</em>, <em>Lichtblokkade</em>, <em>Dimout</em> of <em>Blackout</em>.</dd></div>
-        <div class="veld"><dt>Voeren</dt>
-          <dd>Of een aparte voeringstof geplaatst wordt. <em>Ja</em> voegt de voeringprijs toe aan het totaal.</dd></div>
-        <div class="veld"><dt>Voering prijs per m¹ (€)</dt>
-          <dd>Inkoopprijs van de voeringstof per lopende meter. Laat <em>0</em> voor een automatische schatting (60% van de stofprijs).</dd></div>
-        <div class="veld"><dt>Kantelbaar</dt>
-          <dd><em>Ja</em> = de stof mag 90° gekanteld verwerkt worden. Wanneer de klaarhoogte normaal gezien te groot is voor de stofhoogte, valt de configurator voor deze stof terug op gekanteld verwerken (klant wordt gewaarschuwd). <em>Nee</em> = standaard verwerking, hoogte strikt beperkt door stofhoogte.</dd></div>
-        <div class="veld"><dt>Doubleface</dt>
-          <dd><em>Ja</em> = de stof is aan beide zijden afgewerkt en geschikt voor tweezijdig gebruik.</dd></div>
-        <div class="veld"><dt>Brandvertragend</dt>
-          <dd><em>Ja</em> = de stof voldoet aan brandvertragende normen (FR). Relevant voor projecten en publieke ruimtes.</dd></div>
-        <div class="veld"><dt>Akoestiek klasse</dt>
-          <dd>Geluidsabsorberende klasse: <em>—</em> (geen), <em>A</em> (beste absorptie) of <em>B</em>.</dd></div>
-        <div class="veld"><dt>Verzwaaringskoord</dt>
-          <dd><em>Ja</em> = verzwaringskoord in de onderzoom → onderzoom = 2 cm (coupageverlies = vliesband + 2). <em>Nee</em> = geen koord → onderzoom = 15 cm (coupageverlies = vliesband + 15). Is <em>Ja</em>, dan wordt Loodveter automatisch op <em>Nee</em> gezet (nooit beide nodig).</dd></div>
-        <div class="veld"><dt>Samenstelling</dt>
-          <dd>Vezelsamenstelling van de stof, bijv. <em>"100% Polyester"</em> of <em>"60% Linnen, 40% Viscose"</em>.</dd></div>
-        <div class="veld"><dt>Kleuren</dt>
-          <dd>Beschikbare kleuren voor dit artikel, gescheiden door komma of puntkomma (bijv. <em>"Wit, Naturel, Grijs, Beige, Taupe"</em>). Ideaal 10–20 waarden. Vult het Kleur-dropdown in de configurator wanneer het artikel gekozen is. Artikelen zonder kleuren krijgen bij het laden automatisch een fictieve set toegewezen.</dd></div>
-      </dl>
+      <dl class="veld-uitleg" id="veldUitlegList"></dl>
+      <p style="font-size:.78rem;color:var(--muted);margin-top:14px;padding-top:10px;border-top:1px dashed var(--border)">
+        <strong>Zoho CRM mapping</strong> — elk veld heeft een API-naam in de <em>Products</em>-module van Zoho CRM (zie kolom rechts). Bij sync worden deze namen gebruikt.
+      </p>
     </div>
   </div>
 
@@ -596,88 +550,42 @@
 // ARTIKEL IMPORT — Gordijn Configurator
 // ============================================================
 
-// ── Field definitions (internal key → Dutch label) ──
-const FIELDS = [
-  { key: 'artikelnummer',        label: 'Artikelnummer',           required: true  },
-  { key: 'gordijn_type',         label: 'Gordijn type',            required: false },
-  { key: 'omschrijving',         label: 'Omschrijving',            required: false },
-  { key: 'hoogte_stof',          label: 'Hoogte stof (cm)',        required: false },
-  { key: 'breedte_stof',         label: 'Breedte stof (cm)',       required: false },
-  { key: 'patroon',              label: 'Patroon',                 required: false },
-  { key: 'patroonhoogte',        label: 'Patroonhoogte (cm)',      required: false },
-  { key: 'patroonbreedte',       label: 'Patroonbreedte (cm)',     required: false },
-  { key: 'prijs_per_m1',         label: 'Inkoopprijs per m¹ (€)',  required: false },
-  { key: 'krimpercentage',       label: 'Krimpercentage (%)',      required: false },
-  { key: 'kamerhoog',            label: 'Kamerhoog',               required: false },
-  { key: 'lichtdoorlatenheid',   label: 'Lichtdoorlatenheid',      required: false },
-  { key: 'voeren',               label: 'Voeren',                  required: false },
-  { key: 'voering_prijs_per_m1', label: 'Voering prijs per m¹ (€)',required: false },
-  { key: 'kantelbaar',           label: 'Kantelbaar',              required: false },
-  { key: 'doubleface',           label: 'Doubleface',              required: false },
-  { key: 'brandvertragend',      label: 'Brandvertragend',         required: false },
-  { key: 'akoestiek',            label: 'Akoestiek klasse',        required: false },
-  { key: 'verzwaaringskoord',    label: 'Verzwaaringskoord',       required: false },
-  { key: 'samenstelling',        label: 'Samenstelling',           required: false },
-  { key: 'kleuren',              label: 'Kleuren',                 required: false },
-];
-
-// Aliases used for auto-detecting column headers
-const ALIASES = {
-  artikelnummer:        ['artikelnummer','artikel nr','artikel_nr','article','artnr','art.nr','art nr','art_nr','code','sku','item'],
-  gordijn_type:         ['gordijn type','gordijn_type','type gordijn','type','overgordijn','inbetween','gordijntype'],
-  omschrijving:         ['omschrijving','naam','name','description','desc','omschr'],
-  hoogte_stof:          ['hoogte stof','hoogte_stof','stofhoogte','height fabric','fabric height','hoogte','max hoogte'],
-  breedte_stof:         ['breedte stof','breedte_stof','stofbreedte','fabric width','width fabric','breedte','rolbreedte'],
-  patroon:              ['patroon','pattern','patroontype'],
-  patroonhoogte:        ['patroonhoogte','patroon hoogte','rapport','patroonhoogte (cm)','pattern height'],
-  patroonbreedte:       ['patroonbreedte','patroon breedte','pattern width'],
-  prijs_per_m1:         ['inkoopprijs','inkoopprijs per m1','inkoopprijs per m¹','inkoop','inkoop/m','inkoop per m','inkoop m1','prijs per m1','prijs per m¹','prijs/m1','prijs/m','prijs per meter','price','prijs','cost'],
-  krimpercentage:       ['krimpercentage','krimp','shrinkage','krimp %','krimpp'],
-  kamerhoog:            ['kamerhoog','kamerhoog?','room height','kamer hoog'],
-  lichtdoorlatenheid:   ['lichtdoorlatenheid','licht','transparantie','transparancy','light','lichtdoorl'],
-  voeren:               ['voeren','voering','lined','lining'],
-  voering_prijs_per_m1: ['voering prijs','voering_prijs','voering prijs per m1','voering prijs per m¹','lining price'],
-  kantelbaar:           ['kantelbaar','tiltable','kantel'],
-  doubleface:           ['doubleface','double face','double-face','reversible'],
-  brandvertragend:      ['brandvertragend','brandwerend','fire retardant','fire','fr'],
-  akoestiek:            ['akoestiek','akoestiek klasse','acoustic','acoustic class','akoestiekklasse'],
-  verzwaaringskoord:    ['verzwaaringskoord','verzwaring','weight cord','weighting'],
-  samenstelling:        ['samenstelling','composition','materiaal','material','fiber','vezel'],
-  kleuren:              ['kleuren','kleur','colors','colour','colours','color'],
-};
+// Velden + aliases worden centraal beheerd in db.js (ARTIKEL_FIELDS).
+const FIELDS = ARTIKEL_FIELDS;
 
 let rawRows = [];       // parsed rows from file
 let rawHeaders = [];    // original headers from file
 let mappedRows = [];    // after mapping applied
 let columnMap = {};     // fieldKey → rawHeader
 
-// ── Template CSV ──
+// ── Template CSV (alle velden in dezelfde volgorde als ARTIKEL_FIELDS) ──
+const TEMPLATE_EXAMPLE = {
+  artikelnummer:        'ART-001',
+  gordijn_type:         'Overgordijn',
+  omschrijving:         'Linnen naturel',
+  hoogte_stof:          '300',
+  breedte_stof:         '140',
+  patroon:              'Uni',
+  patroonhoogte:        '0',
+  patroonbreedte:       '0',
+  prijs_per_m1:         '24.95',
+  verkoopprijs_per_m1:  '74.95',
+  krimpercentage:       '3',
+  kamerhoog:            'Ja',
+  lichtdoorlatenheid:   'Semi transparant',
+  voeren:               'Geen voering',
+  voering_prijs_per_m1: '0',
+  kantelbaar:           'Ja',
+  doubleface:           'Nee',
+  brandvertragend:      'Nee',
+  akoestiek:            '—',
+  verzwaaringskoord:    'Nee',
+  samenstelling:        '100% Linnen',
+  kleuren:              'Wit, Naturel, Beige, Zand, Taupe, Grijs',
+};
 function downloadTemplate() {
   const headers = FIELDS.map(f => f.label);
-  // Voorbeeldrij — ordening volgt exact de FIELDS-array.
-  const example = [
-    'ART-001',        // Artikelnummer
-    'Overgordijn',    // Gordijn type
-    'Linnen naturel', // Omschrijving
-    '300',            // Hoogte stof (cm)
-    '140',            // Breedte stof (cm)
-    'Uni',            // Patroon
-    '0',              // Patroonhoogte (cm)
-    '0',              // Patroonbreedte (cm)
-    '24.95',          // Inkoopprijs per m¹ (€)
-    '3',              // Krimpercentage (%)
-    'Ja',             // Kamerhoog
-    'Semi transparant', // Lichtdoorlatenheid
-    'Nee',            // Voeren
-    '0',              // Voering prijs per m¹ (€)
-    'Ja',             // Kantelbaar
-    'Nee',            // Doubleface
-    'Nee',            // Brandvertragend
-    '—',              // Akoestiek klasse
-    'Nee',            // Verzwaaringskoord
-    '100% Linnen',    // Samenstelling
-    'Wit, Naturel, Beige, Zand, Taupe, Grijs', // Kleuren (komma- of puntkomma-gescheiden)
-  ];
+  const example = FIELDS.map(f => TEMPLATE_EXAMPLE[f.key] ?? '');
   const csv = [headers.join(';'), example.join(';')].join('\n');
   const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
   const a = document.createElement('a');
@@ -741,7 +649,9 @@ function handleFile(file) {
 }
 
 function autoDetect(fieldKey) {
-  const aliases = (ALIASES[fieldKey] || [fieldKey]).map(a => a.toLowerCase().replace(/\s+/g,''));
+  const f = getField(fieldKey);
+  const list = (f && f.aliases) || [fieldKey];
+  const aliases = list.map(a => a.toLowerCase().replace(/\s+/g,''));
   for (const h of rawHeaders) {
     const norm = h.toLowerCase().replace(/\s+/g,'').replace(/[¹²³]/g,'1');
     if (aliases.some(a => norm === a || norm.includes(a) || a.includes(norm))) return h;
@@ -810,22 +720,8 @@ function applyMapping() {
 }
 
 // ── Preview table ──
-const PREVIEW_COLS = [
-  { key: 'artikelnummer',      label: 'Artikelnr.' },
-  { key: 'gordijn_type',       label: 'Type' },
-  { key: 'omschrijving',       label: 'Omschrijving' },
-  { key: 'hoogte_stof',        label: 'H stof' },
-  { key: 'breedte_stof',       label: 'B stof' },
-  { key: 'patroon',            label: 'Patroon' },
-  { key: 'prijs_per_m1',       label: 'Prijs/m¹' },
-  { key: 'krimpercentage',     label: 'Krimp%' },
-  { key: 'kamerhoog',          label: 'KH' },
-  { key: 'lichtdoorlatenheid', label: 'Licht' },
-  { key: 'voeren',             label: 'Voe-ren' },
-  { key: 'kantelbaar',         label: 'Kant.' },
-  { key: 'brandvertragend',    label: 'BR' },
-  { key: 'samenstelling',      label: 'Samen-stelling' },
-];
+// Afgeleid uit ARTIKEL_FIELDS — alle velden met `preview: true`.
+const PREVIEW_COLS = FIELDS.filter(f => f.preview).map(f => ({ key: f.key, label: f.short }));
 
 function buildPreviewTable() {
   const thead = document.getElementById('previewHead');
@@ -849,21 +745,25 @@ function buildPreviewTable() {
   updateSelCount();
 }
 
+// Cel-rendering aangedreven door render-hint op het veld (yesno|currency|number|...).
 function renderCell(key, val) {
-  if (!val || val === '0' && ['patroonhoogte','patroonbreedte','voering_prijs_per_m1'].includes(key)) {
-    return `<span style="color:var(--muted)">—</span>`;
+  const f = getField(key);
+  if (!f) return esc(val ?? '');
+  const dash = '<span style="color:var(--muted)">—</span>';
+  const placeholderZero = ['patroonhoogte','patroonbreedte','voering_prijs_per_m1'].includes(key);
+  if (val === undefined || val === null || val === '' || (placeholderZero && val === '0')) return dash;
+  const v = String(val);
+  if (f.render === 'yesno') {
+    const lower = v.toLowerCase();
+    return (lower === 'ja' || lower === 'yes' || lower === '1' || lower === 'true')
+      ? `<span class="tag tag-yes">Ja</span>`
+      : `<span class="tag tag-no">Nee</span>`;
   }
-  const lower = val.toLowerCase();
-  if (['kamerhoog','voeren','kantelbaar','doubleface','brandvertragend','verzwaaringskoord'].includes(key)) {
-    if (lower === 'ja' || lower === 'yes' || lower === '1' || lower === 'true')
-      return `<span class="tag tag-yes">Ja</span>`;
-    return `<span class="tag tag-no">Nee</span>`;
+  if (f.render === 'currency') {
+    const n = parseFloat(v);
+    return isNaN(n) ? esc(v) : `€ ${n.toFixed(2)}`;
   }
-  if (key === 'prijs_per_m1') {
-    const n = parseFloat(val);
-    return isNaN(n) ? val : `€ ${n.toFixed(2)}`;
-  }
-  return esc(val);
+  return esc(v);
 }
 
 function toggleRow(i) {
@@ -1006,92 +906,76 @@ function renderSaved() {
     return;
   }
 
-  const yesNo = v => {
+  // Render-helpers — gebruikt door renderSavedCell.
+  const dashEmpty = '<span style="color:var(--muted)">—</span>';
+  const renderYesNo = v => {
     const l = String(v||'').toLowerCase();
-    if (l === 'ja' || l === 'yes' || l === '1' || l === 'true')
-      return `<span class="tag tag-yes">Ja</span>`;
-    if (l === 'nee' || l === 'no' || l === '0' || l === 'false')
-      return `<span class="tag tag-no">Nee</span>`;
-    return v ? esc(v) : `<span style="color:var(--muted)">—</span>`;
+    if (l === 'ja' || l === 'yes' || l === '1' || l === 'true')  return '<span class="tag tag-yes">Ja</span>';
+    if (l === 'nee' || l === 'no' || l === '0' || l === 'false') return '<span class="tag tag-no">Nee</span>';
+    return v ? esc(v) : dashEmpty;
   };
-  const dash = v => v ? esc(v) : `<span style="color:var(--muted)">—</span>`;
-  const price = v => {
+  const renderCurrency = v => {
     const n = parseFloat(v);
-    return isNaN(n) || n === 0 ? `<span style="color:var(--muted)">—</span>` : `€ ${n.toFixed(2)}`;
+    return isNaN(n) || n === 0 ? dashEmpty : `€ ${n.toFixed(2)}`;
   };
-  // Verkoop incl. btw = inkoop × 3, omhoog afgerond naar het eerstvolgende xx.95.
-  const verkoop95 = v => {
-    const n = parseFloat(v);
-    if (isNaN(n) || n <= 0) return `<span style="color:var(--muted)">—</span>`;
-    const x = n * 3;
-    const f = Math.floor(x);
-    const rounded = (x <= f + 0.95) ? f + 0.95 : f + 1.95;
-    return `<strong>€ ${rounded.toFixed(2)}</strong>`;
+  const renderText = v => v ? esc(v) : dashEmpty;
+  const renderPercent = v => v && v !== '0' ? esc(v) + '%' : dashEmpty;
+  // Verkoop incl. btw — handmatig veld heeft voorrang; auto-formule alleen voor testartikelen.
+  const renderVerkoop = a => {
+    const info = getVerkoopPrijs(a);
+    if (!info) return dashEmpty;
+    const dot = info.bron === 'handmatig'
+      ? '<span style="color:var(--success);font-size:.7rem" title="handmatig ingesteld">●</span>'
+      : '<span style="color:var(--muted);font-size:.7rem" title="auto-berekend (inkoop × 3 → xx.95)">●</span>';
+    return `<strong>€ ${info.prijs.toFixed(2)}</strong> ${dot}`;
   };
+  const renderPatroonhoogte = a =>
+    String(a.patroon||'').toLowerCase() === 'uni'
+      ? '0'
+      : (() => { const n = parseFloat(a.patroonhoogte); return isNaN(n) ? '0' : esc(String(n)); })();
+
+  // Per veld: hoe wordt de cel-content geproduceerd? Speciale gevallen krijgen
+  // een eigen renderer; voor de rest dispatchen we op `render`-hint van het veld.
+  function renderSavedCell(field, a) {
+    const v = a[field.key];
+    if (field.key === 'gordijn_type')        return renderGordijnType(v);
+    if (field.key === 'verkoopprijs_per_m1') return renderVerkoop(a);
+    if (field.key === 'patroonhoogte')       return renderPatroonhoogte(a);
+    if (field.key === 'krimpercentage')      return renderPercent(v);
+    switch (field.render) {
+      case 'yesno':    return renderYesNo(v);
+      case 'currency': return renderCurrency(v);
+      default:         return renderText(v);
+    }
+  }
+  // Cel-styling per veld (alleen wanneer afwijkend).
+  const cellStyle = key => {
+    if (key === 'lichtdoorlatenheid') return 'white-space:normal;max-width:110px';
+    if (key === 'samenstelling')      return 'white-space:normal;max-width:130px';
+    if (key === 'kleuren')            return 'white-space:normal;max-width:180px';
+    return '';
+  };
+
+  const cols = ARTIKEL_FIELDS.filter(f => f.saved);
+  const headers = cols.map(f =>
+    `<th>${f.key === 'verkoopprijs_per_m1' ? 'Verkoop/m¹ incl. btw' : esc(f.short)}</th>`
+  ).join('');
+  const rows = keys.map(nr => {
+    const a = saved[nr];
+    return `<tr>${cols.map(f => {
+      const style = cellStyle(f.key);
+      return `<td${style ? ' style="'+style+'"' : ''}>${renderSavedCell(f, a)}</td>`;
+    }).join('')}<td style="white-space:nowrap">
+      <button class="btn btn-outline btn-sm" onclick="openInConfigurator('${esc(nr)}')" title="Openen in configurator">↗</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteArticle('${esc(nr)}')" title="Verwijderen">✕</button>
+    </td></tr>`;
+  }).join('');
 
   list.innerHTML = `
   <div class="table-wrap">
     <table>
-      <thead>
-        <tr>
-          <th>Artikelnr.</th>
-          <th>Type</th>
-          <th>Omschrijving</th>
-          <th>H stof</th>
-          <th>B stof</th>
-          <th>Patroon</th>
-          <th>Patroonhoogte</th>
-          <th>Inkoop/m¹</th>
-          <th>Verkoop/m¹ incl. btw</th>
-          <th>Krimp%</th>
-          <th>KH</th>
-          <th>Lichtdoorlatenheid</th>
-          <th>Voeren</th>
-          <th>Voer.prijs</th>
-          <th>Kant.</th>
-          <th>D.face</th>
-          <th>BR</th>
-          <th>Akoest.</th>
-          <th>Verzw.</th>
-          <th>Samenstelling</th>
-          <th>Kleuren</th>
-          <th style="width:72px"></th>
-        </tr>
-      </thead>
-      <tbody>
-        ${keys.map(nr => {
-          const a = saved[nr];
-          return `<tr>
-            <td><strong>${esc(nr)}</strong></td>
-            <td>${renderGordijnType(a.gordijn_type)}</td>
-            <td>${dash(a.omschrijving)}</td>
-            <td>${dash(a.hoogte_stof)}</td>
-            <td>${dash(a.breedte_stof)}</td>
-            <td>${dash(a.patroon)}</td>
-            <td>${String(a.patroon||'').toLowerCase() === 'uni'
-              ? '0'
-              : (() => { const n = parseFloat(a.patroonhoogte); return isNaN(n) ? '0' : esc(String(n)); })()}</td>
-            <td>${price(a.prijs_per_m1)}</td>
-            <td>${verkoop95(a.prijs_per_m1)}</td>
-            <td>${a.krimpercentage && a.krimpercentage !== '0' ? esc(a.krimpercentage)+'%' : dash('')}</td>
-            <td>${yesNo(a.kamerhoog)}</td>
-            <td style="white-space:normal;max-width:110px">${dash(a.lichtdoorlatenheid)}</td>
-            <td>${yesNo(a.voeren)}</td>
-            <td>${price(a.voering_prijs_per_m1)}</td>
-            <td>${yesNo(a.kantelbaar)}</td>
-            <td>${yesNo(a.doubleface)}</td>
-            <td>${yesNo(a.brandvertragend)}</td>
-            <td>${dash(a.akoestiek)}</td>
-            <td>${yesNo(a.verzwaaringskoord)}</td>
-            <td style="white-space:normal;max-width:130px">${dash(a.samenstelling)}</td>
-            <td style="white-space:normal;max-width:180px">${dash(a.kleuren)}</td>
-            <td style="white-space:nowrap">
-              <button class="btn btn-outline btn-sm" onclick="openInConfigurator('${esc(nr)}')" title="Openen in configurator">↗</button>
-              <button class="btn btn-danger btn-sm" onclick="deleteArticle('${esc(nr)}')" title="Verwijderen">✕</button>
-            </td>
-          </tr>`;
-        }).join('')}
-      </tbody>
+      <thead><tr>${headers}<th style="width:72px"></th></tr></thead>
+      <tbody>${rows}</tbody>
     </table>
   </div>`;
 }
@@ -1167,7 +1051,46 @@ function toggleHint() {
 
 // esc() staat in db.js (gedeeld met index.html).
 
+// Genereer hint-field lijst (bovenaan, in upload-card) en veld-uitleg (onderaan).
+// Beide auto-afgeleid uit ARTIKEL_FIELDS zodat ze altijd consistent zijn.
+function buildHintAndUitleg() {
+  const hintHost = document.getElementById('hintFieldList');
+  if (hintHost) {
+    hintHost.innerHTML = ARTIKEL_FIELDS.map(f => {
+      const star = f.required ? '<span class="req">★</span> ' : '';
+      const enumHints = {
+        gordijn_type:  ' <em>(Overgordijn / Inbetween)</em>',
+        patroon:       ' <em>(Uni / Patroon)</em>',
+        kamerhoog:     ' <em>(Ja / Nee)</em>',
+        kantelbaar:    ' <em>(Ja / Nee)</em>',
+        doubleface:    ' <em>(Ja / Nee)</em>',
+        brandvertragend:   ' <em>(Ja / Nee)</em>',
+        verzwaaringskoord: ' <em>(Ja / Nee)</em>',
+        akoestiek:     ' <em>(— / A / B)</em>',
+        krimpercentage: ' <em>(informatief)</em>',
+        kleuren:       ' <em>(komma- of puntkomma-gescheiden)</em>',
+      };
+      return `<span class="hint-field">${star}${esc(f.label)}${enumHints[f.key] || ''}</span>`;
+    }).join('');
+  }
+  const uitlegHost = document.getElementById('veldUitlegList');
+  if (uitlegHost) {
+    uitlegHost.innerHTML = ARTIKEL_FIELDS.map(f => {
+      const star = f.required ? ' <span class="req">★</span>' : '';
+      const apiText = f.zoho_api
+        ? `<span class="zoho-api" title="Zoho CRM Products API name">${esc(f.zoho_api)}</span>`
+        : `<span class="zoho-api local" title="Niet gesynchroniseerd met Zoho">local-only</span>`;
+      return `<div class="veld">
+        <dt>${esc(f.label)}${star}</dt>
+        <dd>${f.desc}</dd>
+        ${apiText}
+      </div>`;
+    }).join('');
+  }
+}
+
 // ── Init ──
+buildHintAndUitleg();
 refreshSaved();
 </script>
 </body>

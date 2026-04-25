@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Berekeningsregels — Gordijn Configurator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #f4f5f7;
+      --surface:   #ffffff;
+      --border:    #d9dde8;
+      --accent:    #2c5f8a;
+      --accent-lt: #e8f0f8;
+      --accent-dk: #1e4166;
+      --success:   #2e7d32;
+      --error:     #c62828;
+      --warn:      #e65100;
+      --text:      #1a1a2e;
+      --muted:     #5a6072;
+      --radius:    8px;
+      --shadow:    0 2px 8px rgba(0,0,0,.10);
+      --code-bg:   #f0f3f8;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.55;
+    }
+
+    header {
+      background: var(--accent); color: #fff; padding: 14px 28px;
+      display: flex; align-items: center; gap: 14px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.25);
+      position: sticky; top: 0; z-index: 100;
+    }
+    header svg { flex-shrink: 0; }
+    header h1 { font-size: 1.15rem; font-weight: 600; letter-spacing: .02em; }
+    header nav { margin-left: auto; display: flex; gap: 8px; }
+    header nav a {
+      color: rgba(255,255,255,.85); text-decoration: none; font-size: .82rem;
+      font-weight: 500; padding: 5px 12px; border-radius: 5px;
+      border: 1px solid rgba(255,255,255,.3); transition: background .15s;
+    }
+    header nav a:hover { background: rgba(255,255,255,.15); color: #fff; }
+
+    .page { max-width: 980px; margin: 0 auto; padding: 28px 24px 64px; }
+
+    .toc {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px 22px; margin-bottom: 28px;
+      box-shadow: var(--shadow);
+    }
+    .toc h3 {
+      font-size: .78rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--accent); margin-bottom: 10px;
+    }
+    .toc ol { padding-left: 20px; }
+    .toc li { margin-bottom: 4px; font-size: .88rem; }
+    .toc a { color: var(--accent-dk); text-decoration: none; }
+    .toc a:hover { color: var(--accent); text-decoration: underline; }
+
+    h2 {
+      font-size: 1.25rem; font-weight: 700; color: var(--accent-dk);
+      margin: 32px 0 14px; padding-bottom: 6px;
+      border-bottom: 2px solid var(--accent-lt); scroll-margin-top: 80px;
+    }
+    h2:first-of-type { margin-top: 0; }
+    h3 {
+      font-size: 1rem; font-weight: 700; color: var(--accent);
+      margin: 20px 0 8px;
+    }
+
+    p { margin-bottom: 10px; font-size: .92rem; }
+
+    ul, ol { margin: 8px 0 12px 24px; }
+    li { margin-bottom: 4px; font-size: .9rem; }
+
+    pre {
+      background: var(--code-bg); border: 1px solid var(--border);
+      border-radius: 6px; padding: 12px 14px; margin: 10px 0;
+      overflow-x: auto; font-family: 'Courier New', monospace;
+      font-size: .82rem; color: var(--accent-dk);
+    }
+    code {
+      background: var(--code-bg); padding: 1px 6px; border-radius: 3px;
+      font-family: 'Courier New', monospace; font-size: .82rem;
+      color: var(--accent-dk);
+    }
+    pre code { background: none; padding: 0; }
+
+    table {
+      width: 100%; border-collapse: collapse; margin: 10px 0 14px;
+      font-size: .88rem; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 6px; overflow: hidden;
+    }
+    thead th {
+      background: var(--code-bg); color: var(--accent-dk); font-weight: 700;
+      padding: 8px 12px; text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    tbody td { padding: 7px 12px; border-bottom: 1px solid var(--border); }
+    tbody tr:last-child td { border-bottom: none; }
+
+    blockquote {
+      border-left: 3px solid var(--warn); background: #fff8e1;
+      padding: 10px 14px; margin: 10px 0; border-radius: 4px;
+      font-size: .87rem; color: #7b5e00;
+    }
+    blockquote strong { color: var(--warn); }
+
+    strong { color: var(--accent-dk); }
+    em { color: var(--muted); font-style: normal; }
+
+    .badge {
+      display: inline-block; background: var(--accent-lt);
+      color: var(--accent-dk); font-size: .72rem; font-weight: 700;
+      padding: 2px 9px; border-radius: 12px; margin-left: 6px;
+      letter-spacing: .03em;
+    }
+
+    .meta {
+      font-size: .78rem; color: var(--muted); margin-bottom: 16px;
+      padding-bottom: 12px; border-bottom: 1px dashed var(--border);
+    }
+
+    .top-link {
+      display: inline-block; font-size: .78rem; color: var(--muted);
+      text-decoration: none; margin-top: 8px;
+    }
+    .top-link:hover { color: var(--accent); }
+  </style>
+</head>
+<body>
+
+<header>
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="3" width="18" height="2" rx="1"/>
+    <line x1="6"  y1="5" x2="6"  y2="21"/>
+    <line x1="18" y1="5" x2="18" y2="21"/>
+    <path d="M6 8 Q9 10 12 8 Q15 6 18 8"/>
+    <path d="M6 13 Q9 15 12 13 Q15 11 18 13"/>
+    <path d="M6 18 Q9 20 12 18 Q15 16 18 18"/>
+  </svg>
+  <h1>Berekeningsregels &amp; richtlijnen</h1>
+  <nav>
+    <a href="index.html">&larr; Configurator</a>
+    <a href="import.html">&larr; Artikel import</a>
+  </nav>
+</header>
+
+<div class="page" id="top">
+
+  <p class="meta">Samenvatting van alle regels die de configurator hanteert. Wijzig altijd zowel <code>index.html</code> (UI + JS) als <code>gordijn_configurator.deluge</code> (Zoho-script) wanneer één van deze regels verandert.</p>
+
+  <div class="toc">
+    <h3>Inhoudsopgave</h3>
+    <ol>
+      <li><a href="#s1">Configuratie-volgorde</a></li>
+      <li><a href="#s2">Plooi &amp; plooifactoren</a></li>
+      <li><a href="#s3">Aantal delen</a></li>
+      <li><a href="#s4">Retourplooi-marge (Lab21-richtlijn)</a></li>
+      <li><a href="#s5">Zijzomen (alleen kamerhoog)</a></li>
+      <li><a href="#s6">Snijhoogte (lengte per baan)</a></li>
+      <li><a href="#s7">Scenario A &mdash; Kamerhoog</a></li>
+      <li><a href="#s8">Scenario B &mdash; Banenstof</a></li>
+      <li><a href="#s9">Voering</a></li>
+      <li><a href="#s10">Prijsberekening</a></li>
+      <li><a href="#s11">Stof-afmetingen normalisatie</a></li>
+      <li><a href="#s12">Waarschuwingen</a></li>
+      <li><a href="#s13">Loodveter &amp; verzwaaringskoord</a></li>
+      <li><a href="#s14">Artikel-specificaties (aside)</a></li>
+      <li><a href="#s15">Filter-uitleg</a></li>
+      <li><a href="#s16">Architectuur &mdash; bestanden</a></li>
+      <li><a href="#s17">Synchronisatie-regel</a></li>
+      <li><a href="#s18">Zoho CRM &mdash; veld-mapping</a></li>
+    </ol>
+  </div>
+
+  <h2 id="s1">1. Configuratie-volgorde</h2>
+  <ol>
+    <li><strong>Type gordijn</strong> &mdash; Overgordijn of Inbetween (filter op artikellijst).</li>
+    <li><strong>Klaarmaten</strong> &mdash; KlaarBreedte + KlaarHoogte (cm).</li>
+    <li><strong>Artikel kiezen</strong> &mdash; uit gefilterde lijst met feasibility-badge.</li>
+    <li><strong>Kleur</strong> &mdash; per artikel (5&ndash;16 fictieve kleuren via <code>KLEUR_POOLS</code>).</li>
+    <li><strong>Bevestiging</strong> &mdash; Plafond op de dag / Wand op de dag / In de dag.</li>
+    <li><strong>Plooi &amp; verdeling</strong> &mdash; plooi, aantal delen, vliesband.</li>
+    <li><strong>Voering</strong> &mdash; type, kleur, prijs.</li>
+    <li><strong>Afwerking &amp; toeslagen</strong> &mdash; verzwaaringskoord, lock, loodveter.</li>
+    <li><strong>Bediening</strong> &mdash; laatste stap (Opstrek L/R, Tuimelen L/R, Middenstroom, Koordloos).</li>
+  </ol>
+
+  <h2 id="s2">2. Plooi &amp; plooifactoren</h2>
+  <table>
+    <thead><tr><th>Plooi</th><th>Factor</th></tr></thead>
+    <tbody>
+      <tr><td>Wave <span class="badge">default</span></td><td>2.00</td></tr>
+      <tr><td>Dubbel retour</td><td>2.50</td></tr>
+      <tr><td>Enkel retour</td><td>2.10</td></tr>
+      <tr><td>Dubbel</td><td>2.35</td></tr>
+      <tr><td>Enkel</td><td>1.80</td></tr>
+    </tbody>
+  </table>
+  <p>Volgorde in dropdown: Wave &rarr; Dubbel retour &rarr; Enkel retour &rarr; Dubbel &rarr; Enkel.</p>
+
+  <h2 id="s3">3. Aantal delen</h2>
+  <ul>
+    <li><strong>Stel</strong> = 2 stuks (links + rechts samen).</li>
+    <li><strong>1 deel links</strong> = 1 stuk.</li>
+    <li><strong>1 deel rechts</strong> = 1 stuk.</li>
+  </ul>
+  <p>Geen invloed op effectieve breedte: alle drie dekken de volledige rail. Wel invloed op zijzomen-toeslag (&sect;5) en op de retour-marge (&sect;4).</p>
+
+  <h2 id="s4">4. Retourplooi-marge (Lab21-richtlijn)</h2>
+  <p>Bij <strong>Enkel retour</strong> of <strong>Dubbel retour</strong> wordt de klaarbreedte kunstmatig aangepast &mdash; voor zowel <strong>Stel</strong> als <strong>1 deel links/rechts</strong>:</p>
+  <pre>klaarbreedte &ge; 300 cm  &rarr; retourMarge = 10% &times; klaarbreedte
+klaarbreedte &lt;  300 cm  &rarr; retourMarge = 30 cm
+effectieveBreedte = klaarbreedte + retourMarge</pre>
+  <p><strong>Reden</strong> &mdash; bij een retour-/zigzag-plooi steekt de stof naar achteren uit; zonder slack worden de plooien plat getrokken bij sluiten en ontstaan kieren bij de zijkanten of in het midden (bij Stel).</p>
+  <ul>
+    <li><strong>10%-regel</strong> voor grotere ramen (rail 6 m &rarr; 60 cm extra).</li>
+    <li><strong>30 cm-regel</strong> als minimum bij kleinere ramen (rail 1,5 m &rarr; 10% = 15 cm onvoldoende voor diepe retourplooien).</li>
+  </ul>
+  <blockquote><strong>Inmeet-tip:</strong> rail moet minimaal 7&ndash;10 cm van de wand om te voorkomen dat de plooien tegen de muur schuren.</blockquote>
+
+  <h2 id="s5">5. Zijzomen (alleen kamerhoog)</h2>
+  <ul>
+    <li><strong>ZIJZOOM_CM = 12 cm</strong> per zijde, dubbele vouw &rarr; 3 cm zichtbare afwerking.</li>
+    <li><strong>Per stuk gordijn</strong>: 2 &times; 12 = <strong>24 cm</strong> extra stofbreedte.</li>
+    <li><strong>Stel</strong>: 2 &times; 24 = <strong>48 cm</strong>.</li>
+    <li><strong>1 deel</strong>: 1 &times; 24 = <strong>24 cm</strong>.</li>
+  </ul>
+  <p>Banenstof krijgt <strong>geen</strong> zijzoomtoeslag in breedte (per baan zit de zijzoom binnen de rolbreedte).</p>
+  <pre>benodigdeStofbreedte (kamerhoog) = effectieveBreedte &times; plooi + aantalDelen &times; 24
+benodigdeStofbreedte (banenstof) = effectieveBreedte &times; plooi</pre>
+
+  <h2 id="s6">6. Snijhoogte (lengte per baan)</h2>
+  <pre>rawSnijhoogte = klaarhoogte + vliesband + onderzoom</pre>
+
+  <h3>6a. Vliesband (bovenzoom)</h3>
+  <p>Keuze: 8 / 10 / 12 / 15 cm. <strong>Default 10 cm</strong>.</p>
+
+  <h3>6b. Onderzoom</h3>
+  <table>
+    <thead><tr><th>Conditie</th><th>Onderzoom</th></tr></thead>
+    <tbody>
+      <tr><td>Lock = Ja</td><td>0 cm (afgelockt)</td></tr>
+      <tr><td>Verzwaaringskoord = Ja</td><td>2 cm</td></tr>
+      <tr><td>anders</td><td>15 cm (gestoomde onderzoom)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>6c. Patroon-rapport</h3>
+  <p>Bij <strong>Patroon = Patroon</strong> en <code>patroonhoogte &gt; 0</code>:</p>
+  <pre>rapporten         = &lceil;rawSnijhoogte &divide; patroonhoogte&rceil;
+vereistSnijhoogte = rapporten &times; patroonhoogte</pre>
+  <p>Het patroon mag nooit doormidden gesneden worden &mdash; snijhoogte rondt naar boven af op een heel rapport.</p>
+  <p><strong>Patroon-stof kantelt nooit:</strong> kantelbaar wordt geforceerd op <strong>Nee</strong> (zou het patroon 90&deg; draaien). Bij feasibility en compute() wordt de kantelbaar-fallback uitgeschakeld voor patroon-artikelen.</p>
+
+  <h2 id="s7">7. Scenario A &mdash; Kamerhoog</h2>
+  <p>Stof rolt verticaal: hoogte van de rol = <code>hoogte_stof</code> (max ~300 cm), roleinden-richting (originele "breedte_stof") is onbeperkt &rarr; opgeslagen als <strong>10000 cm</strong>.</p>
+
+  <h3>7a. Rechtop (default)</h3>
+  <p>Past wanneer <code>vereistSnijhoogte &le; hoogte_stof</code>.</p>
+  <pre>aantalBanen   = 1
+totaalMetrage = benodigdeStofbreedte &divide; 100</pre>
+
+  <h3>7b. Gekanteld (alleen als kantelbaar = Ja, <strong>niet bij patroon</strong>)</h3>
+  <p>Bij <code>vereistSnijhoogte &gt; hoogte_stof</code> met kantelbare uni-stof wordt de stof 90&deg; gedraaid; de oorspronkelijke hoogte wordt baan-breedte.</p>
+  <pre>koordVerlies   = (verzwaaringskoord = Ja) ? 2 cm : 0
+baanBreedteEff = hoogte_stof &minus; koordVerlies
+aantalBanen    = &lceil;benodigdeStofbreedte &divide; baanBreedteEff&rceil;
+totaalMetrage  = aantalBanen &times; vereistSnijhoogte &divide; 100</pre>
+  <p><strong>Verzwaaringskoord bij kanteling:</strong> koord wordt weggesneden (&minus;2 cm in baan-breedte).</p>
+
+  <h3>7c. Niet mogelijk</h3>
+  <p><code>vereistSnijhoogte &gt; hoogte_stof</code> &eacute;n (kantelbaar = Nee &oacute;f patroon = Patroon) &rarr; artikel als "Niet mogelijk" gemarkeerd.</p>
+
+  <h2 id="s8">8. Scenario B &mdash; Banenstof</h2>
+  <p>Stof rolt horizontaal: rolbreedte = <code>breedte_stof</code> (typisch 140 cm), lengte (originele "hoogte_stof") onbeperkt &rarr; opgeslagen als <strong>10000 cm</strong>.</p>
+  <pre>aantalBanen      = &lceil;benodigdeStofbreedte &divide; breedte_stof&rceil;
+lengtePerBaan    = vereistSnijhoogte             (incl. eventueel rapport)
+totaalCm         = aantalBanen &times; lengtePerBaan
+totaalMetrage_m  = totaalCm &divide; 100</pre>
+  <p><strong>Geen hoogte-begrenzing</strong>, geen kanteling.</p>
+
+  <h2 id="s9">9. Voering</h2>
+  <p>Opties: <strong>Geen voering</strong> / <strong>Semi-transparant</strong> / <strong>Verduisterend</strong>. Voering-prijs en -kleur verschijnen alleen wanneer voering &ne; Geen voering.</p>
+  <pre>voeringPrijs/m¹ = (voering_prijs_per_m1 &gt; 0)
+                  ? voering_prijs_per_m1
+                  : prijs_per_m1 &times; 0.60       (60%-fallback)
+voeringKosten   = totaalMetrage &times; voeringPrijs/m¹</pre>
+  <p><strong>Voering-kleuren</strong> (5 fictief): Wit, Beige, Taupe, Grijs, Antraciet.</p>
+
+  <h2 id="s10">10. Prijsberekening</h2>
+  <p>Stofprijs is gebaseerd op <strong>verkoopprijs incl. btw</strong>, niet op inkoop:</p>
+  <pre>stofPrijs   = totaalMetrage &times; verkoopPrijs/m¹
+totaalPrijs = stofPrijs (+ voeringKosten als van toepassing)</pre>
+
+  <h3>Verkoopprijs/m¹ &mdash; bron-prioriteit</h3>
+  <ol>
+    <li><strong>Handmatig (<code>verkoopprijs_per_m1</code> veld)</strong> &mdash; door Victor ingevuld in productie. Dit veld heeft altijd voorrang.</li>
+    <li><strong>Auto-formule</strong> &mdash; alleen voor testartikelen waar <code>verkoopprijs_per_m1</code> leeg of 0 is:
+      <pre>verkoopPrijs/m¹ = inkoop &times; 3, omhoog afgerond naar xx.95</pre>
+      Voorbeeld auto: inkoop &euro;&nbsp;12,34 &rarr; verkoop &euro;&nbsp;37,95.
+    </li>
+  </ol>
+  <p>Implementatie: <code>verkoopPrijs95(inkoop)</code> + <code>getVerkoopPrijs(article)</code> in <code>db.js</code>. In de breakdown wordt expliciet vermeld of de prijs <em>handmatig</em> of <em>auto</em> is.</p>
+  <p><strong>Voering</strong> rekent nog op inkoop-basis (custom prijs of 60% fallback van inkoop).</p>
+
+  <h2 id="s11">11. Stof-afmetingen normalisatie</h2>
+  <p>Bij elke load wordt via <code>seedAfmetingenPlaceholders()</code>:</p>
+  <table>
+    <thead><tr><th>Type</th><th>Veld</th><th>Waarde</th></tr></thead>
+    <tbody>
+      <tr><td>Kamerhoog (Ja)</td><td><code>breedte_stof</code></td><td>10000 (= onbeperkte rol-lengte)</td></tr>
+      <tr><td>Banenstof (Nee)</td><td><code>hoogte_stof</code></td><td>10000 (= onbeperkte rol-lengte)</td></tr>
+    </tbody>
+  </table>
+  <p>In de aside (Artikel specificaties) tonen we voor de onbeperkte richting <strong>"Niet relevant"</strong> in plaats van het getal.</p>
+
+  <h2 id="s12">12. Waarschuwingen</h2>
+
+  <h3>MAX_STUK_BREEDTE_CM = 600</h3>
+  <pre>als effectieveBreedte &gt; 600 cm &rarr; waarschuwing:
+  "verdeel het gordijn in 1 deel links + 1 deel rechts"</pre>
+
+  <h3>Hoogte overschreden</h3>
+  <ul>
+    <li>Kamerhoog + niet kantelbaar (of patroon) &rarr; fout, berekening stopt.</li>
+    <li>Kamerhoog + kantelbaar uni-stof &rarr; waarschuwing + gekanteld scenario.</li>
+  </ul>
+
+  <h2 id="s13">13. Loodveter &amp; verzwaaringskoord</h2>
+  <ul>
+    <li><strong>Verzwaaringskoord = Ja</strong> &rarr; onderzoom = 2 cm; loodveter wordt automatisch uitgeschakeld (forceer Nee + disable input). Beide tegelijk heeft geen zin.</li>
+    <li><strong>Lock = Ja</strong> &rarr; onderzoom = 0 cm (overschrijft de verzwaaringskoord-regel).</li>
+  </ul>
+
+  <h2 id="s14">14. Artikel-specificaties (aside)</h2>
+  <p>Vaste, alleen-lezen weergave per gekozen artikel:</p>
+  <ul>
+    <li><strong>Identificatie</strong>: Artikelnummer, Gordijn type, Omschrijving, Verkoopprijs incl. btw.</li>
+    <li><strong>Afmetingen stof</strong>: Hoogte stof, Breedte stof (&eacute;&eacute;n van beide "Niet relevant" &mdash; zie &sect;11).</li>
+    <li><strong>Patroon</strong>: Patroon (Uni/Patroon), Patroonhoogte (&mdash; "Niet relevant" bij Uni &mdash;), Patroonbreedte.</li>
+    <li><strong>Eigenschappen</strong>: Kamerhoog, Lichtdoorlatenheid, Krimpercentage (informatief, niet in berekening).</li>
+    <li><strong>Overige kenmerken</strong>: Kantelbaar, Doubleface, Brandvertragend, Akoestiek, Samenstelling.</li>
+  </ul>
+  <p>Inkoopprijs is <strong>niet</strong> zichtbaar (alleen verkoopprijs incl. btw). Selects in de aside tonen geen dropdown-pijl meer (puur waarde-display).</p>
+
+  <h2 id="s15">15. Filter-uitleg (boven artikellijst)</h2>
+  <p>3 actieve filters:</p>
+  <ol>
+    <li>Gordijn type (gekozen in stap 1).</li>
+    <li>Hoogtegrens voor kamerhoog: <code>klaarhoogte + vliesband + onderzoom &le; hoogte_stof</code>.</li>
+    <li>Verzw. (verzwaaringskoord) bepaalt onderzoom: 2 cm of 15 cm; bij Lock = 0.</li>
+  </ol>
+
+  <h2 id="s16">16. Architectuur &mdash; bestanden</h2>
+  <table>
+    <thead><tr><th>Bestand</th><th>Rol</th></tr></thead>
+    <tbody>
+      <tr><td><code>index.html</code></td><td>Configurator (stappen 1&ndash;9, berekening, artikel-aside).</td></tr>
+      <tr><td><code>import.html</code></td><td>CSV/Excel-import + opgeslagen artikelen-overzicht.</td></tr>
+      <tr><td><code>db.js</code></td><td>Supabase + localStorage CRUD, kleuren-pools, seed-migraties, <code>esc()</code>, <code>verkoopPrijs95()</code>.</td></tr>
+      <tr><td><code>supabase-config.js</code></td><td>URL + anon key.</td></tr>
+      <tr><td><code>schema.sql</code></td><td>Supabase tabel-definitie.</td></tr>
+      <tr><td><code>gordijn_configurator.deluge</code></td><td>Zoho Creator script &mdash; gespiegeld op <code>index.html</code> logica.</td></tr>
+      <tr><td><code>start.sh</code></td><td>Lokale server (Python http.server of Node fallback).</td></tr>
+      <tr><td><code>berekeningsregels.html</code></td><td>Deze pagina &mdash; samenvatting van alle regels.</td></tr>
+    </tbody>
+  </table>
+  <p><strong>Opgeslagen artikelen-tabel</strong> (import.html) toont per artikel: Artikelnr, Type, Omschrijving, H stof, B stof (= 10000 voor kamerhoog), Patroon, Patroonhoogte (= 0 bij Uni), Inkoop/m¹, Verkoop/m¹ incl. btw, Krimp%, KH, Licht, Voeren, Voer.prijs, Kantelbaar, D.face, BR, Akoest, Verzw, Samenstelling, Kleuren.</p>
+
+  <h2 id="s17">17. Synchronisatie-regel</h2>
+  <p><code>index.html</code> is leidend voor de business-logica. Bij elke wijziging in:</p>
+  <ul>
+    <li>plooifactoren (PLOOI)</li>
+    <li>ZIJZOOM_CM, MAX_STUK_BREEDTE_CM, DEFAULT_BAND_CHECK</li>
+    <li>onderzoom-regels</li>
+    <li>snijhoogte / patroon-rapport</li>
+    <li>kanteling-formules</li>
+    <li>retour-marge</li>
+    <li>voering-fallback</li>
+    <li>aantalDelen-toeslag</li>
+  </ul>
+  <p>&rarr; <code>gordijn_configurator.deluge</code> ook bijwerken in dezelfde commit.</p>
+
+  <h2 id="s18">18. Zoho CRM &mdash; veld-mapping</h2>
+  <p>De configurator wordt aangesloten op Zoho CRM (module: <strong>Products</strong>). Onderstaande tabel mapt onze interne veld-keys op de Zoho API-namen. Het master-overzicht staat in <code>db.js</code> (<code>ARTIKEL_FIELDS</code>) en wordt in <code>import.html</code> automatisch getoond bij elke veld-uitleg.</p>
+  <table>
+    <thead><tr><th>Interne key</th><th>Label</th><th>Zoho API (Products)</th><th>Type</th></tr></thead>
+    <tbody>
+      <tr><td><code>artikelnummer</code></td><td>Artikelnummer</td><td><code>Product_Code</code></td><td>text</td></tr>
+      <tr><td><code>gordijn_type</code></td><td>Gordijn type</td><td><code>Gordijn_Type</code></td><td>enum</td></tr>
+      <tr><td><code>omschrijving</code></td><td>Omschrijving</td><td><code>Product_Name</code></td><td>text</td></tr>
+      <tr><td><code>hoogte_stof</code></td><td>Hoogte stof (cm)</td><td><code>Hoogte_Stof</code></td><td>number</td></tr>
+      <tr><td><code>breedte_stof</code></td><td>Breedte stof (cm)</td><td><code>Breedte_Stof</code></td><td>number</td></tr>
+      <tr><td><code>patroon</code></td><td>Patroon</td><td><code>Patroon</code></td><td>enum</td></tr>
+      <tr><td><code>patroonhoogte</code></td><td>Patroonhoogte (cm)</td><td><code>Patroonhoogte</code></td><td>number</td></tr>
+      <tr><td><code>patroonbreedte</code></td><td>Patroonbreedte (cm)</td><td><code>Patroonbreedte</code></td><td>number</td></tr>
+      <tr><td><code>prijs_per_m1</code></td><td>Inkoopprijs per m¹</td><td><code>Inkoopprijs_M1</code></td><td>currency</td></tr>
+      <tr><td><code>verkoopprijs_per_m1</code></td><td>Verkoopprijs per m¹ incl. btw</td><td><code>Verkoopprijs_M1</code></td><td>currency</td></tr>
+      <tr><td><code>krimpercentage</code></td><td>Krimpercentage (%)</td><td><code>Krimpercentage</code></td><td>number</td></tr>
+      <tr><td><code>kamerhoog</code></td><td>Kamerhoog</td><td><code>Kamerhoog</code></td><td>yesno</td></tr>
+      <tr><td><code>lichtdoorlatenheid</code></td><td>Lichtdoorlatenheid</td><td><code>Lichtdoorlatenheid</code></td><td>enum</td></tr>
+      <tr><td><code>voeren</code></td><td>Voeren (default)</td><td><code>Voering_Default</code></td><td>enum</td></tr>
+      <tr><td><code>voering_prijs_per_m1</code></td><td>Voering prijs per m¹</td><td><code>Voering_Prijs_M1</code></td><td>currency</td></tr>
+      <tr><td><code>kantelbaar</code></td><td>Kantelbaar</td><td><code>Kantelbaar</code></td><td>yesno</td></tr>
+      <tr><td><code>doubleface</code></td><td>Doubleface</td><td><code>Doubleface</code></td><td>yesno</td></tr>
+      <tr><td><code>brandvertragend</code></td><td>Brandvertragend</td><td><code>Brandvertragend</code></td><td>yesno</td></tr>
+      <tr><td><code>akoestiek</code></td><td>Akoestiek klasse</td><td><code>Akoestiek</code></td><td>enum</td></tr>
+      <tr><td><code>verzwaaringskoord</code></td><td>Verzwaaringskoord</td><td><code>Verzwaaringskoord</code></td><td>yesno</td></tr>
+      <tr><td><code>samenstelling</code></td><td>Samenstelling</td><td><code>Samenstelling</code></td><td>text</td></tr>
+      <tr><td><code>kleuren</code></td><td>Kleuren</td><td><em>local-only</em></td><td>tags</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Zoho Creator (Deluge) form-velden</h3>
+  <p>Het Zoho Creator script <code>gordijn_configurator.deluge</code> verwacht dezelfde API-namen op het input-formulier (<code>input.Inkoopprijs_M1</code>, <code>input.Verkoopprijs_M1</code>, <code>input.Hoogte_Stof</code>, &hellip;). Configuratie-keuzes (<code>KlaarBreedte</code>, <code>KlaarHoogte</code>, <code>Plooi</code>, <code>Stuk</code>, <code>Voering</code>, <code>Lock</code>, <code>Band</code>) zijn formulier-velden, geen Products-veldEN.</p>
+
+  <p style="text-align:center;margin-top:32px"><a href="#top" class="top-link">&uarr; Terug naar boven</a></p>
+
+</div>
+
+</body>
+</html>

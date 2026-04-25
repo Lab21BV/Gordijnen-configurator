@@ -12,6 +12,7 @@ create table if not exists artikelen (
   patroonhoogte        text default '',
   patroonbreedte       text default '',
   prijs_per_m1         text default '',
+  verkoopprijs_per_m1  text default '',
   krimpercentage       text default '',
   kamerhoog            text default '',
   lichtdoorlatenheid   text default '',
@@ -27,7 +28,8 @@ create table if not exists artikelen (
 );
 
 -- Voeg ontbrekende kolommen toe aan een bestaande tabel (veilig om opnieuw te draaien):
-alter table artikelen add column if not exists gordijn_type text default '';
+alter table artikelen add column if not exists gordijn_type        text default '';
+alter table artikelen add column if not exists verkoopprijs_per_m1 text default '';
 
 -- Auto-update updated_at bij elke wijziging
 create or replace function _set_updated_at()

@@ -4,12 +4,15 @@
 // In sync met index.html (V5) — wijzig altijd beide tegelijk.
 // ------------------------------------------------------------
 // Trigger: On User Input
-// Verwachte formuliervelden:
-//   KlaarBreedte, KlaarHoogte, Plooi, Kamehoog, Stuk, Lock,
-//   Patroon, Voeren, Verzwaaringskoord, Kantelbaar,
-//   Hoogte_stof, breedte_stof, Patroonhoogte,
-//   prijs_per_m1, voering_prijs_per_m1, Band
+// Verwachte formuliervelden (matchen Zoho CRM Products API-namen waar zinvol):
+//   KlaarBreedte, KlaarHoogte, Plooi, Kamerhoog, Stuk, Lock,
+//   Patroon, Voering, Verzwaaringskoord, Kantelbaar,
+//   Hoogte_Stof, Breedte_Stof, Patroonhoogte,
+//   Inkoopprijs_M1, Verkoopprijs_M1, Voering_Prijs_M1, Band
 //   Output: Aantal_Banen, Totaal_Metrage, Totaal_Prijs
+//
+// Verkoopprijs/m¹ — handmatig (Verkoopprijs_M1) heeft voorrang;
+// als leeg of 0, fallback naar inkoop × 3 → xx.95 (testartikelen).
 // ============================================================
 
 // ------------------------------------------------------------
@@ -29,24 +32,25 @@ plooi_Wave         = 2.00;
 // ------------------------------------------------------------
 // SECTIE 2: FORMULIERVELDEN UITLEZEN
 // ------------------------------------------------------------
-// "Kamehoog" volgt de spelwijze uit het formulier.
+// API-namen volgen Zoho CRM Products module conventie (PascalCase_M1 voor m¹).
 breedte_rail  = ifnull(input.KlaarBreedte, 0).toDecimal();
 hoogte_rail   = ifnull(input.KlaarHoogte, 0).toDecimal();
-isKamerhoog   = input.Kamehoog;             // "Ja" | "Nee"
+isKamerhoog   = input.Kamerhoog;            // "Ja" | "Nee"
 plooiKeuze    = input.Plooi;
 patroonType   = input.Patroon;              // "Uni" | "Patroon"
-stuk          = input.Stuk;                 // "Single" | "Links" | "Rechts"
+stuk          = input.Stuk;                 // "Stel" | "1 deel links" | "1 deel rechts"
 lockKeuze     = input.Lock;                 // "Ja" | "Nee"
 verzwKeuze    = input.Verzwaaringskoord;    // "Ja" | "Nee"
 kantelbaar    = input.Kantelbaar;           // "Ja" | "Nee"
-voeren        = input.Voeren;               // "Ja" | "Nee"
+voeren        = input.Voering;              // "Geen voering" | "Semi-transparant" | "Verduisterend"
 
-hoogte_stof   = ifnull(input.Hoogte_stof, 300.0).toDecimal();
-breedte_stof  = ifnull(input.breedte_stof, DEFAULT_STOFBREEDTE).toDecimal();
-patroonHoogte = ifnull(input.Patroonhoogte, 0).toDecimal();
-prijs_per_m1  = ifnull(input.prijs_per_m1, 0).toDecimal();
-voering_m1    = ifnull(input.voering_prijs_per_m1, 0).toDecimal();
-band_cm       = ifnull(input.Band, DEFAULT_BAND).toDecimal();
+hoogte_stof    = ifnull(input.Hoogte_Stof, 300.0).toDecimal();
+breedte_stof   = ifnull(input.Breedte_Stof, DEFAULT_STOFBREEDTE).toDecimal();
+patroonHoogte  = ifnull(input.Patroonhoogte, 0).toDecimal();
+prijs_per_m1   = ifnull(input.Inkoopprijs_M1, 0).toDecimal();
+verkoop_manual = ifnull(input.Verkoopprijs_M1, 0).toDecimal();
+voering_m1     = ifnull(input.Voering_Prijs_M1, 0).toDecimal();
+band_cm        = ifnull(input.Band, DEFAULT_BAND).toDecimal();
 
 // ------------------------------------------------------------
 // SECTIE 3: VALIDATIE
@@ -68,11 +72,21 @@ else if (breedte_stof <= 0)
 // ------------------------------------------------------------
 // SECTIE 4: AFGELEIDE WAARDEN
 // ------------------------------------------------------------
-// 4a. Effectieve breedte — halve rail bij Links/Rechts.
+// 4a. Effectieve breedte — Stel / 1 deel links / 1 deel rechts dekken alle drie
+// de volledige rail. Bij retourplooi wordt de klaarbreedte kunstmatig aangepast
+// volgens Lab21-richtlijn (geldt voor zowel Stel als 1 deel):
+//   klaarbreedte >= 300 cm → +10% × klaarbreedte
+//   klaarbreedte <  300 cm → +30 cm
 effectieveBreedte = breedte_rail;
-if (stuk == "Links" || stuk == "Rechts")
+isRetour = (plooiKeuze == "Enkel retour" || plooiKeuze == "Dubbel retour");
+if (isRetour)
 {
-    effectieveBreedte = breedte_rail / 2;
+    retourMarge_dec = 30.0;
+    if (breedte_rail >= 300)
+    {
+        retourMarge_dec = breedte_rail * 0.10;
+    }
+    effectieveBreedte = breedte_rail + retourMarge_dec;
 }
 
 // 4b. Onderzoom — Lock=Ja → 0; Verzwaaringskoord=Ja → 2; anders 15.
@@ -109,11 +123,18 @@ else if (plooiKeuze == "Wave")
     plooiFactor = plooi_Wave;
 }
 
-// 4d. Benodigde stofbreedte — kamerhoog krijgt 2× zijzoom toeslag.
+// 4d. Benodigde stofbreedte — per stuk gordijn 2× zijzoom toeslag.
+//      Stel = 2 stuks (links + rechts), anders 1 stuk.
+//      Banenstof: geen zijzoomtoeslag in breedte.
+aantalDelen = 1;
+if (stuk == "Stel")
+{
+    aantalDelen = 2;
+}
 benodigdeBreedte_cm = effectieveBreedte * plooiFactor;
 if (isKamerhoog == "Ja")
 {
-    benodigdeBreedte_cm = benodigdeBreedte_cm + (2 * ZIJZOOM_CM);
+    benodigdeBreedte_cm = benodigdeBreedte_cm + (aantalDelen * 2 * ZIJZOOM_CM);
 }
 
 // ------------------------------------------------------------
@@ -126,12 +147,27 @@ waarschuwing  = "";
 
 if (foutmelding == "")
 {
+    // Snijhoogte basis = klaarhoogte + vliesband + onderzoom.
+    // Bij patroon-stof: naar boven afronden op heel rapport zodat het patroon
+    // niet doormidden gesneden wordt.
+    rawSnijhoogte = hoogte_rail + band_cm + onderzoom_cm;
+    vereisteHoogte_cm = rawSnijhoogte;
+    if (patroonType == "Patroon" && patroonHoogte > 0)
+    {
+        rapporten_dec = rawSnijhoogte / patroonHoogte;
+        rapporten     = rapporten_dec.toLong();
+        if (rapporten_dec > rapporten.toDecimal())
+        {
+            rapporten = rapporten + 1;
+        }
+        vereisteHoogte_cm = rapporten.toDecimal() * patroonHoogte;
+    }
+
     if (isKamerhoog == "Ja")
     {
         // ----- Scenario A: Kamerhoog -----
-        vereisteHoogte_cm = hoogte_rail + band_cm + onderzoom_cm;
-        teHoog            = vereisteHoogte_cm > hoogte_stof;
-        gekanteld         = teHoog && (kantelbaar == "Ja");
+        teHoog    = vereisteHoogte_cm > hoogte_stof;
+        gekanteld = teHoog && (kantelbaar == "Ja");
 
         if (teHoog && kantelbaar != "Ja")
         {
@@ -183,30 +219,40 @@ if (foutmelding == "")
             aantalBanen = aantalBanen + 1;
         }
 
-        coupageVerlies_cm = band_cm + onderzoom_cm;
-        hoogte_per_baan   = hoogte_rail + coupageVerlies_cm;
-
-        // Patroon: rond op naar volledige rapporten.
-        if (patroonType == "Patroon" && patroonHoogte > 0)
-        {
-            rapporten_dec = hoogte_per_baan / patroonHoogte;
-            rapporten     = rapporten_dec.toLong();
-            if (rapporten_dec > rapporten.toDecimal())
-            {
-                rapporten = rapporten + 1;
-            }
-            hoogte_per_baan = rapporten.toDecimal() * patroonHoogte;
-        }
+        // hoogte_per_baan = rawSnijhoogte; bij patroon zit rapport-rounding
+        // al in vereisteHoogte_cm verwerkt.
+        hoogte_per_baan = vereisteHoogte_cm;
 
         mPerBaan      = hoogte_per_baan / 100;
         totaalMetrage = (aantalBanen.toDecimal() * mPerBaan).round(1);
     }
 
-    // ----- Prijs (stof + optionele voering @ 60% fallback) -----
-    if (totaalMetrage > 0 && prijs_per_m1 > 0)
+    // ----- Verkoopprijs/m¹ incl. btw -----
+    // 1. Handmatig (Verkoopprijs_M1) heeft voorrang.
+    // 2. Anders auto-formule (testartikelen): inkoop × 3, omhoog naar xx.95.
+    verkoop_m1 = 0.0;
+    if (verkoop_manual > 0)
     {
-        totaalPrijs = totaalMetrage * prijs_per_m1;
-        if (voeren == "Ja")
+        verkoop_m1 = verkoop_manual;
+    }
+    else if (prijs_per_m1 > 0)
+    {
+        verkoopRaw   = prijs_per_m1 * 3;
+        verkoopFloor = verkoopRaw.toLong();
+        if (verkoopRaw <= verkoopFloor.toDecimal() + 0.95)
+        {
+            verkoop_m1 = verkoopFloor.toDecimal() + 0.95;
+        }
+        else
+        {
+            verkoop_m1 = verkoopFloor.toDecimal() + 1.95;
+        }
+    }
+
+    if (totaalMetrage > 0 && verkoop_m1 > 0)
+    {
+        totaalPrijs = totaalMetrage * verkoop_m1;
+        if (voeren != null && voeren != "" && voeren != "Geen voering")
         {
             voering_m1_eff = voering_m1;
             if (voering_m1_eff <= 0)

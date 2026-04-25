@@ -210,6 +210,29 @@
     .tag { display: inline-block; font-size: .68rem; font-weight: 700; padding: 2px 7px; border-radius: 20px; letter-spacing: .04em; }
     hr.sep { border: none; border-top: 1px solid var(--border); margin: 12px 0; grid-column: 1/-1; }
 
+    /* ── Info "i" knopje + panel ── */
+    .info-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: var(--accent); color: #fff;
+      font-size: .68rem; font-weight: 700; font-family: 'Times New Roman', serif;
+      font-style: italic; cursor: pointer; border: none;
+      margin-left: 6px; vertical-align: middle; padding: 0; line-height: 1;
+    }
+    .info-btn:hover { background: var(--accent-dk); }
+    .info-panel {
+      background: var(--accent-lt); border: 1px solid #b8d0e8; border-radius: 6px;
+      padding: 12px 16px; margin-top: 10px; font-size: .82rem; line-height: 1.5;
+      color: var(--text); grid-column: 1 / -1;
+    }
+    .info-panel h4 {
+      font-size: .9rem; font-weight: 700; color: var(--accent-dk);
+      margin-bottom: 8px;
+    }
+    .info-panel p { margin-bottom: 6px; }
+    .info-panel ul { margin: 6px 0 0 20px; }
+    .info-panel ul li { margin-bottom: 3px; }
+
     /* Artikel specificaties alleen-lezen — vaste waarden uit gekozen artikel.
        Selects krijgen geen dropdown-pijl meer; leest als platte tekstwaarde. */
     aside .field input[readonly],
@@ -286,16 +309,44 @@
     <div class="step-body">
       <div class="maten-grid">
         <div class="field">
-          <label>KlaarBreedte (cm)</label>
+          <label>
+            KlaarBreedte (cm)
+            <button type="button" class="info-btn" onclick="toggleInfo('info_klaarbreedte')" aria-label="Meer info over breedte">i</button>
+          </label>
           <input type="number" id="klaarbreedte" min="1" step="1" placeholder="bijv. 300"
                  oninput="onMatenChange()" onchange="onMatenChange()" />
           <span class="unit">Breedte van de rail of roede</span>
         </div>
         <div class="field">
-          <label>KlaarHoogte (cm)</label>
+          <label>
+            KlaarHoogte (cm)
+            <button type="button" class="info-btn" onclick="toggleInfo('info_klaarhoogte')" aria-label="Meer info over hoogte">i</button>
+          </label>
           <input type="number" id="klaarhoogte" min="1" step="1" placeholder="bijv. 250"
                  oninput="onMatenChange()" onchange="onMatenChange()" />
           <span class="unit">Gewenste klaarmaat hoogte</span>
+        </div>
+        <div id="info_klaarbreedte" class="info-panel" style="display:none">
+          <h4>Breedte gordijnen</h4>
+          <p>Vul hier de gewenste klaarbreedte in cm in &mdash; de breedte die het gordijn opgehangen zal innemen.</p>
+          <p><strong>Hoe bepaal je de juiste breedte?</strong></p>
+          <ul>
+            <li><strong>Bestaande rail:</strong> meet de totale lengte van de rail.</li>
+            <li><strong>Roede:</strong> meet de afstand tussen de eindknoppen.</li>
+            <li><strong>Nieuwe situatie:</strong> kies een breedte die het raam volledig dekt, met 5&ndash;15&nbsp;cm overlap aan elke kant zodat het gordijn dichtgeschoven het kozijn afsluit.</li>
+          </ul>
+        </div>
+        <div id="info_klaarhoogte" class="info-panel" style="display:none">
+          <h4>Hoogte gordijnen</h4>
+          <p>Vul hier de gewenste klaarhoogte in cm in &mdash; de afgewerkte hoogte zoals het gordijn klaar zal hangen.</p>
+          <p><strong>Hoe meet je de hoogte?</strong></p>
+          <ol style="margin:6px 0 0 20px">
+            <li>Meet vanaf het plafond tot aan de vloer of vensterbank.</li>
+            <li>Meet op drie verschillende plekken (links, midden en rechts).</li>
+            <li>Vul de <strong>kleinste</strong> maat in &mdash; zo hangt het gordijn overal vrij.</li>
+          </ol>
+          <p style="margin-top:8px;font-style:italic">Houd de exacte maat aan; wij zorgen dat het gordijn vrij van de vloer hangt.</p>
+          <p style="margin-top:6px;font-size:.78rem;color:var(--muted)">* Heb je al een gordijnrail? Meet dan vanaf de bovenkant van de rail in plaats van vanaf het plafond.</p>
         </div>
       </div>
     </div>
@@ -457,14 +508,14 @@
       </div>
     </div>
 
-    <!-- Configuration — volgorde gespiegeld op Veneta product-flow:
-         Kleur → Bevestiging → Plooi → Bediening → Voering → Afwerking. -->
+    <!-- Configuration — volgorde:
+         Kleur → Bevestiging → Plooi → Voering → Afwerking → Bediening. -->
     <div class="card">
       <div class="card-header">Configuratie</div>
       <div class="card-body">
         <div class="fg">
 
-          <!-- 1. Kleur (Veneta start: kleurkeuze op gekozen stof) -->
+          <!-- 1. Kleur -->
           <div class="section-label">Kleur</div>
           <div class="field">
             <label>Kleur</label>
@@ -485,10 +536,13 @@
             </select>
           </div>
 
-          <!-- 3. Plooi & verdeling (Veneta: plooi-keuze; aangevuld met onze Stuk/Vaste kant) -->
+          <!-- 3. Plooi & verdeling -->
           <div class="section-label">Plooi &amp; verdeling</div>
           <div class="field">
-            <label>Plooi</label>
+            <label>
+              Plooi
+              <button type="button" class="info-btn" onclick="toggleInfo('info_plooi')" aria-label="Meer info over plooi">i</button>
+            </label>
             <select id="plooi">
               <option value="Wave" selected>Wave plooi (&times;2.00)</option>
               <option value="Dubbel retour">Dubbel retour (&times;2.50)</option>
@@ -497,28 +551,84 @@
               <option value="Enkel">Enkel plooi (&times;1.80)</option>
             </select>
           </div>
-          <div class="field">
-            <label>Stuk</label>
-            <select id="stuk">
-              <option value="Single">Single (volledig)</option>
-              <option value="Links">Links (halve rail)</option>
-              <option value="Rechts">Rechts (halve rail)</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Vaste kant stuk</label>
-            <select id="vaste_kant">
-              <option>—</option><option>Links</option><option>Rechts</option>
-            </select>
-          </div>
+          <div id="info_plooi" class="info-panel" style="display:none">
+            <h4>Soort plooi</h4>
+            <p>Kies de gewenste afwerking aan de bovenkant van het gordijn. De plooi bepaalt hoe vol en luxe het gordijn valt &mdash; én hoeveel stof er nodig is (de plooifactor).</p>
 
-          <!-- 4. Voering (Veneta: aparte stap voor voering ja/nee + type) -->
+            <p style="margin-top:10px"><strong>Enkele plooi</strong> &mdash; <em>plooifactor &times;1.80</em></p>
+            <p>Strakke en rustige uitstraling. Compacter stofpakket als het gordijn open is. Geschikt bij plafonds &lt;&nbsp;180&nbsp;cm; de golf valt dan nog mooi tot aan de vloer.</p>
+
+            <p style="margin-top:10px"><strong>Dubbele plooi (vlinderplooi)</strong> &mdash; <em>plooifactor &times;2.35</em></p>
+            <p>Chique, rijke en volle look. Past goed bij plafonds &gt;&nbsp;180&nbsp;cm; de plooi loopt mooi door tot aan de onderkant van de stof. Gebruikt meer stof dan een enkele plooi.</p>
+
+            <p style="margin-top:10px"><strong>Wave plooi</strong> &mdash; <em>plooifactor &times;2.00</em></p>
+            <p>Moderne uitstraling: het gordijn hangt in golfvorm onder de rail dankzij waverunners verbonden met een koord.</p>
+            <ul>
+              <li><strong>Tip 1:</strong> Wave vereist een breedspoorrail met glijderafstand van 8&nbsp;cm.</li>
+              <li><strong>Tip 2:</strong> Aan de bovenkant kunnen kleine kieren ontstaan; voor volledig verduisteren is een enkele of dubbele plooi geschikter.</li>
+            </ul>
+
+            <p style="margin-top:10px"><strong>Enkel retour / Dubbel retour</strong> &mdash; <em>plooifactor &times;2.10 / &times;2.50</em></p>
+            <p>Variant met retour-naden voor extra stevigheid en een rijkere val. Zelfde uitstraling als enkele/dubbele plooi, met meer stof per gordijn.</p>
+          </div>
+          <div class="field">
+            <label>Aantal delen</label>
+            <select id="stuk">
+              <option value="Stel">Stel</option>
+              <option value="1 deel links">1 deel links</option>
+              <option value="1 deel rechts">1 deel rechts</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Vliesband (cm)</label>
+            <select id="band">
+              <option value="8">8 cm</option>
+              <option value="10" selected>10 cm</option>
+              <option value="12">12 cm</option>
+              <option value="15">15 cm</option>
+            </select>
+          </div>
+          <!-- 4. Voering -->
           <div class="section-label">Voering</div>
           <div class="field">
-            <label>Voeren</label>
+            <label>
+              Voering
+              <button type="button" class="info-btn" onclick="toggleInfo('info_voeren')" aria-label="Meer info over voering">i</button>
+            </label>
             <select id="voeren">
-              <option value="Nee">Nee</option>
-              <option value="Ja">Ja</option>
+              <option value="Geen voering">Geen voering</option>
+              <option value="Semi-transparant">Semi-transparant</option>
+              <option value="Verduisterend">Verduisterend</option>
+            </select>
+          </div>
+          <div id="info_voeren" class="info-panel" style="display:none">
+            <h4>Voering</h4>
+            <p>Je kunt de achterkant van het gordijn laten bekleden met een voering. Daarmee profiteer je van:</p>
+            <ul>
+              <li>Extra verduistering</li>
+              <li>Extra isolatie</li>
+              <li>Extra geluidswering</li>
+              <li>Extra bescherming van de stof</li>
+              <li>Luxere uitstraling en val</li>
+            </ul>
+
+            <p style="margin-top:10px"><strong>Verduisterende voering</strong></p>
+            <p>Sommige overgordijnen laten nog wat licht door. Een verduisterende voering houdt dat tegen &mdash; ideaal voor een slaapkamer waar je het volledig donker wilt.</p>
+
+            <p style="margin-top:10px"><strong>Semi-transparante voering</strong></p>
+            <p>Wel de voordelen van een voering (zoals extra isolatie), maar zonder de ruimte volledig te verduisteren. Je behoudt natuurlijke lichtinval.</p>
+
+            <p style="margin-top:10px"><strong>Geen voering</strong></p>
+            <p>Bij een vitrage wil je juist zoveel mogelijk licht doorlaten; een voering is dan niet zinvol.</p>
+          </div>
+          <div class="field" id="wrap_voering_kleur" style="display:none">
+            <label>Voering kleur</label>
+            <select id="voering_kleur">
+              <option value="Wit">Wit</option>
+              <option value="Beige">Beige</option>
+              <option value="Taupe">Taupe</option>
+              <option value="Grijs">Grijs</option>
+              <option value="Antraciet">Antraciet</option>
             </select>
           </div>
           <div class="field" id="wrap_voering_prijs" style="display:none">
@@ -538,15 +648,6 @@
             <select id="lock">
               <option value="Nee">Nee &mdash; gestoomde onderzoom</option>
               <option value="Ja">Ja &mdash; afgelockt (geen zoom)</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Vliesband (cm)</label>
-            <select id="band">
-              <option value="8">8 cm</option>
-              <option value="10" selected>10 cm</option>
-              <option value="12">12 cm</option>
-              <option value="15">15 cm</option>
             </select>
           </div>
           <div class="field">
@@ -627,17 +728,22 @@ function onderzoomHoogte(verzwaringskoord, lock) {
 // ── Feasibility check ──────────────────────────────────────
 // Eerst controleren of de stof rechtop past. Past niet en is kantelbaar?
 // → nog steeds mogelijk, maar met melding dat gekanteld verwerkt moet worden.
+// Patroon-stof kantelt nooit (patroon zou 90° gedraaid worden) → overschrijding
+// is dan onmogelijk, ook al staat kantelbaar in de data op Ja.
 function checkFeasibility(a, klaarbreedte, klaarhoogte) {
   if (!klaarbreedte || !klaarhoogte || klaarbreedte <= 0 || klaarhoogte <= 0)
     return { mogelijk: null };
 
   if (isJa(a.kamerhoog)) {
     const onderzoom = onderzoomHoogte(a.verzwaaringskoord);
-    const vereist   = klaarhoogte + DEFAULT_BAND_CHECK + onderzoom;
-    const maxH      = parseFloat(a.hoogte_stof) || 0;
+    const rawVereist = klaarhoogte + DEFAULT_BAND_CHECK + onderzoom;
+    const rapport    = parseFloat(a.patroonhoogte);
+    const isPatroon  = String(a.patroon||'').toLowerCase() === 'patroon' && !isNaN(rapport) && rapport > 0;
+    const vereist    = isPatroon ? Math.ceil(rawVereist / rapport) * rapport : rawVereist;
+    const maxH       = parseFloat(a.hoogte_stof) || 0;
     if (maxH > 0 && vereist > maxH) {
       const reden = `Vereiste hoogte ${Math.ceil(vereist)} cm > stofhoogte ${maxH} cm`;
-      if (isJa(a.kantelbaar)) {
+      if (isJa(a.kantelbaar) && !isPatroon) {
         return { mogelijk: true, kantelenVereist: true, reden };
       }
       return { mogelijk: false, reden };
@@ -707,13 +813,19 @@ function buildCalcDetail(a, b, h) {
     };
   }
   const onderzoom = onderzoomHoogte(a.verzwaaringskoord);
-  const vereist   = h + DEFAULT_BAND_CHECK + onderzoom;
+  const rawVereist = h + DEFAULT_BAND_CHECK + onderzoom;
+  // Patroon-stof: snijhoogte naar boven afronden op heel rapport.
+  const rapport   = parseFloat(a.patroonhoogte);
+  const heeftRap  = String(a.patroon||'').toLowerCase() === 'patroon' && !isNaN(rapport) && rapport > 0;
+  const vereist   = heeftRap ? Math.ceil(rawVereist / rapport) * rapport : rawVereist;
   const maxH      = parseFloat(a.hoogte_stof) || 0;
   const passt     = maxH > 0 ? vereist <= maxH : true;
-  const kantelbr  = isJa(a.kantelbaar);
+  // Patroon-stof kantelt nooit; effectieve kantelbaarheid = false bij patroon.
+  const kantelbr  = isJa(a.kantelbaar) && !heeftRap;
 
-  const koordStr = isJa(a.verzwaaringskoord) ? ' (met verzwaringskoord)' : '';
-  const formula  = `${h} + ${DEFAULT_BAND_CHECK} + ${onderzoom}${koordStr} = ${vereist.toFixed(1)} cm`;
+  const koordStr  = isJa(a.verzwaaringskoord) ? ' (met verzwaringskoord)' : '';
+  const rapportStr = heeftRap ? ` &rarr; rapport &lceil;${rawVereist.toFixed(1)}&divide;${rapport}&rceil;&times;${rapport} = ${vereist.toFixed(1)}` : '';
+  const formula  = `${h} + ${DEFAULT_BAND_CHECK} + ${onderzoom}${koordStr} = ${rawVereist.toFixed(1)} cm${rapportStr}`;
   const vergelijk = maxH > 0
     ? ` ${passt ? '&le;' : '&gt;'} ${maxH} cm ${passt ? '&#10003;' : '&#10007;'}`
     : '';
@@ -918,8 +1030,8 @@ function applyArtikel(a) {
   setVal('artikelnummer',        a.artikelnummer);
   setVal('gordijn_type',         a.gordijn_type);
   setVal('omschrijving',         a.omschrijving);
-  const verkoop = verkoopPrijs95(a.prijs_per_m1);
-  setVal('verkoopprijs_m1',      verkoop !== null ? '€ ' + verkoop.toFixed(2) : '—');
+  const verkoopInfo = getVerkoopPrijs(a);
+  setVal('verkoopprijs_m1',      verkoopInfo ? `€ ${verkoopInfo.prijs.toFixed(2)} (${verkoopInfo.bron === 'handmatig' ? 'handmatig' : 'auto'})` : '—');
   setVal('krimpercentage',       a.krimpercentage);
   setVal('hoogte_stof',          a.hoogte_stof);
   setVal('breedte_stof',         a.breedte_stof);
@@ -968,6 +1080,13 @@ function populateKleurOpties(a) {
   sel.innerHTML = kleuren.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
 }
 
+// Toggle een info-panel (uitleg achter het "i"-knopje).
+function toggleInfo(id) {
+  const node = document.getElementById(id);
+  if (!node) return;
+  node.style.display = node.style.display === 'none' ? '' : 'none';
+}
+
 // ── Calculation ────────────────────────────────────────────
 function setBanner(msg, type) {
   const b = el('banner');
@@ -1006,12 +1125,25 @@ function compute() {
     return;
   }
 
-  const effectieveBreedte = (stuk === 'Links' || stuk === 'Rechts') ? breedte_rail / 2 : breedte_rail;
+  // Volledige rail wordt altijd gedekt — basis effectieve breedte = klaarbreedte.
+  const aantalDelen = stuk === 'Stel' ? 2 : 1;
+  const isRetour = plooiKeuze === 'Enkel retour' || plooiKeuze === 'Dubbel retour';
+  // Lab21-regel: retourplooi vereist extra marge zodat de zigzag-plooi niet
+  // platgetrokken wordt en er geen kieren ontstaan (zijkanten of midden bij Stel).
+  // De klaarbreedte wordt kunstmatig aangepast:
+  //   klaarbreedte ≥ 300 cm → +10% × klaarbreedte
+  //   klaarbreedte <  300 cm → +30 cm
+  const retourMarge = isRetour
+    ? (breedte_rail >= 300 ? 0.10 * breedte_rail : 30)
+    : 0;
+  const effectieveBreedte = breedte_rail + retourMarge;
   const plooiFactor = PLOOI[plooiKeuze] ?? 2.0;
   const baseBreedte = effectieveBreedte * plooiFactor;
-  // Kamerhoog: +24 cm stof voor beide zijzomen. Banenstof: geen zijzoomtoeslag in breedte.
+  // Per stuk 2 zijzomen (links + rechts) van ZIJZOOM_CM = 24 cm totaal.
+  const zijzoomToeslag = aantalDelen * 2 * ZIJZOOM_CM;
+  // Kamerhoog: stof-zijzoomtoeslag toepassen. Banenstof: geen toeslag in breedte.
   const benodigdeBreedte = (kamerhoog === 'Ja')
-    ? baseBreedte + (2 * ZIJZOOM_CM)
+    ? baseBreedte + zijzoomToeslag
     : baseBreedte;
   const koordLabel = isJa(verzwKeuze) ? ' (met verzwaringskoord)'
                    : isJa(lockKeuze)  ? ' (afgelockt)'
@@ -1019,10 +1151,25 @@ function compute() {
 
   const warnings = [];
   let aantalBanen = 0, totaalMetrage = 0, totaalPrijs = 0, breakdownHTML = '';
+  const retourRegel = retourMarge > 0
+    ? `<b>Retour-marge (${plooiKeuze}):</b> klaarbreedte ${breedte_rail < 300 ? `&lt; 300 &rarr; +30` : `&ge; 300 &rarr; +10% &times; ${breedte_rail}`} = <b>${fmt(retourMarge)} cm</b> &rarr; aangepaste klaarbreedte ${breedte_rail} + ${fmt(retourMarge)} = <b>${fmt(effectieveBreedte)} cm</b><br>`
+    : '';
+
+  // Snijhoogte basis = klaarhoogte + vliesband + onderzoom. Bij patroon-stof
+  // wordt naar boven afgerond op een heel rapport zodat het patroon niet
+  // doormidden gesneden wordt.
+  const rawSnijhoogte = hoogte_rail + band_in + onderzoom_cm;
+  const heeftRapport  = patroonType === 'Patroon' && patroonHoogte > 0;
+  const rapportenSnij = heeftRapport ? Math.ceil(rawSnijhoogte / patroonHoogte) : 0;
+  const vereistSnijhoogte = heeftRapport ? rapportenSnij * patroonHoogte : rawSnijhoogte;
+  const rapportNote = heeftRapport
+    ? `<b>Patroon rapport:</b> &lceil;${fmt(rawSnijhoogte)} &divide; ${patroonHoogte}&rceil; = ${rapportenSnij} &rarr; <b>${fmt(vereistSnijhoogte)} cm</b><br>`
+    : '';
 
   if (kamerhoog === 'Ja') {
-    const vereistTotaal = hoogte_rail + band_in + onderzoom_cm;
-    const kantelbaar    = _gekozenArtikel && isJa(_gekozenArtikel.kantelbaar);
+    const vereistTotaal = vereistSnijhoogte;
+    // Patroon-stof kantelt nooit (rapport zou 90° gedraaid worden).
+    const kantelbaar    = _gekozenArtikel && isJa(_gekozenArtikel.kantelbaar) && !heeftRapport;
     const teHoog        = vereistTotaal > hoogte_stof;
     const gekanteld     = teHoog && kantelbaar;
 
@@ -1056,70 +1203,76 @@ function compute() {
         : '';
       breakdownHTML = `
         <span class="step">Scenario A &mdash; Kamerhoog (gekanteld)</span>
-        <b>Effectieve breedte:</b> ${fmt(effectieveBreedte,0)} cm ${stuk !== 'Single' ? '(halve rail: '+breedte_rail+'/2)' : ''}<br>
-        <b>Plooifactor:</b> ${plooiFactor} (${plooiKeuze})<br>
-        <b>Benodigd stofbreedte:</b> ${fmt(effectieveBreedte,0)} &times; ${plooiFactor} + 1&times;${2 * ZIJZOOM_CM} = <b>${fmt(benodigdeBreedte)} cm</b><br>
+        <b>Effectieve breedte:</b> ${fmt(effectieveBreedte,0)} cm<br>
+        ${retourRegel}<b>Plooifactor:</b> ${plooiFactor} (${plooiKeuze})<br>
+        <b>Benodigd stofbreedte:</b> ${fmt(effectieveBreedte,0)} &times; ${plooiFactor} + ${aantalDelen}&times;${2 * ZIJZOOM_CM} = <b>${fmt(benodigdeBreedte)} cm</b><br>
         ${koordRegel}<b>Banen (na kanteling):</b> &lceil;${fmt(benodigdeBreedte)} &divide; ${baanBreedteEff}&rceil; = <b>${aantalBanen} banen</b><br>
-        <b>Hoogte per baan:</b> ${fmt(vereistTotaal)} cm (snijhoogte)<br>
+        <b>Vereiste snijhoogte (basis):</b> ${hoogte_rail} + ${band_in} + ${onderzoom_cm}${koordLabel} = ${fmt(rawSnijhoogte)} cm<br>
+        ${rapportNote}<b>Hoogte per baan:</b> ${fmt(vereistTotaal)} cm (snijhoogte)<br>
         <b>Metrage/baan:</b> ${fmt(vereistTotaal)} &divide; 100 = ${fmt(mPerBaan)} m<br>
         <b>Totaal metrage:</b> ${aantalBanen} &times; ${fmt(mPerBaan)} = <b>${fmt(totaalMetrage)} m</b><br>
-        <b>Vereiste snijhoogte:</b> ${hoogte_rail} + ${band_in} + ${onderzoom_cm}${koordLabel} = ${snijCheck}`;
+        <b>Snijhoogte vs. stof:</b> ${snijCheck}`;
     } else {
       // Kamerhoog niet-gekanteld: één baan uit de rol gesneden; metrage = benodigde breedte.
+      // Snijhoogte (incl. rapport-rounding) bepaalt feasibility; metrage zelf is lengte-gedreven.
       aantalBanen   = 1;
       totaalMetrage = parseFloat((benodigdeBreedte / 100).toFixed(2));
       breakdownHTML = `
         <span class="step">Scenario A &mdash; Kamerhoog</span>
-        <b>Effectieve breedte:</b> ${fmt(effectieveBreedte,0)} cm ${stuk !== 'Single' ? '(halve rail: '+breedte_rail+'/2)' : ''}<br>
-        <b>Plooifactor:</b> ${plooiFactor} (${plooiKeuze})<br>
-        <b>Benodigd stofbreedte:</b> ${fmt(effectieveBreedte,0)} &times; ${plooiFactor} + 1&times;${2 * ZIJZOOM_CM} = <b>${fmt(benodigdeBreedte)} cm</b><br>
+        <b>Effectieve breedte:</b> ${fmt(effectieveBreedte,0)} cm<br>
+        ${retourRegel}<b>Plooifactor:</b> ${plooiFactor} (${plooiKeuze})<br>
+        <b>Benodigd stofbreedte:</b> ${fmt(effectieveBreedte,0)} &times; ${plooiFactor} + ${aantalDelen}&times;${2 * ZIJZOOM_CM} = <b>${fmt(benodigdeBreedte)} cm</b><br>
         <b>Banen:</b> <b>1 baan</b> (kamerhoog: &eacute;&eacute;n stuk uit de rol gesneden)<br>
         <b>Totaal metrage:</b> ${fmt(benodigdeBreedte)} &divide; 100 = <b>${fmt(totaalMetrage, 2)} m</b><br>
-        <b>Vereiste snijhoogte:</b> ${hoogte_rail} + ${band_in} + ${onderzoom_cm}${koordLabel} = ${snijCheck}`;
+        <b>Vereiste snijhoogte (basis):</b> ${hoogte_rail} + ${band_in} + ${onderzoom_cm}${koordLabel} = ${fmt(rawSnijhoogte)} cm<br>
+        ${rapportNote}<b>Snijhoogte vs. stof:</b> ${snijCheck}`;
     }
   } else {
     aantalBanen = Math.ceil(benodigdeBreedte / breedte_stof);
     const coupageVerlies = band_in + onderzoom_cm;
-    let hoogte_per_baan = hoogte_rail + coupageVerlies;
-    let patroonNote = '';
-    if (patroonType === 'Patroon' && patroonHoogte > 0) {
-      const rapporten = Math.ceil(hoogte_per_baan / patroonHoogte);
-      const hoogteMet = rapporten * patroonHoogte;
-      patroonNote = `<b>Patroon rapport:</b> &lceil;${fmt(hoogte_per_baan)} &divide; ${patroonHoogte}&rceil; = ${rapporten} &rarr; ${fmt(hoogteMet)} cm<br>`;
-      hoogte_per_baan = hoogteMet;
-    }
-    const mPerBaan = hoogte_per_baan / 100;
-    totaalMetrage  = parseFloat((aantalBanen * mPerBaan).toFixed(1));
+    // Lengte per baan = klaarhoogte + coupageverlies; bij patroon afgerond
+    // op heel rapport (zit al in vereistSnijhoogte verwerkt).
+    const lengtePerBaan  = vereistSnijhoogte;
+    const totaalCm       = aantalBanen * lengtePerBaan;
+    totaalMetrage = parseFloat((totaalCm / 100).toFixed(1));
+    const patroonHoogteRegel = heeftRapport
+      ? `<b>Lengte per baan met patroon:</b> &lceil;${fmt(rawSnijhoogte)} &divide; ${patroonHoogte}&rceil; &times; ${patroonHoogte} = <b>${fmt(lengtePerBaan)} cm</b><br>`
+      : '';
     breakdownHTML = `
       <span class="step">Scenario B &mdash; Banenstof</span>
-      <b>Effectieve breedte:</b> ${fmt(effectieveBreedte,0)} cm ${stuk !== 'Single' ? '(halve rail: '+breedte_rail+'/2)' : ''}<br>
-      <b>Plooifactor:</b> ${plooiFactor} (${plooiKeuze})<br>
-      <b>Benodigd stofbreedte:</b> ${fmt(effectieveBreedte,0)} &times; ${plooiFactor} = <b>${fmt(benodigdeBreedte)} cm</b><br>
-      <b>Banen:</b> &lceil;${fmt(benodigdeBreedte)} &divide; ${breedte_stof}&rceil; = <b>${aantalBanen} banen</b><br>
-      <b>Coupageverlies:</b> vliesband ${band_in} + onderzoom ${onderzoom_cm}${koordLabel} = ${coupageVerlies} cm per baan<br>
-      <b>Hoogte per baan:</b> ${hoogte_rail} + ${coupageVerlies} = ${fmt(hoogte_per_baan)} cm<br>
-      ${patroonNote}
-      <b>Metrage/baan:</b> ${fmt(hoogte_per_baan)} &divide; 100 = ${fmt(mPerBaan)} m<br>
-      <b>Totaal metrage:</b> ${aantalBanen} &times; ${fmt(mPerBaan)} = <b>${fmt(totaalMetrage)} m</b><br>`;
+      <b>Raambreedte:</b> ${fmt(effectieveBreedte,0)} cm<br>
+      ${retourRegel}<b>Plooifactor:</b> ${plooiFactor} (${plooiKeuze})<br>
+      <b>Benodigde stofbreedte:</b> ${fmt(effectieveBreedte,0)} &times; ${plooiFactor} = <b>${fmt(benodigdeBreedte)} cm</b><br>
+      <b>Aantal banen:</b> &lceil;${fmt(benodigdeBreedte)} &divide; ${breedte_stof}&rceil; = <b>${aantalBanen}</b><br>
+      <b>Coupageverlies:</b> vliesband ${band_in} + onderzoom ${onderzoom_cm}${koordLabel} = ${coupageVerlies} cm<br>
+      <b>Lengte per baan zonder patroon:</b> ${hoogte_rail} + ${coupageVerlies} = <b>${fmt(rawSnijhoogte)} cm</b><br>
+      ${patroonHoogteRegel}<b>Totale stoflengte:</b> ${aantalBanen} &times; ${fmt(lengtePerBaan)} = <b>${fmt(totaalCm)} cm</b> = <b>${fmt(totaalMetrage)} m</b><br>`;
   }
 
   let prijsBreakdown = '';
-  if (prijs_per_m1 > 0) {
-    const stolPrijs = totaalMetrage * prijs_per_m1;
+  // Verkoopprijs/m¹ incl. btw: handmatig (door Victor) heeft voorrang;
+  // auto-formule (inkoop × 3 → xx.95) wordt alleen voor testartikelen gebruikt.
+  const verkoopInfo = getVerkoopPrijs(_gekozenArtikel);
+  const verkoopM1   = verkoopInfo ? verkoopInfo.prijs : null;
+  if (verkoopM1) {
+    const stolPrijs = totaalMetrage * verkoopM1;
     totaalPrijs = stolPrijs;
-    prijsBreakdown = `<span class="step">Prijsberekening</span><b>Stofprijs:</b> ${fmt(totaalMetrage)} m &times; ${fmtEur(prijs_per_m1)} = <b>${fmtEur(stolPrijs)}</b><br>`;
-    if (voeren === 'Ja') {
+    const bronTekst = verkoopInfo.bron === 'handmatig'
+      ? `<b>Verkoopprijs/m¹ incl. btw:</b> <b>${fmtEur(verkoopM1)}</b> <i>(handmatig ingesteld)</i><br>`
+      : `<b>Verkoopprijs/m¹ incl. btw:</b> ${fmtEur(prijs_per_m1)} &times; 3 &rarr; xx.95 = <b>${fmtEur(verkoopM1)}</b> <i>(auto, testartikel)</i><br>`;
+    prijsBreakdown = `<span class="step">Prijsberekening</span>${bronTekst}<b>Stofprijs:</b> ${fmt(totaalMetrage)} m &times; ${fmtEur(verkoopM1)} = <b>${fmtEur(stolPrijs)}</b><br>`;
+    if (voeren && voeren !== 'Geen voering') {
       const vPrijsM1 = voering_prijs > 0 ? voering_prijs : prijs_per_m1 * 0.60;
       const vPrijs   = totaalMetrage * vPrijsM1;
       totaalPrijs   += vPrijs;
-      prijsBreakdown += `<b>Voering:</b> ${fmt(totaalMetrage)} m &times; ${fmtEur(vPrijsM1)} = <b>${fmtEur(vPrijs)}</b>${voering_prijs <= 0 ? ' <i>(60% schatting)</i>' : ''}<br>`;
+      prijsBreakdown += `<b>Voering (${voeren}):</b> ${fmt(totaalMetrage)} m &times; ${fmtEur(vPrijsM1)} = <b>${fmtEur(vPrijs)}</b>${voering_prijs <= 0 ? ' <i>(60% schatting)</i>' : ''}<br>`;
       prijsBreakdown += `<b>Totaal incl. voering:</b> <b>${fmtEur(totaalPrijs)}</b>`;
     }
   }
 
   el('out_banen').textContent   = aantalBanen;
   el('out_metrage').textContent = fmt(totaalMetrage);
-  el('out_prijs').textContent   = prijs_per_m1 > 0 ? fmtEur(totaalPrijs) : '—';
+  el('out_prijs').textContent   = verkoopM1 ? fmtEur(totaalPrijs) : '—';
   el('breakdown').innerHTML     = breakdownHTML + prijsBreakdown;
 
   if (effectieveBreedte > MAX_STUK_BREEDTE_CM) {
@@ -1159,7 +1312,10 @@ function toggleBreedteStof() {
     : 'Bij banenstof = lengte van de rol (onbeperkt)';
 }
 function toggleVoering() {
-  el('wrap_voering_prijs').style.display = sel('voeren') === 'Ja' ? '' : 'none';
+  // Voering-prijs en kleur verschijnen zodra een voering-type is gekozen.
+  const heeft = sel('voeren') !== 'Geen voering';
+  el('wrap_voering_prijs').style.display = heeft ? '' : 'none';
+  el('wrap_voering_kleur').style.display = heeft ? '' : 'none';
 }
 // Bij verzwaringskoord is loodveter nooit nodig — forceer Nee en disable het veld.
 function toggleLoodveter() {
@@ -1197,15 +1353,22 @@ toggleLoodveter();
 
 // Fictieve kantelbaar-waarden toekennen aan artikelen die nog geen waarde hebben,
 // zodat de kolom in de lijst meteen is ingevuld. Persisteert via dbUpsertArticles.
+// Regel: bij patroon-stof is kantelbaar altijd Nee (patroon zou bij kanteling
+// 90° gedraaid worden — visueel onacceptabel).
 async function seedKantelbaar(saved) {
   const toUpdate = [];
   let i = 0;
   Object.keys(saved).sort().forEach(nr => {
-    const v = String(saved[nr].kantelbaar || '').trim().toLowerCase();
-    if (v !== 'ja' && v !== 'nee') {
-      saved[nr].kantelbaar = (i % 2 === 0) ? 'Ja' : 'Nee';
+    const a = saved[nr];
+    const isPatroon = String(a.patroon || '').trim().toLowerCase() === 'patroon';
+    const v = String(a.kantelbaar || '').trim().toLowerCase();
+    if (isPatroon && v !== 'nee') {
+      a.kantelbaar = 'Nee';
+      toUpdate.push(a);
+    } else if (!isPatroon && v !== 'ja' && v !== 'nee') {
+      a.kantelbaar = (i % 2 === 0) ? 'Ja' : 'Nee';
       i++;
-      toUpdate.push(saved[nr]);
+      toUpdate.push(a);
     }
   });
   if (toUpdate.length > 0) await dbUpsertArticles(toUpdate);
