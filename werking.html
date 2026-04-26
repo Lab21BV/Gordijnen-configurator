@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Werking — Gordijn Configurator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #f4f5f7;
+      --surface:   #ffffff;
+      --border:    #d9dde8;
+      --accent:    #2c5f8a;
+      --accent-lt: #e8f0f8;
+      --accent-dk: #1e4166;
+      --success:   #2e7d32;
+      --success-lt:#e7f5e8;
+      --error:     #c62828;
+      --error-lt:  #fde8e8;
+      --warn:      #e65100;
+      --warn-lt:   #fff3e0;
+      --text:      #1a1a2e;
+      --muted:     #5a6072;
+      --radius:    8px;
+      --shadow:    0 2px 8px rgba(0,0,0,.10);
+      --code-bg:   #f0f3f8;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.55;
+    }
+
+    header {
+      background: var(--accent); color: #fff; padding: 14px 28px;
+      display: flex; align-items: center; gap: 14px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.25);
+      position: sticky; top: 0; z-index: 100;
+    }
+    header svg { flex-shrink: 0; }
+    header h1 { font-size: 1.15rem; font-weight: 600; letter-spacing: .02em; }
+    header nav { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+    header nav a {
+      color: rgba(255,255,255,.85); text-decoration: none; font-size: .82rem;
+      font-weight: 500; padding: 5px 12px; border-radius: 5px;
+      border: 1px solid rgba(255,255,255,.3); transition: background .15s;
+    }
+    header nav a:hover { background: rgba(255,255,255,.15); color: #fff; }
+
+    .page { max-width: 1100px; margin: 0 auto; padding: 28px 24px 64px; }
+
+    .toc {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px 22px; margin-bottom: 28px;
+      box-shadow: var(--shadow);
+    }
+    .toc h3 {
+      font-size: .78rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--accent); margin-bottom: 10px;
+    }
+    .toc ol { padding-left: 20px; }
+    .toc li { margin-bottom: 4px; font-size: .88rem; }
+    .toc a { color: var(--accent-dk); text-decoration: none; }
+    .toc a:hover { color: var(--accent); text-decoration: underline; }
+
+    h2 {
+      font-size: 1.25rem; font-weight: 700; color: var(--accent-dk);
+      margin: 36px 0 14px; padding-bottom: 6px;
+      border-bottom: 2px solid var(--accent-lt); scroll-margin-top: 80px;
+    }
+    h2:first-of-type { margin-top: 0; }
+    h3 {
+      font-size: 1rem; font-weight: 700; color: var(--accent);
+      margin: 20px 0 8px;
+    }
+
+    p { margin-bottom: 10px; font-size: .92rem; }
+    ul, ol { margin: 8px 0 12px 24px; }
+    li { margin-bottom: 4px; font-size: .9rem; }
+
+    code {
+      background: var(--code-bg); padding: 1px 6px; border-radius: 3px;
+      font-family: 'Courier New', monospace; font-size: .82rem;
+      color: var(--accent-dk);
+    }
+    pre {
+      background: var(--code-bg); border: 1px solid var(--border);
+      border-radius: 6px; padding: 12px 14px; margin: 10px 0;
+      overflow-x: auto; font-family: 'Courier New', monospace;
+      font-size: .82rem; color: var(--accent-dk);
+    }
+    pre code { background: none; padding: 0; }
+
+    table {
+      width: 100%; border-collapse: collapse; margin: 10px 0 14px;
+      font-size: .87rem; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 6px; overflow: hidden;
+    }
+    thead th {
+      background: var(--code-bg); color: var(--accent-dk); font-weight: 700;
+      padding: 8px 12px; text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    tbody td { padding: 7px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tbody tr:last-child td { border-bottom: none; }
+
+    strong { color: var(--accent-dk); }
+    em { color: var(--muted); font-style: normal; }
+
+    .meta {
+      font-size: .78rem; color: var(--muted); margin-bottom: 16px;
+      padding-bottom: 12px; border-bottom: 1px dashed var(--border);
+    }
+
+    /* ─── Flowchart blocks ─────────────────────────────────── */
+    .flow {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 22px 18px;
+      margin: 14px 0 22px; box-shadow: var(--shadow);
+      overflow-x: auto;
+    }
+    .flow-title {
+      font-size: .78rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--accent); margin-bottom: 14px;
+      text-align: center;
+    }
+
+    .flow-row {
+      display: flex; justify-content: center; align-items: stretch;
+      gap: 14px; flex-wrap: wrap; margin: 0;
+    }
+    .flow-arrow-down {
+      display: flex; justify-content: center; align-items: center;
+      height: 28px; color: var(--accent);
+    }
+    .flow-arrow-down::after {
+      content: ''; width: 0; height: 0;
+      border-left: 8px solid transparent; border-right: 8px solid transparent;
+      border-top: 12px solid var(--accent);
+    }
+
+    .node {
+      border: 2px solid var(--accent); background: var(--accent-lt);
+      color: var(--accent-dk); border-radius: 8px;
+      padding: 10px 14px; font-size: .85rem; font-weight: 600;
+      min-width: 150px; text-align: center; line-height: 1.35;
+    }
+    .node small { display: block; font-weight: 400; font-size: .76rem; color: var(--muted); margin-top: 3px; }
+    .node-input  { border-color: var(--accent);  background: var(--accent-lt);  color: var(--accent-dk); }
+    .node-decide { border-color: var(--warn);    background: var(--warn-lt);    color: #7b3a00; border-radius: 22px; }
+    .node-calc   { border-color: var(--accent-dk); background: #fff; color: var(--accent-dk); border-style: dashed; }
+    .node-output { border-color: var(--success); background: var(--success-lt); color: #1b5e20; }
+    .node-error  { border-color: var(--error);   background: var(--error-lt);   color: #b71c1c; }
+
+    .branch {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+      position: relative; margin-top: 8px;
+    }
+    .branch-3 { grid-template-columns: 1fr 1fr 1fr; }
+    .branch-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .branch-label {
+      font-size: .72rem; font-weight: 700; color: var(--muted);
+      letter-spacing: .04em; text-transform: uppercase;
+    }
+    .branch-label.yes { color: var(--success); }
+    .branch-label.no  { color: var(--error); }
+
+    .legend {
+      display: flex; flex-wrap: wrap; gap: 10px;
+      margin: 8px 0 16px; font-size: .78rem;
+    }
+    .legend .node { min-width: 0; padding: 4px 10px; font-size: .76rem; font-weight: 600; }
+
+    /* ─── Effect tabel ─────────────────────────────────── */
+    .effect-table th { background: var(--accent-lt); color: var(--accent-dk); }
+    .effect-table td:first-child { font-weight: 600; color: var(--accent-dk); white-space: nowrap; }
+    .effect-table td:nth-child(2) { color: var(--muted); }
+
+    .pill {
+      display: inline-block; background: var(--accent-lt);
+      color: var(--accent-dk); padding: 1px 8px; border-radius: 10px;
+      font-size: .74rem; font-weight: 600; margin: 0 2px;
+    }
+    .pill-warn  { background: var(--warn-lt);    color: #7b3a00; }
+    .pill-error { background: var(--error-lt);   color: #b71c1c; }
+    .pill-ok    { background: var(--success-lt); color: #1b5e20; }
+
+    .top-link {
+      display: inline-block; font-size: .78rem; color: var(--muted);
+      text-decoration: none; margin-top: 8px;
+    }
+    .top-link:hover { color: var(--accent); }
+
+    @media (max-width: 720px) {
+      .flow-row { flex-direction: column; align-items: center; }
+      .branch, .branch-3 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="3" width="18" height="2" rx="1"/>
+    <line x1="6"  y1="5" x2="6"  y2="21"/>
+    <line x1="18" y1="5" x2="18" y2="21"/>
+    <path d="M6 8 Q9 10 12 8 Q15 6 18 8"/>
+    <path d="M6 13 Q9 15 12 13 Q15 11 18 13"/>
+    <path d="M6 18 Q9 20 12 18 Q15 16 18 18"/>
+  </svg>
+  <h1>Werking van de configurator</h1>
+  <nav>
+    <a href="index.html">&larr; Configurator</a>
+    <a href="import.html">&larr; Artikel import</a>
+    <a href="berekeningsregels.html">&#128218; Berekeningsregels</a>
+  </nav>
+</header>
+
+<div class="page" id="top">
+
+  <p class="meta">
+    Deze pagina laat zien <strong>welke invoervelden welke andere velden of berekeningen sturen</strong>.
+    Gebruik dit om snel te begrijpen waarom een waarde verandert na een keuze, en waarom een artikel als
+    &laquo;niet mogelijk&raquo; wordt gemarkeerd. Voor de exacte formules: zie
+    <a href="berekeningsregels.html">Berekeningsregels</a>.
+  </p>
+
+  <div class="toc">
+    <h3>Inhoudsopgave</h3>
+    <ol>
+      <li><a href="#legende">Legenda</a></li>
+      <li><a href="#flow-hoofd">Hoofd-flow van de configurator</a></li>
+      <li><a href="#flow-feasibility">Flow: kan dit artikel deze maten aan?</a></li>
+      <li><a href="#flow-snijhoogte">Flow: snijhoogte (lengte per baan)</a></li>
+      <li><a href="#flow-stofbreedte">Flow: benodigde stofbreedte</a></li>
+      <li><a href="#flow-metrage">Flow: aantal banen &amp; totaal metrage</a></li>
+      <li><a href="#flow-prijs">Flow: verkoopprijs &amp; eindprijs</a></li>
+      <li><a href="#flow-afwerking">Flow: afwerkingen onderling (lock / koord / loodveter)</a></li>
+      <li><a href="#effect-matrix">Effect-matrix: welk veld stuurt wat?</a></li>
+    </ol>
+  </div>
+
+  <!-- ────────── LEGENDA ────────── -->
+  <h2 id="legende">1. Legenda</h2>
+  <p>De flowcharts gebruiken vier soorten blokken:</p>
+  <div class="legend">
+    <span class="node node-input">Invoer</span>
+    <span class="node node-decide">Beslissing</span>
+    <span class="node node-calc">Berekening</span>
+    <span class="node node-output">Resultaat</span>
+    <span class="node node-error">Fout / blokkade</span>
+  </div>
+  <p>Pijlen lopen van boven naar beneden. Bij een beslissing splitst de flow zich, en de tak heeft een label (<em>Ja</em>, <em>Nee</em>, of de gekozen optie).</p>
+
+  <!-- ────────── HOOFD-FLOW ────────── -->
+  <h2 id="flow-hoofd">2. Hoofd-flow van de configurator</h2>
+  <p>De stappen van de configurator volgen elkaar in vaste volgorde. Elke stap filtert of stuurt de volgende.</p>
+
+  <div class="flow">
+    <div class="flow-title">Configuratie-volgorde</div>
+
+    <div class="flow-row"><div class="node node-input">Stap 1 — Type gordijn<small>Overgordijn / Inbetween</small></div></div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-input">Stap 2 — Klaarmaten<small>KlaarBreedte + KlaarHoogte (cm)</small></div></div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-calc">Filter artikellijst<small>op type + hoogte-feasibility</small></div></div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-input">Stap 3 — Artikel kiezen<small>uit gefilterde lijst</small></div></div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-input">Stap 4 — Kleur</div></div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-input">Stap 5 — Bevestiging<small>Plafond / Wand / In de dag</small></div></div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-input">Stap 6 — Plooi &amp; verdeling<small>plooi, aantal delen, vliesband</small></div></div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-input">Stap 7 — Voering<small>type, kleur, prijs</small></div></div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-input">Stap 8 — Afwerking<small>verzwaaringskoord, lock, loodveter</small></div></div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-input">Stap 9 — Bediening<small>Opstrek L/R, Tuimel, Middenstroom, Koordloos</small></div></div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-output">compute() &rarr; offerte<small>metrage, prijs, breakdown</small></div></div>
+  </div>
+
+  <!-- ────────── FEASIBILITY ────────── -->
+  <h2 id="flow-feasibility">3. Flow: kan dit artikel deze maten aan?</h2>
+  <p>Bij het renderen van de artikellijst (stap 3) wordt per artikel een feasibility-check uitgevoerd. De uitkomst bepaalt of het artikel <span class="pill pill-ok">geschikt</span>, <span class="pill pill-warn">kantel-fallback</span> of <span class="pill pill-error">niet mogelijk</span> krijgt.</p>
+
+  <div class="flow">
+    <div class="flow-title">Per artikel — past het bij de klaarmaten?</div>
+
+    <div class="flow-row"><div class="node node-input">Artikel met<br/><code>kamerhoog</code>, <code>hoogte_stof</code>,<br/><code>kantelbaar</code>, <code>patroon</code></div></div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-calc">Bereken vereistSnijhoogte<br/>= klaarhoogte + vliesband + onderzoom<br/>(rond op patroonrapport)</div></div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-decide">kamerhoog = Ja?</div></div>
+
+    <div class="branch">
+      <div class="branch-col">
+        <div class="branch-label yes">Ja — Kamerhoog</div>
+        <div class="flow-arrow-down"></div>
+        <div class="node node-decide">vereistSnijhoogte<br/>&le; hoogte_stof?</div>
+        <div class="branch">
+          <div class="branch-col">
+            <div class="branch-label yes">Ja</div>
+            <div class="flow-arrow-down"></div>
+            <div class="node node-output">Geschikt<br/><small>scenario: rechtop</small></div>
+          </div>
+          <div class="branch-col">
+            <div class="branch-label no">Nee</div>
+            <div class="flow-arrow-down"></div>
+            <div class="node node-decide">kantelbaar = Ja<br/>&amp; patroon = Uni?</div>
+            <div class="branch">
+              <div class="branch-col">
+                <div class="branch-label yes">Ja</div>
+                <div class="flow-arrow-down"></div>
+                <div class="node node-output">Geschikt<br/><small>scenario: gekanteld</small></div>
+              </div>
+              <div class="branch-col">
+                <div class="branch-label no">Nee</div>
+                <div class="flow-arrow-down"></div>
+                <div class="node node-error">Niet mogelijk<br/><small>hoogte stof te klein</small></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="branch-col">
+        <div class="branch-label no">Nee — Banenstof</div>
+        <div class="flow-arrow-down"></div>
+        <div class="node node-output">Geschikt<br/><small>geen hoogtegrens, lengte onbeperkt</small></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ────────── SNIJHOOGTE ────────── -->
+  <h2 id="flow-snijhoogte">4. Flow: snijhoogte (lengte per baan)</h2>
+  <p>De snijhoogte is de lengte stof die per baan wordt afgesneden. Drie velden bepalen samen de onderzoom; patroon kan de snijhoogte daarna nog naar boven afronden.</p>
+
+  <div class="flow">
+    <div class="flow-title">Snijhoogte = klaarhoogte + vliesband + onderzoom &nbsp;(&times; rapport bij patroon)</div>
+
+    <div class="flow-row">
+      <div class="node node-input">KlaarHoogte<br/><small>uit stap 2</small></div>
+      <div class="node node-input">Vliesband<br/><small>8 / 10 / 12 / 15 cm</small></div>
+      <div class="node node-input">Lock?</div>
+      <div class="node node-input">Verzwaaringskoord?</div>
+    </div>
+    <div class="flow-arrow-down"></div>
+
+    <div class="flow-row"><div class="node node-decide">Lock = Ja?</div></div>
+    <div class="branch">
+      <div class="branch-col">
+        <div class="branch-label yes">Ja</div>
+        <div class="flow-arrow-down"></div>
+        <div class="node node-calc">onderzoom = <strong>0 cm</strong><br/><small>afgelockt</small></div>
+      </div>
+      <div class="branch-col">
+        <div class="branch-label no">Nee</div>
+        <div class="flow-arrow-down"></div>
+        <div class="node node-decide">Verzwaaringskoord<br/>= Ja?</div>
+        <div class="branch">
+          <div class="branch-col">
+            <div class="branch-label yes">Ja</div>
+            <div class="flow-arrow-down"></div>
+            <div class="node node-calc">onderzoom = <strong>2 cm</strong></div>
+          </div>
+          <div class="branch-col">
+            <div class="branch-label no">Nee</div>
+            <div class="flow-arrow-down"></div>
+            <div class="node node-calc">onderzoom = <strong>15 cm</strong><br/><small>gestoomde onderzoom</small></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-calc">rawSnijhoogte = klaarhoogte + vliesband + onderzoom</div></div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-decide">Artikel patroon = Patroon?<br/>&amp; patroonhoogte &gt; 0?</div></div>
+    <div class="branch">
+      <div class="branch-col">
+        <div class="branch-label yes">Ja</div>
+        <div class="flow-arrow-down"></div>
+        <div class="node node-calc">rapporten = &lceil;raw &divide; patroonhoogte&rceil;<br/>vereistSnijhoogte = rapporten &times; patroonhoogte</div>
+      </div>
+      <div class="branch-col">
+        <div class="branch-label no">Nee</div>
+        <div class="flow-arrow-down"></div>
+        <div class="node node-calc">vereistSnijhoogte = rawSnijhoogte</div>
+      </div>
+    </div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-output">vereistSnijhoogte (cm)</div></div>
+  </div>
+
+  <!-- ────────── STOFBREEDTE ────────── -->
+  <h2 id="flow-stofbreedte">5. Flow: benodigde stofbreedte</h2>
+  <p>De effectieve breedte hangt af van de plooi (retour vraagt extra slack) en aantal delen (zijzomen alleen kamerhoog).</p>
+
+  <div class="flow">
+    <div class="flow-title">benodigdeStofbreedte = effectieveBreedte &times; plooifactor &nbsp;(+ zijzomen)</div>
+
+    <div class="flow-row">
+      <div class="node node-input">KlaarBreedte<br/><small>uit stap 2</small></div>
+      <div class="node node-input">Plooi<br/><small>Wave / Dubbel R / Enkel R / Dubbel / Enkel</small></div>
+      <div class="node node-input">Aantal delen<br/><small>Stel / Links / Rechts</small></div>
+    </div>
+    <div class="flow-arrow-down"></div>
+
+    <div class="flow-row"><div class="node node-decide">Plooi = Enkel retour<br/>of Dubbel retour?</div></div>
+    <div class="branch">
+      <div class="branch-col">
+        <div class="branch-label yes">Ja</div>
+        <div class="flow-arrow-down"></div>
+        <div class="node node-decide">klaarbreedte<br/>&ge; 300 cm?</div>
+        <div class="branch">
+          <div class="branch-col">
+            <div class="branch-label yes">Ja</div>
+            <div class="flow-arrow-down"></div>
+            <div class="node node-calc">retourMarge = 10 % &times; klaarbreedte</div>
+          </div>
+          <div class="branch-col">
+            <div class="branch-label no">Nee</div>
+            <div class="flow-arrow-down"></div>
+            <div class="node node-calc">retourMarge = 30 cm</div>
+          </div>
+        </div>
+      </div>
+      <div class="branch-col">
+        <div class="branch-label no">Nee</div>
+        <div class="flow-arrow-down"></div>
+        <div class="node node-calc">retourMarge = 0</div>
+      </div>
+    </div>
+
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-calc">effectieveBreedte = klaarbreedte + retourMarge</div></div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-decide">Artikel kamerhoog = Ja?</div></div>
+    <div class="branch">
+      <div class="branch-col">
+        <div class="branch-label yes">Ja — Kamerhoog</div>
+        <div class="flow-arrow-down"></div>
+        <div class="node node-calc">+ aantalDelen &times; 24 cm zijzomen<br/><small>Stel = 48, 1 deel = 24</small></div>
+      </div>
+      <div class="branch-col">
+        <div class="branch-label no">Nee — Banenstof</div>
+        <div class="flow-arrow-down"></div>
+        <div class="node node-calc">geen zijzomen-toeslag</div>
+      </div>
+    </div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-output">benodigdeStofbreedte (cm)</div></div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-decide">effectieveBreedte &gt; 600 cm?</div></div>
+    <div class="branch">
+      <div class="branch-col">
+        <div class="branch-label yes">Ja</div>
+        <div class="flow-arrow-down"></div>
+        <div class="node node-error" style="border-color:var(--warn);background:var(--warn-lt);color:#7b3a00">Waarschuwing<br/><small>verdeel in 1 deel L + 1 deel R</small></div>
+      </div>
+      <div class="branch-col">
+        <div class="branch-label no">Nee</div>
+        <div class="flow-arrow-down"></div>
+        <div class="node node-output">OK</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ────────── METRAGE ────────── -->
+  <h2 id="flow-metrage">6. Flow: aantal banen &amp; totaal metrage</h2>
+  <p>De manier waarop banen worden geteld hangt af van of het artikel kamerhoog is, en bij kamerhoog of de stof gekanteld moet worden.</p>
+
+  <div class="flow">
+    <div class="flow-title">aantalBanen + lengte per baan &rarr; totaalMetrage</div>
+
+    <div class="flow-row">
+      <div class="node node-input">benodigdeStofbreedte</div>
+      <div class="node node-input">vereistSnijhoogte</div>
+      <div class="node node-input">artikel.hoogte_stof<br/>artikel.breedte_stof<br/>artikel.kantelbaar / patroon</div>
+    </div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-decide">kamerhoog = Ja?</div></div>
+
+    <div class="branch">
+      <div class="branch-col">
+        <div class="branch-label yes">Ja — Kamerhoog</div>
+        <div class="flow-arrow-down"></div>
+        <div class="node node-decide">vereistSnijhoogte<br/>&le; hoogte_stof?</div>
+        <div class="branch">
+          <div class="branch-col">
+            <div class="branch-label yes">Ja — rechtop</div>
+            <div class="flow-arrow-down"></div>
+            <div class="node node-calc">aantalBanen = 1<br/>totaalMetrage = stofbreedte / 100</div>
+          </div>
+          <div class="branch-col">
+            <div class="branch-label no">Nee — kantelen</div>
+            <div class="flow-arrow-down"></div>
+            <div class="node node-decide">kantelbaar = Ja<br/>&amp; patroon = Uni?</div>
+            <div class="branch">
+              <div class="branch-col">
+                <div class="branch-label yes">Ja</div>
+                <div class="flow-arrow-down"></div>
+                <div class="node node-calc">koordverlies = verzw? 2 : 0<br/>baanBreedte = hoogte_stof &minus; koordverlies<br/>aantalBanen = &lceil;stofbreedte / baanBreedte&rceil;<br/>totaalMetrage = banen &times; vereistSnijhoogte / 100</div>
+              </div>
+              <div class="branch-col">
+                <div class="branch-label no">Nee</div>
+                <div class="flow-arrow-down"></div>
+                <div class="node node-error">Berekening stopt<br/><small>artikel niet geschikt</small></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="branch-col">
+        <div class="branch-label no">Nee — Banenstof</div>
+        <div class="flow-arrow-down"></div>
+        <div class="node node-calc">aantalBanen = &lceil;stofbreedte / breedte_stof&rceil;<br/>totaalCm = banen &times; vereistSnijhoogte<br/>totaalMetrage = totaalCm / 100</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ────────── PRIJS ────────── -->
+  <h2 id="flow-prijs">7. Flow: verkoopprijs &amp; eindprijs</h2>
+  <p>De stofprijs gebruikt het handmatige <code>verkoopprijs_per_m1</code> als die is ingevuld; anders een 60&minus;%-fallback gebaseerd op de inkoopprijs.</p>
+
+  <div class="flow">
+    <div class="flow-title">verkoopPrijs/m¹ &rarr; stofPrijs &rarr; totaalPrijs</div>
+
+    <div class="flow-row">
+      <div class="node node-input">artikel.verkoopprijs_per_m1<br/><small>handmatig veld</small></div>
+      <div class="node node-input">artikel.prijs_per_m1<br/><small>inkoop</small></div>
+    </div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-decide">verkoopprijs_per_m1<br/>ingevuld &amp; &gt; 0?</div></div>
+    <div class="branch">
+      <div class="branch-col">
+        <div class="branch-label yes">Ja — handmatig</div>
+        <div class="flow-arrow-down"></div>
+        <div class="node node-calc">verkoopPrijs/m¹ = handmatige waarde<br/><span class="pill pill-ok">bron: handmatig</span></div>
+      </div>
+      <div class="branch-col">
+        <div class="branch-label no">Nee — auto</div>
+        <div class="flow-arrow-down"></div>
+        <div class="node node-calc">verkoopPrijs/m¹ = inkoop &times; 3<br/>afgerond op eerstvolgende xx,95<br/><span class="pill pill-warn">bron: auto</span></div>
+      </div>
+    </div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-calc">stofPrijs = totaalMetrage &times; verkoopPrijs/m¹</div></div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-decide">Voering &ne; Geen?</div></div>
+    <div class="branch">
+      <div class="branch-col">
+        <div class="branch-label yes">Ja</div>
+        <div class="flow-arrow-down"></div>
+        <div class="node node-calc">voeringPrijs/m¹ = voering_prijs_per_m1<br/>óf inkoop &times; 0,60 (fallback)<br/>voeringKosten = totaalMetrage &times; prijs</div>
+      </div>
+      <div class="branch-col">
+        <div class="branch-label no">Nee</div>
+        <div class="flow-arrow-down"></div>
+        <div class="node node-calc">voeringKosten = 0</div>
+      </div>
+    </div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-output">totaalPrijs = stofPrijs + voeringKosten</div></div>
+  </div>
+
+  <!-- ────────── AFWERKING ONDERLING ────────── -->
+  <h2 id="flow-afwerking">8. Flow: afwerkingen onderling (lock / koord / loodveter)</h2>
+  <p>Lock, verzwaaringskoord en loodveter beïnvloeden elkaar. Onderstaande regel-keten zorgt dat onmogelijke combinaties automatisch worden uitgesloten.</p>
+
+  <div class="flow">
+    <div class="flow-title">Lock &gt; Verzwaaringskoord &gt; Loodveter</div>
+
+    <div class="flow-row"><div class="node node-input">Gebruiker zet Lock = Ja</div></div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row">
+      <div class="node node-calc">onderzoom = 0<br/><small>afgelockt, geen zoom</small></div>
+    </div>
+    <hr style="border:0;border-top:1px dashed var(--border);margin:18px 0"/>
+    <div class="flow-row"><div class="node node-input">Gebruiker zet Verzwaaringskoord = Ja</div></div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row">
+      <div class="node node-calc">onderzoom = 2 cm<br/>(als Lock = Nee)</div>
+      <div class="node node-calc">Loodveter wordt Nee<br/><small>input gedisabled</small></div>
+      <div class="node node-calc">bij gekanteld scenario:<br/>baanBreedte &minus; 2 cm</div>
+    </div>
+    <hr style="border:0;border-top:1px dashed var(--border);margin:18px 0"/>
+    <div class="flow-row"><div class="node node-input">Patroon = Patroon (artikel)</div></div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row">
+      <div class="node node-calc">Kantelbaar geforceerd op Nee<br/><small>patroon mag niet 90&deg; draaien</small></div>
+      <div class="node node-calc">Snijhoogte rondt op rapport<br/><small>nooit door patroon snijden</small></div>
+    </div>
+  </div>
+
+  <!-- ────────── EFFECT MATRIX ────────── -->
+  <h2 id="effect-matrix">9. Effect-matrix: welk veld stuurt wat?</h2>
+  <p>Snel naslagwerk: zoek een invoerveld in de eerste kolom, en zie welke andere velden of berekeningen daardoor veranderen.</p>
+
+  <table class="effect-table">
+    <thead>
+      <tr>
+        <th style="width:22%">Bron-veld (invoer)</th>
+        <th style="width:18%">Stap</th>
+        <th>Stuurt &rarr; doel-veld of berekening</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Type gordijn</td>
+        <td>1</td>
+        <td>Filtert artikellijst (alleen artikelen met dat <code>gordijn_type</code>).</td>
+      </tr>
+      <tr>
+        <td>KlaarBreedte</td>
+        <td>2</td>
+        <td>
+          &rarr; <strong>retourMarge</strong> (drempel 300&nbsp;cm)<br/>
+          &rarr; <strong>effectieveBreedte</strong><br/>
+          &rarr; <strong>benodigdeStofbreedte</strong><br/>
+          &rarr; <strong>aantalBanen</strong> (banenstof of gekanteld)<br/>
+          &rarr; waarschuwing &gt; 600&nbsp;cm
+        </td>
+      </tr>
+      <tr>
+        <td>KlaarHoogte</td>
+        <td>2</td>
+        <td>
+          &rarr; <strong>rawSnijhoogte</strong> &rarr; <strong>vereistSnijhoogte</strong><br/>
+          &rarr; feasibility-check kamerhoog<br/>
+          &rarr; <strong>totaalMetrage</strong> bij banenstof / gekanteld
+        </td>
+      </tr>
+      <tr>
+        <td>Artikel.kamerhoog</td>
+        <td>3</td>
+        <td>Kiest scenario A (kamerhoog) of B (banenstof). Kamerhoog krijgt zijzomen-toeslag.</td>
+      </tr>
+      <tr>
+        <td>Artikel.hoogte_stof</td>
+        <td>3</td>
+        <td>Bovengrens voor kamerhoog rechtop. Bij gekanteld is dit de baan-breedte.</td>
+      </tr>
+      <tr>
+        <td>Artikel.breedte_stof</td>
+        <td>3</td>
+        <td>Bij banenstof: rolbreedte voor <code>aantalBanen = &lceil;stofbreedte/breedte_stof&rceil;</code>.</td>
+      </tr>
+      <tr>
+        <td>Artikel.kantelbaar</td>
+        <td>3</td>
+        <td>Schakelt gekanteld scenario aan/uit. <em>Wordt geforceerd Nee bij patroon.</em></td>
+      </tr>
+      <tr>
+        <td>Artikel.patroon + patroonhoogte</td>
+        <td>3</td>
+        <td>Bij Patroon: snijhoogte rondt op rapport. Forceert kantelbaar = Nee.</td>
+      </tr>
+      <tr>
+        <td>Artikel.verkoopprijs_per_m1</td>
+        <td>3</td>
+        <td>Bron handmatig &rarr; <strong>stofPrijs</strong>. Leeg/0 &rarr; auto via inkoop&times;3 / xx,95.</td>
+      </tr>
+      <tr>
+        <td>Plooi</td>
+        <td>6</td>
+        <td>
+          &rarr; <strong>plooifactor</strong> (1.80&ndash;2.50)<br/>
+          &rarr; <strong>retourMarge</strong> (alleen bij Enkel/Dubbel retour)<br/>
+          &rarr; <strong>benodigdeStofbreedte</strong>
+        </td>
+      </tr>
+      <tr>
+        <td>Aantal delen</td>
+        <td>6</td>
+        <td>&rarr; zijzomen-toeslag (Stel +48 / 1 deel +24, alleen kamerhoog).</td>
+      </tr>
+      <tr>
+        <td>Vliesband (8/10/12/15)</td>
+        <td>6</td>
+        <td>&rarr; <strong>rawSnijhoogte</strong>.</td>
+      </tr>
+      <tr>
+        <td>Voering</td>
+        <td>7</td>
+        <td>Voering ≠ Geen toont kleur + prijsveld; vermenigvuldigt met totaalMetrage.</td>
+      </tr>
+      <tr>
+        <td>Lock</td>
+        <td>8</td>
+        <td>Lock = Ja &rarr; <strong>onderzoom = 0</strong> (overschrijft koord-regel).</td>
+      </tr>
+      <tr>
+        <td>Verzwaaringskoord</td>
+        <td>8</td>
+        <td>
+          &rarr; <strong>onderzoom = 2&nbsp;cm</strong> (als Lock = Nee)<br/>
+          &rarr; Loodveter wordt geforceerd Nee + input disabled<br/>
+          &rarr; bij gekanteld: baanBreedte &minus; 2&nbsp;cm
+        </td>
+      </tr>
+      <tr>
+        <td>Loodveter</td>
+        <td>8</td>
+        <td>Geen invloed op berekening; gedisabled bij verzwaaringskoord = Ja.</td>
+      </tr>
+      <tr>
+        <td>Bediening</td>
+        <td>9</td>
+        <td>Geen invloed op metrage of prijs; alleen offerte-output.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <a class="top-link" href="#top">&uarr; Terug naar boven</a>
+
+</div>
+</body>
+</html>
