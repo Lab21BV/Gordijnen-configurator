@@ -65,7 +65,7 @@
     }
     .progress-row {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 8px;
       margin-bottom: 12px;
     }
@@ -228,11 +228,6 @@
     .bg-bold-contrast   { background: linear-gradient(135deg,#3a3d44 0%,#1c1e23 50%,#0a0c10 100%); }
     .bg-natural-green   { background: linear-gradient(135deg,#d3dfa8 0%,#7d9461 50%,#3e5430 100%); }
 
-    .bg-cognac-leather  { background: linear-gradient(135deg,#bf7f4d 0%,#8c5126 60%,#4f2e15 100%); }
-    .bg-soft-velvet     { background: linear-gradient(135deg,#7f4a86 0%,#4d2960 60%,#2a1432 100%); }
-    .bg-natural-oak     { background: linear-gradient(135deg,#dec299 0%,#a87a4d 50%,#6b4623 100%); }
-    .bg-black-steel     { background: linear-gradient(135deg,#3b3f48 0%,#1a1d22 60%,#06070a 100%); }
-
     .icon-light    { color: rgba(255,255,255,.92); }
     .icon-dark     { color: rgba(0,0,0,.65); }
 
@@ -363,6 +358,32 @@
       display: flex; align-items: center; gap: 10px;
     }
 
+    /* ── Afsluitende boodschap ───────────────────────────── */
+    .final-note {
+      margin-top: 24px;
+      padding: 18px 22px;
+      background: linear-gradient(135deg, var(--success-lt) 0%, #d8efdb 100%);
+      border: 1px solid #a5d6a7;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(46,125,50,.15);
+      display: flex; align-items: flex-start; gap: 14px;
+      animation: fadeIn .4s ease;
+    }
+    .final-note-icon {
+      font-size: 1.6rem; line-height: 1;
+      flex-shrink: 0;
+    }
+    .final-note-title {
+      font-size: 1.02rem; font-weight: 700;
+      color: #1b5e20;
+      margin-bottom: 4px;
+    }
+    .final-note-body {
+      font-size: .9rem;
+      color: #2e5b32;
+      line-height: 1.5;
+    }
+
     /* Smaller mobile tweaks. */
     @media (max-width: 540px) {
       .step { padding: 22px 18px 18px; }
@@ -398,8 +419,7 @@
     <div class="progress-row" id="progressRow">
       <div class="progress-step active" data-step="1"><span class="num">1</span><span class="label">Woonstijl</span></div>
       <div class="progress-step"        data-step="2"><span class="num">2</span><span class="label">Kleur-palet</span></div>
-      <div class="progress-step"        data-step="3"><span class="num">3</span><span class="label">Materiaal</span></div>
-      <div class="progress-step"        data-step="4"><span class="num">4</span><span class="label">Foto &amp; profiel</span></div>
+      <div class="progress-step"        data-step="3"><span class="num">3</span><span class="label">Foto &amp; profiel</span></div>
     </div>
     <div class="progress-bar"><div class="fill" id="progressFill"></div></div>
   </div>
@@ -471,29 +491,6 @@ const PALETTES = [
            'natural plant elements', 'organic earthy palette'] },
 ];
 
-const MATERIALS = [
-  { id: 'Cognac_Leather', label: 'Robuust leer',
-    sub: 'Cognac of donker bruin, gerijpt en zacht.',
-    bgClass: 'bg-cognac-leather', iconColor: 'icon-light',
-    tags: ['cognac leather sofa', 'aged leather details',
-           'visible leather grain'] },
-  { id: 'Soft_Velvet',    label: 'Zacht velvet',
-    sub: 'Diep en tactiel — petrol, mosgroen of okergeel.',
-    bgClass: 'bg-soft-velvet', iconColor: 'icon-light',
-    tags: ['velvet upholstery', 'tactile rich fabric',
-           'jewel-tone accents'] },
-  { id: 'Natural_Oak',    label: 'Natuurlijk eiken',
-    sub: 'Eerlijk hout met zichtbare nerf en knoesten.',
-    bgClass: 'bg-natural-oak', iconColor: 'icon-dark',
-    tags: ['oak furniture', 'visible natural wood grain',
-           'matte oiled wood finish'] },
-  { id: 'Black_Steel',    label: 'Zwart staal',
-    sub: 'Mat, strak, zichtbare lasnaden.',
-    bgClass: 'bg-black-steel', iconColor: 'icon-light',
-    tags: ['matte black steel frames', 'industrial metal accents',
-           'powder-coated black hardware'] },
-];
-
 // Stijl → toegestane paletten (3 van 4 — filtert er één uit die stilistisch
 // niet past). De volgorde stuurt de tile-volgorde in stap 2.
 const STYLE_PALETTES = {
@@ -501,26 +498,6 @@ const STYLE_PALETTES = {
   Scandinavian: ['Cool_Fresh',    'Warm_Earth', 'Natural_Green'], // weg: Bold_Contrast
   Modern:       ['Cool_Fresh',    'Bold_Contrast', 'Warm_Earth'], // weg: Natural_Green
   Country:      ['Warm_Earth',    'Natural_Green', 'Bold_Contrast'], // weg: Cool_Fresh
-};
-
-// (Stijl, palet) → top materialen (2-3 stuks). Beperkt de keuze tot wat
-// stilistisch overtuigt — trechter-principe.
-const STYLE_PALETTE_MATERIALS = {
-  'Industrial|Bold_Contrast':   ['Black_Steel', 'Cognac_Leather'],
-  'Industrial|Warm_Earth':      ['Cognac_Leather', 'Natural_Oak', 'Black_Steel'],
-  'Industrial|Natural_Green':   ['Natural_Oak', 'Cognac_Leather', 'Black_Steel'],
-
-  'Scandinavian|Cool_Fresh':    ['Natural_Oak', 'Soft_Velvet'],
-  'Scandinavian|Warm_Earth':    ['Natural_Oak', 'Soft_Velvet', 'Cognac_Leather'],
-  'Scandinavian|Natural_Green': ['Natural_Oak', 'Soft_Velvet'],
-
-  'Modern|Cool_Fresh':          ['Black_Steel', 'Soft_Velvet', 'Natural_Oak'],
-  'Modern|Bold_Contrast':       ['Black_Steel', 'Cognac_Leather', 'Soft_Velvet'],
-  'Modern|Warm_Earth':          ['Soft_Velvet', 'Natural_Oak', 'Cognac_Leather'],
-
-  'Country|Warm_Earth':         ['Natural_Oak', 'Cognac_Leather', 'Soft_Velvet'],
-  'Country|Natural_Green':      ['Natural_Oak', 'Cognac_Leather'],
-  'Country|Bold_Contrast':      ['Cognac_Leather', 'Black_Steel', 'Natural_Oak'],
 };
 
 // ── SVG-iconen — placeholders voor de tiles. Vervang of verwijder als je
@@ -560,36 +537,17 @@ const ICONS = {
     <path d="M32 52V28"/><path d="M32 28c-8 0-14-4-14-12 8 0 14 4 14 12z"/>
     <path d="M32 34c8 0 14-4 14-12-8 0-14 4-14 12z"/>
   </svg>`,
-
-  Cognac_Leather: `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="10" y="22" width="44" height="22" rx="6"/>
-    <path d="M14 32h36"/><path d="M20 44v6M44 44v6"/>
-  </svg>`,
-  Soft_Velvet: `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M12 18Q32 30 52 18"/><path d="M12 30Q32 42 52 30"/>
-    <path d="M12 42Q32 54 52 42"/>
-  </svg>`,
-  Natural_Oak: `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M14 18Q22 32 14 46"/><path d="M26 18Q34 32 26 46"/>
-    <path d="M38 18Q46 32 38 46"/><path d="M50 18Q58 32 50 46"/>
-  </svg>`,
-  Black_Steel: `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="14" y="14" width="36" height="36"/>
-    <path d="M14 14l36 36M50 14L14 50"/>
-  </svg>`,
 };
 
 // ── Lookup helpers ──────────────────────────────────────────
-const styleById    = id => STYLES.find(s => s.id === id);
-const paletteById  = id => PALETTES.find(p => p.id === id);
-const materialById = id => MATERIALS.find(m => m.id === id);
+const styleById   = id => STYLES.find(s => s.id === id);
+const paletteById = id => PALETTES.find(p => p.id === id);
 
 // ── State ──────────────────────────────────────────────────
 const state = {
   step: 1,
   style: null,
   palette: null,
-  material: null,
   photoFile: null,
   photoDataUrl: null,
   aiSuggested: false,
@@ -614,7 +572,7 @@ function escHtml(s) {
 
 // Voortgangsbalk synchroniseren met state.step.
 function renderProgress() {
-  const total = 4;
+  const total = 3;
   $('#progressFill').style.width = ((state.step - 1) / (total - 1) * 100) + '%';
   document.querySelectorAll('.progress-step').forEach(node => {
     const n = parseInt(node.dataset.step, 10);
@@ -652,10 +610,10 @@ function renderStep1() {
   host.innerHTML = '';
   const card = el('div', { class: 'step' });
   card.innerHTML = `
-    <div class="step-eyebrow">Stap 1 van 4</div>
+    <div class="step-eyebrow">Stap 1 van 3</div>
     <h2 class="step-title">Welke sfeer voelt als thuis?</h2>
     <p class="step-lead">Kies wat je hart raakt — niet wat je <em>zou moeten</em> kiezen.
-       Op basis van deze richting filteren we straks paletten en materialen die echt bij je passen.</p>
+       Op basis van deze richting filteren we het kleurpalet dat echt bij je past.</p>
     <div class="tiles" id="tilesStep1"></div>
     <div class="step-actions">
       <span style="font-size:.78rem;color:var(--muted)">Klik op een sfeer om verder te gaan.</span>
@@ -666,12 +624,9 @@ function renderStep1() {
     grid.appendChild(renderTile(s, {
       selected: state.style === s.id,
       onClick: chosen => {
-        // Reset dependent choices wanneer een andere stijl gekozen wordt — anders
-        // blijft een palet/materiaal hangen dat misschien niet meer past.
-        if (state.style !== chosen.id) {
-          state.palette = null;
-          state.material = null;
-        }
+        // Reset palet wanneer een andere stijl gekozen wordt — anders blijft
+        // een palet hangen dat misschien niet meer past bij de nieuwe stijl.
+        if (state.style !== chosen.id) state.palette = null;
         state.style = chosen.id;
         gotoStep(2);
       },
@@ -688,7 +643,7 @@ function renderStep2() {
 
   const card = el('div', { class: 'step' });
   card.innerHTML = `
-    <div class="step-eyebrow">Stap 2 van 4 · ${escHtml(styleObj.label)}</div>
+    <div class="step-eyebrow">Stap 2 van 3 · ${escHtml(styleObj.label)}</div>
     <h2 class="step-title">Welk palet spreekt je aan?</h2>
     <p class="step-lead">Bij <strong>${escHtml(styleObj.label.toLowerCase())}</strong> tonen we de kleurfamilies die het beste werken.
        Andere paletten blijven mogelijk, maar zijn afgezwakt — vertrouw op je eerste reactie.</p>
@@ -712,7 +667,6 @@ function renderStep2() {
       dimmed: !isAllowed,
       onClick: chosen => {
         if (!allowed.includes(chosen.id)) return;
-        if (state.palette !== chosen.id) state.material = null;
         state.palette = chosen.id;
         gotoStep(3);
       },
@@ -721,62 +675,22 @@ function renderStep2() {
   card.querySelector('#back2').addEventListener('click', () => gotoStep(1));
 }
 
-// ── STAP 3 — Materiaal (gefilterd op stijl + palet) ────────
+// ── STAP 3 — Foto-upload + JSON output ─────────────────────
+// (Materiaal-keuze is bewust verwijderd: de visualizer-API van Kevin werkt
+//  op style_id + color_palette_id; materialen worden door zijn model zelf
+//  afgeleid uit de gekozen stijl.)
 function renderStep3() {
   const host = $('#stepHost');
   host.innerHTML = '';
   const styleObj   = styleById(state.style);
   const paletteObj = paletteById(state.palette);
-  const key = `${state.style}|${state.palette}`;
-  const allowed = STYLE_PALETTE_MATERIALS[key] || MATERIALS.map(m => m.id);
 
   const card = el('div', { class: 'step' });
   card.innerHTML = `
-    <div class="step-eyebrow">Stap 3 van 4 · ${escHtml(styleObj.label)} · ${escHtml(paletteObj.label)}</div>
-    <h2 class="step-title">Welk materiaal mag niet ontbreken?</h2>
-    <p class="step-lead">Eén materiaal is genoeg — dit wordt het signatuur dat de AI als anker gebruikt
-       bij het invullen van je foto. De rest stemt zich daarop af.</p>
-    <div class="tiles" id="tilesStep3"></div>
-    <div class="step-actions">
-      <button class="btn btn-ghost" type="button" id="back3">← Ander palet kiezen</button>
-      <span style="font-size:.78rem;color:var(--muted)">Klik op een materiaal om verder te gaan.</span>
-    </div>`;
-  host.appendChild(card);
-
-  const grid = card.querySelector('#tilesStep3');
-  const ordered = [
-    ...allowed.map(id => materialById(id)),
-    ...MATERIALS.filter(m => !allowed.includes(m.id)),
-  ];
-  ordered.forEach(m => {
-    const isAllowed = allowed.includes(m.id);
-    grid.appendChild(renderTile(m, {
-      selected: state.material === m.id,
-      dimmed: !isAllowed,
-      onClick: chosen => {
-        if (!allowed.includes(chosen.id)) return;
-        state.material = chosen.id;
-        gotoStep(4);
-      },
-    }));
-  });
-  card.querySelector('#back3').addEventListener('click', () => gotoStep(2));
-}
-
-// ── STAP 4 — Foto upload + JSON output ─────────────────────
-function renderStep4() {
-  const host = $('#stepHost');
-  host.innerHTML = '';
-  const styleObj    = styleById(state.style);
-  const paletteObj  = paletteById(state.palette);
-  const materialObj = materialById(state.material);
-
-  const card = el('div', { class: 'step' });
-  card.innerHTML = `
-    <div class="step-eyebrow">Stap 4 van 4 · Style profile</div>
+    <div class="step-eyebrow">Stap 3 van 3 · Style profile</div>
     <h2 class="step-title">Upload je foto — en zie hoe de AI je woonkamer invult</h2>
     <p class="step-lead">Upload een foto van de huidige woonruimte. We genereren een Style Profile (JSON)
-       met je keuzes en prompt-tags die het externe AI-model kan inlezen.</p>
+       met je keuzes en prompt-tags voor de AI-visualizer.</p>
 
     ${state.aiSuggested ? `
       <div class="ai-suggest-banner">
@@ -796,11 +710,6 @@ function renderStep4() {
         <div class="val">${escHtml(paletteObj.label)}</div>
         <div class="sub">${escHtml(paletteObj.sub)}</div>
       </div>
-      <div class="profile-item">
-        <div class="lbl">Sleutel-materiaal</div>
-        <div class="val">${escHtml(materialObj.label)}</div>
-        <div class="sub">${escHtml(materialObj.sub)}</div>
-      </div>
     </div>
 
     <label class="upload-zone" id="dropZone">
@@ -818,14 +727,14 @@ function renderStep4() {
     </div>
 
     <div class="step-actions">
-      <button class="btn btn-ghost"   type="button" id="back4">← Ander materiaal</button>
+      <button class="btn btn-ghost"   type="button" id="back3">← Ander palet kiezen</button>
       <button class="btn btn-success btn-lg" type="button" id="genJson" disabled>✓ Genereer Style Profile</button>
     </div>
 
     <div id="jsonWrap" style="display:none;margin-top:24px">
       <h3 style="font-size:1rem;color:var(--accent-dk);margin-bottom:8px">Style Profile (JSON)</h3>
       <p style="font-size:.82rem;color:var(--muted);margin-bottom:8px">
-        Stuur dit bestand samen met de foto naar je image-to-image AI-tool.
+        Wordt verstuurd naar de AI-visualizer-API met <code>style_id</code> en <code>color_palette_id</code>.
       </p>
       <pre class="json-out" id="jsonOut"></pre>
       <div class="copy-row">
@@ -833,11 +742,20 @@ function renderStep4() {
         <button class="btn btn-outline" type="button" id="downloadJson">⬇ Download JSON</button>
         <button class="btn btn-ghost"   type="button" id="resetAll">↺ Opnieuw beginnen</button>
       </div>
+
+      <!-- Afsluitende boodschap die de gebruiker doorverwijst naar een Lab21-adviseur. -->
+      <div class="final-note" id="finalNote">
+        <span class="final-note-icon">✨</span>
+        <div>
+          <div class="final-note-title">Je persoonlijke stijl is vertaald naar jouw ruimte.</div>
+          <div class="final-note-body">Vraag nu een van onze adviseurs voor de fysieke stalen van dit ontwerp.</div>
+        </div>
+      </div>
     </div>`;
   host.appendChild(card);
 
   // ── Listeners ─────────────────────────────────────────
-  card.querySelector('#back4').addEventListener('click', () => gotoStep(3));
+  card.querySelector('#back3').addEventListener('click', () => gotoStep(2));
 
   const dropZone = card.querySelector('#dropZone');
   const fileInput = card.querySelector('#photoInput');
@@ -868,7 +786,7 @@ function renderStep4() {
     });
   }
 
-  // Restore vorige foto-keuze (bij terugnavigatie naar stap 4).
+  // Restore vorige foto-keuze (bij terugnavigatie naar stap 3).
   if (state.photoDataUrl) showPhotoPreview();
 }
 
@@ -917,23 +835,22 @@ function showPhotoPreview() {
 }
 
 // ── Style profile (JSON output) ─────────────────────────
+// Sleutel-namen volgen Kevin's AI-visualizer-API: style_id + color_palette_id
+// zijn de primaire inputs; de overige velden zijn bijlage / context.
 function buildStyleProfile() {
-  const styleObj    = styleById(state.style);
-  const paletteObj  = paletteById(state.palette);
-  const materialObj = materialById(state.material);
-  // Tags: stijl + palet + materiaal samengevoegd, doublures verwijderd.
-  const tags = [...styleObj.tags, ...paletteObj.tags, ...materialObj.tags];
+  const styleObj   = styleById(state.style);
+  const paletteObj = paletteById(state.palette);
+  // Tags: stijl + palet samengevoegd, doublures verwijderd.
+  const tags = [...styleObj.tags, ...paletteObj.tags];
   const uniqueTags = Array.from(new Set(tags));
   return {
-    style: state.style,
-    color_palette: state.palette,
-    key_material: state.material,
+    style_id: state.style,
+    color_palette_id: state.palette,
     customer_photo_url: state.photoDataUrl,
     ai_prompt_tags: uniqueTags,
     meta: {
       style_label: styleObj.label,
       palette_label: paletteObj.label,
-      material_label: materialObj.label,
       ai_suggested: state.aiSuggested,
       generated_at: new Date().toISOString(),
     },
@@ -986,7 +903,7 @@ function downloadJson(profile) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `style_profile_${profile.style}_${profile.color_palette}.json`;
+  a.download = `style_profile_${profile.style_id}_${profile.color_palette_id}.json`;
   a.click();
   // Korte vertraging zodat de download daadwerkelijk start vóór de URL ingetrokken wordt.
   setTimeout(() => URL.revokeObjectURL(url), 1000);
@@ -1001,45 +918,42 @@ function showToast(msg = 'Gekopieerd ✓') {
 }
 
 // ── "Inspireer me" — automatisch een geldig profiel kiezen ──
-// Gewogen voor "veelgevraagde" combinaties: warme aardse paletten met eiken
-// en cognac leer doen het altijd goed; we randomiseren binnen die zone.
+// Veelgevraagde stijl + palet combinaties; we randomiseren binnen die set
+// en springen direct door naar de foto-upload (stap 3).
 function inspireerMe() {
   const POPULAR = [
-    { style: 'Industrial',   palette: 'Warm_Earth',    material: 'Cognac_Leather' },
-    { style: 'Industrial',   palette: 'Bold_Contrast', material: 'Black_Steel' },
-    { style: 'Scandinavian', palette: 'Warm_Earth',    material: 'Natural_Oak' },
-    { style: 'Scandinavian', palette: 'Cool_Fresh',    material: 'Natural_Oak' },
-    { style: 'Modern',       palette: 'Cool_Fresh',    material: 'Soft_Velvet' },
-    { style: 'Modern',       palette: 'Bold_Contrast', material: 'Black_Steel' },
-    { style: 'Country',      palette: 'Warm_Earth',    material: 'Natural_Oak' },
-    { style: 'Country',      palette: 'Natural_Green', material: 'Cognac_Leather' },
+    { style: 'Industrial',   palette: 'Warm_Earth' },
+    { style: 'Industrial',   palette: 'Bold_Contrast' },
+    { style: 'Scandinavian', palette: 'Warm_Earth' },
+    { style: 'Scandinavian', palette: 'Cool_Fresh' },
+    { style: 'Modern',       palette: 'Cool_Fresh' },
+    { style: 'Modern',       palette: 'Bold_Contrast' },
+    { style: 'Country',      palette: 'Warm_Earth' },
+    { style: 'Country',      palette: 'Natural_Green' },
   ];
   const pick = POPULAR[Math.floor(Math.random() * POPULAR.length)];
   state.style       = pick.style;
   state.palette     = pick.palette;
-  state.material    = pick.material;
   state.aiSuggested = true;
-  gotoStep(4);
+  gotoStep(3);
 }
 
 // ── Navigatie ──────────────────────────────────────────────
 function gotoStep(n) {
   // Vooruit: voorwaarden bekijken. Achteruit: altijd toegestaan.
-  if (n > 1 && !state.style)    n = 1;
-  if (n > 2 && !state.palette)  n = 2;
-  if (n > 3 && !state.material) n = 3;
+  if (n > 1 && !state.style)   n = 1;
+  if (n > 2 && !state.palette) n = 2;
   state.step = n;
   renderProgress();
   if (n === 1) renderStep1();
   if (n === 2) renderStep2();
   if (n === 3) renderStep3();
-  if (n === 4) renderStep4();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function resetAll() {
   state.step = 1;
-  state.style = state.palette = state.material = null;
+  state.style = state.palette = null;
   state.photoFile = state.photoDataUrl = null;
   state.aiSuggested = false;
   gotoStep(1);
