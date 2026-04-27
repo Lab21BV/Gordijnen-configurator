@@ -797,11 +797,11 @@
     <div class="flow-arrow-down"></div>
     <div class="flow-row"><div class="node node-input">Stap 3 &mdash; Meubel-inventarisatie<small>foto + L&times;B&times;H per behouden meubel (optioneel)</small></div></div>
     <div class="flow-arrow-down"></div>
-    <div class="flow-row"><div class="node node-input">Stap 4 &mdash; Project-scope<small>Vloer / Raamdecoratie / Beide</small></div></div>
+    <div class="flow-row"><div class="node node-input">Stap 4 &mdash; Project-scope (multi-select)<small>Vloer / Raamdecoratie / Muur / Meubelen — minstens één</small></div></div>
     <div class="flow-arrow-down"></div>
     <div class="flow-row">
       <div class="node node-input">Stap 5 &mdash; Raamdecoratie per raam<small>maten + kozijn + doel-klant &rarr; Top-4 uit oplossingen-matrix</small></div>
-      <div class="node node-decide" style="margin-left:14px">Scope = Vloer?<br/><small>&rarr; sla stap 5 over</small></div>
+      <div class="node node-decide" style="margin-left:14px">'window_decor' niet in scope?<br/><small>&rarr; sla stap 5 over</small></div>
     </div>
     <div class="flow-arrow-down"></div>
     <div class="flow-row"><div class="node node-input">Stap 6 &mdash; Foto-upload<small>JPG / PNG / WEBP &mdash; drag-drop of klik</small></div></div>
@@ -858,7 +858,7 @@ function filterRaamOplossingen(goals: string[]): RaamOplossing[] {
   <pre><code>{
   "style_id": "Industrial",
   "color_palette_id": "Warm_Earth",
-  "project_scope": ["window_decor", "flooring"],
+  "project_scope": ["flooring", "window_decor", "wall", "furniture"],
   "existing_furniture": [
     { "type": "Bank", "dimensions": { "l": 220, "w": 90, "h": 80 }, "image_url": "data:&hellip;" }
   ],
@@ -883,7 +883,8 @@ function filterRaamOplossingen(goals: string[]): RaamOplossing[] {
   <h3>Bijzonderheden</h3>
   <ul>
     <li><strong>"Inspireer me"</strong> &mdash; willekeurige greep uit acht populaire stijl-/paletcombinaties; vult automatisch een voorbeeld-raam met privacy/sfeer/akoestiek en kiest de eerste matching combinatie. Springt direct naar stap 6 met <code>ai_suggested: true</code> in de output.</li>
-    <li><strong>Stap 5 wordt overgeslagen</strong> wanneer de gebruiker scope <em>Vloer</em> kiest &mdash; de progress-bar markeert de stap als <em>skipped</em> (afgezwakt).</li>
+    <li><strong>Stap 4 is multi-select</strong> &mdash; de gebruiker kiest één of meerdere zones uit Vloer / Raamdecoratie / Muur / Meubelen. <code>state.projectScope</code> is een array; in de JSON gaat hij 1-op-1 mee als <code>project_scope</code>.</li>
+    <li><strong>Stap 5 wordt overgeslagen</strong> wanneer <em>Raamdecoratie</em> niet in de gekozen scope zit &mdash; de progress-bar markeert de stap als <em>skipped</em> (afgezwakt).</li>
     <li><strong>Geen materiaal-stap</strong> &mdash; Kevin's diffusion-model leidt materialen zelf af uit stijl + gekozen raamdecoratie; we vragen er niet expliciet naar om de keuze-trechter niet te smal te maken.</li>
     <li><strong>Tile-visuals</strong> zijn CSS-gradient placeholders met SVG mood-iconen. Elk <code>.tile-image</code>-blok heeft een HTML-comment <code>&lt;!-- IMAGE-PLACEHOLDER {ID} --&gt;</code>; vervang het door <code>&lt;img src="&hellip;"&gt;</code> voor showroomfoto's.</li>
     <li><strong>Adviseur-CTA</strong> &mdash; na het genereren van het profiel verschijnt een groene callout: <em>"Je persoonlijke stijl is vertaald naar jouw ruimte. Vraag nu een van onze adviseurs voor de fysieke stalen van dit ontwerp."</em></li>

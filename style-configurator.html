@@ -675,17 +675,22 @@ const STYLE_PALETTES = {
   Country:      ['Warm_Earth',    'Natural_Green', 'Bold_Contrast'], // weg: Cool_Fresh
 };
 
-// ── Project-scope tegels (stap 4) ───────────────────────────
+// ── Project-scope tegels (stap 4 — multi-select) ────────────
+// De gebruiker kiest één of meerdere transformatie-zones; Stap 5 (raamconfig)
+// verschijnt alleen als 'window_decor' geselecteerd is.
 const PROJECT_SCOPES = [
   { id: 'flooring',     label: 'Vloer',
-    sub: 'Alleen vloer-advies — bestaande raamdecoratie blijft.',
+    sub: 'Houten vloer, tegels, vinyl of tapijt — kleur en textuur die bij je stijl past.',
     bgClass: 'bg-warm-earth', iconColor: 'icon-dark', icon: 'flooring' },
   { id: 'window_decor', label: 'Raamdecoratie',
     sub: 'Gordijnen, jaloezieën, duettes of rolgordijnen — per raam advies.',
     bgClass: 'bg-cool-fresh', iconColor: 'icon-dark', icon: 'window_decor' },
-  { id: 'both',         label: 'Beide',
-    sub: 'Volledige metamorfose — vloer én raamdecoratie samen.',
-    bgClass: 'bg-natural-green', iconColor: 'icon-light', icon: 'both' },
+  { id: 'wall',         label: 'Muur',
+    sub: 'Behang, schilderwerk of accentmuur — kleur en textuur op de muren.',
+    bgClass: 'bg-natural-green', iconColor: 'icon-light', icon: 'wall' },
+  { id: 'furniture',    label: 'Meubelen',
+    sub: 'Nieuwe bank, tafels of kasten die jouw stijl visueel verankeren.',
+    bgClass: 'bg-bold-contrast', iconColor: 'icon-light', icon: 'furniture' },
 ];
 
 // ── Meubel-types voor stap 3 ────────────────────────────────
@@ -811,10 +816,16 @@ const ICONS = {
     <rect x="14" y="10" width="36" height="44" rx="2"/>
     <path d="M14 18h36M32 18v36M22 18v36M42 18v36"/>
   </svg>`,
-  both: `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="10" y="8" width="22" height="32" rx="2"/>
-    <path d="M10 16h22M21 16v24"/>
-    <path d="M36 44h22M36 50h22M36 56h22"/>
+  wall: `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="8" y="10" width="48" height="44"/>
+    <path d="M8 24h48M8 38h48"/>
+    <path d="M22 10v14M40 24v14M20 38v16"/>
+  </svg>`,
+  furniture: `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10 30h44v18H10z"/>
+    <path d="M14 30v-8a4 4 0 0 1 4-4h28a4 4 0 0 1 4 4v8"/>
+    <path d="M14 48v6M50 48v6"/>
+    <path d="M14 36h36"/>
   </svg>`,
 };
 
@@ -828,7 +839,7 @@ const state = {
   style: null,
   palette: null,
   furniture: [],          // [{id, type, l, w, h, photoUrl}]
-  projectScope: null,     // 'flooring' | 'window_decor' | 'both'
+  projectScope: [],       // subset van ['flooring', 'window_decor', 'wall', 'furniture']
   windows: [],            // [{id, name, height, width, frame_material, ... goals[], chosenComboId}]
   photoFile: null,
   photoDataUrl: null,
@@ -907,7 +918,7 @@ function getWindow(id) { return state.windows.find(w => w.id === id); }
 
 // Of de huidige scope window-decor inhoud heeft.
 function scopeIncludesWindowDecor() {
-  return state.projectScope === 'window_decor' || state.projectScope === 'both';
+  return Array.isArray(state.projectScope) && state.projectScope.includes('window_decor');
 }
 
 // ── Rendering helpers ──────────────────────────────────────
@@ -932,7 +943,10 @@ function escHtml(s) {
 function renderProgress() {
   const total = 6;
   $('#progressFill').style.width = ((state.step - 1) / (total - 1) * 100) + '%';
-  const skipStep5 = state.projectScope === 'flooring';
+  // Stap 5 wordt overgeslagen als de scope is gezet (≥1) en window_decor er
+  // niet bij zit. Bij niet-gezet scope blijft stap 5 in beeld als 'gewone'
+  // toekomstige stap.
+  const skipStep5 = state.projectScope.length > 0 && !scopeIncludesWindowDecor();
   document.querySelectorAll('.progress-step').forEach(node => {
     const n = parseInt(node.dataset.step, 10);
     node.classList.toggle('active',  n === state.step);
@@ -1126,7 +1140,9 @@ function renderFurnitureList() {
   });
 }
 
-// ── STAP 4 — Project scope ─────────────────────────────────
+// ── STAP 4 — Project scope (MULTI-select) ──────────────────
+// De gebruiker kan één of meerdere transformatie-zones aanvinken. Stap 5
+// is alleen relevant wanneer 'window_decor' geselecteerd is.
 function renderStep4() {
   const host = $('#stepHost');
   host.innerHTML = '';
@@ -1135,28 +1151,56 @@ function renderStep4() {
   card.innerHTML = `
     <div class="step-eyebrow">Stap 4 van 6 · Productselectie</div>
     <h2 class="step-title">Wat wil je laten transformeren?</h2>
-    <p class="step-lead">Kies waar de adviseur op moet focussen. Bij <em>Beide</em> krijg je een geïntegreerd
-       advies waar vloer en raamdecoratie elkaar versterken.</p>
+    <p class="step-lead">Kies <strong>één of meerdere</strong> zones waar de adviseur op mag focussen.
+       Hoe meer zones je aanvinkt, hoe vollediger de visualisatie.</p>
     <div class="tiles scope-grid" id="tilesStep4"></div>
     <div class="step-actions">
-      <button class="btn btn-ghost" type="button" id="back4">← Meubels aanpassen</button>
-      <span style="font-size:.78rem;color:var(--muted)">Klik op een scope om verder te gaan.</span>
+      <button class="btn btn-ghost"   type="button" id="back4">← Meubels aanpassen</button>
+      <button class="btn btn-primary btn-lg" type="button" id="next4" disabled>Volgende →</button>
+    </div>
+    <div style="font-size:.78rem;color:var(--muted);text-align:right;margin-top:6px" id="scopeHint">
+      Selecteer minimaal één scope om verder te gaan.
     </div>`;
   host.appendChild(card);
 
-  const grid = card.querySelector('#tilesStep4');
+  const grid    = card.querySelector('#tilesStep4');
+  const nextBtn = card.querySelector('#next4');
+  const hint    = card.querySelector('#scopeHint');
+
+  function refreshSelection() {
+    Array.from(grid.children).forEach(node => {
+      const id = node.dataset.id;
+      node.classList.toggle('selected', state.projectScope.includes(id));
+    });
+    nextBtn.disabled = state.projectScope.length === 0;
+    hint.textContent = state.projectScope.length === 0
+      ? 'Selecteer minimaal één scope om verder te gaan.'
+      : `${state.projectScope.length} scope(s) geselecteerd — klik op Volgende.`;
+  }
+
   PROJECT_SCOPES.forEach(s => {
     grid.appendChild(renderTile(s, {
-      selected: state.projectScope === s.id,
+      selected: state.projectScope.includes(s.id),
       onClick: chosen => {
-        state.projectScope = chosen.id;
-        // Default: maak één leeg raam aan zodra raamdecor in scope komt.
+        // Toggle de scope; minstens één blijft de eis voor doorgaan.
+        if (state.projectScope.includes(chosen.id)) {
+          state.projectScope = state.projectScope.filter(s => s !== chosen.id);
+        } else {
+          state.projectScope = [...state.projectScope, chosen.id];
+        }
+        // Default raam aanmaken zodra raamdecor erbij komt.
         if (scopeIncludesWindowDecor() && state.windows.length === 0) addWindow();
-        gotoStep(scopeIncludesWindowDecor() ? 5 : 6);
+        refreshSelection();
       },
     }));
   });
+  refreshSelection();
+
   card.querySelector('#back4').addEventListener('click', () => gotoStep(3));
+  nextBtn.addEventListener('click', () => {
+    // Skip stap 5 als raamdecor niet in scope zit.
+    gotoStep(scopeIncludesWindowDecor() ? 5 : 6);
+  });
 }
 
 // ── STAP 5 — Raamdecoratie per raam ────────────────────────
@@ -1547,10 +1591,8 @@ function buildStyleProfile() {
   const styleObj   = styleById(state.style);
   const paletteObj = paletteById(state.palette);
 
-  // Project-scope als array (matcht JSON-schema in briefing).
-  const scopeArr = state.projectScope === 'both'
-    ? ['flooring', 'window_decor']
-    : state.projectScope ? [state.projectScope] : [];
+  // Project-scope is al een array (multi-select) — direct doorgeven.
+  const scopeArr = [...state.projectScope];
 
   // Behouden meubels — alleen velden met inhoud.
   const existing_furniture = state.furniture
@@ -1688,7 +1730,8 @@ function inspireerMe() {
   const pick = POPULAR[Math.floor(Math.random() * POPULAR.length)];
   state.style        = pick.style;
   state.palette      = pick.palette;
-  state.projectScope = 'both';
+  // Volledige metamorfose: vloer + raamdecor + meubelen.
+  state.projectScope = ['flooring', 'window_decor', 'furniture'];
   // Eén voorbeeld-raam zodat de JSON niet leeg is voor window_decor.
   if (state.windows.length === 0) addWindow();
   const w = state.windows[0];
@@ -1706,9 +1749,9 @@ function inspireerMe() {
 // Stap 5 wordt automatisch overgeslagen wanneer scope alleen 'flooring' is.
 function gotoStep(n) {
   // Vooruit: voorwaarden bekijken. Achteruit: altijd toegestaan.
-  if (n > 1 && !state.style)        n = 1;
-  if (n > 2 && !state.palette)      n = 2;
-  if (n > 4 && !state.projectScope) n = 4;
+  if (n > 1 && !state.style)                  n = 1;
+  if (n > 2 && !state.palette)                n = 2;
+  if (n > 4 && state.projectScope.length === 0) n = 4;
   // Auto-skip stap 5 bij scope flooring-only.
   if (n === 5 && !scopeIncludesWindowDecor()) n = state.step < 5 ? 6 : 4;
 
@@ -1726,7 +1769,7 @@ function gotoStep(n) {
 function resetAll() {
   state.step = 1;
   state.style = state.palette = null;
-  state.projectScope = null;
+  state.projectScope = [];
   state.furniture = [];
   state.windows = [];
   state.photoFile = state.photoDataUrl = null;
