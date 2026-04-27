@@ -155,7 +155,6 @@ const ARTIKEL_FIELDS = [
 // Volgorde matcht de dropdown in index.html. Wijzigen? Update ook PLOOI in
 // index.html en de plooi_* constantes in gordijn_configurator.deluge.
 const PLOOI_OPTIES = ['Wave', 'Dubbel retour', 'Enkel retour', 'Dubbel', 'Enkel'];
-const VOUWGORDIJN_OPTIES = ['Ja', 'Nee', 'Ja (ongevoerd)'];
 
 // Parse de comma/puntkomma-string naar een lijst geldige plooi-namen.
 // Onbekende of foutgespelde waarden worden stilletjes overgeslagen.

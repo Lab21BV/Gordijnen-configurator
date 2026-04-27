@@ -243,6 +243,7 @@
       <li><a href="#flow-afwerking">Flow: afwerkingen onderling (lock / koord / loodveter)</a></li>
       <li><a href="#flow-plooi-geschikt">Flow: plooi-geschiktheid &amp; vouwgordijn-flag</a></li>
       <li><a href="#effect-matrix">Effect-matrix: welk veld stuurt wat?</a></li>
+      <li><a href="#flow-style-engine">Flow: Style Engine (interieur-configurator)</a></li>
     </ol>
   </div>
 
@@ -780,6 +781,67 @@
       </tr>
     </tbody>
   </table>
+
+  <!-- ────────── STYLE ENGINE ────────── -->
+  <h2 id="flow-style-engine">11. Flow: Style Engine (interieur-configurator)</h2>
+  <p>De pagina <a href="style-configurator.html"><code>style-configurator.html</code></a> is een aparte tool die de woonstijl en kleurvoorkeur van een klant vertaalt naar een gestructureerd JSON-profiel. Dit profiel wordt door de externe AI-visualizer-API van <em>Kevin</em> gebruikt om meubels in een foto van de klant te plaatsen.</p>
+
+  <div class="flow">
+    <div class="flow-title">3-staps trechter &mdash; van keuze naar Style Profile JSON</div>
+
+    <div class="flow-row"><div class="node node-input">Stap 1 &mdash; Woonstijl<small>Industrieel / Scandinavisch / Modern / Landelijk</small></div></div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-calc">Filter kleur-paletten<small>3 van 4 paletten passend bij de gekozen stijl</small></div></div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-input">Stap 2 &mdash; Kleur-palet<small>Warm &amp; Geborgen / Koel &amp; Fris / Krachtig Contrast / Natuurlijk</small></div></div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-input">Stap 3 &mdash; Foto-upload<small>JPG / PNG / WEBP &mdash; drag-drop of klik</small></div></div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-calc">buildStyleProfile()<small>style.tags + palette.tags &rarr; uniek</small></div></div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-output">Style Profile JSON<small>style_id + color_palette_id + base64-foto + tags</small></div></div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-output" style="border-color:var(--success);background:var(--success-lt);color:#1b5e20">Adviseur-CTA<small>"Vraag fysieke stalen van dit ontwerp"</small></div></div>
+  </div>
+
+  <h3>Filtering &mdash; stijl stuurt het palet</h3>
+  <p>Stap 2 toont alle vier de paletten, maar zwakt er telkens één af die stilistisch botst. Niet-passende paletten blijven klikbaar in beeld zodat de gebruiker ziet <em>waarom</em> de keuze inkrimpt &mdash; een blokkade in plaats van verbergen voorkomt verwarring.</p>
+  <table class="effect-table">
+    <thead><tr><th style="width:30%">Stijl</th><th>Toegelaten paletten (volgorde)</th><th>Afgezwakt</th></tr></thead>
+    <tbody>
+      <tr><td>Industrieel</td><td>Krachtig Contrast &middot; Warm &amp; Geborgen &middot; Natuurlijk</td><td>Koel &amp; Fris</td></tr>
+      <tr><td>Scandinavisch</td><td>Koel &amp; Fris &middot; Warm &amp; Geborgen &middot; Natuurlijk</td><td>Krachtig Contrast</td></tr>
+      <tr><td>Modern / Minimalistisch</td><td>Koel &amp; Fris &middot; Krachtig Contrast &middot; Warm &amp; Geborgen</td><td>Natuurlijk</td></tr>
+      <tr><td>Landelijk / Klassiek</td><td>Warm &amp; Geborgen &middot; Natuurlijk &middot; Krachtig Contrast</td><td>Koel &amp; Fris</td></tr>
+    </tbody>
+  </table>
+
+  <h3>JSON-output (input voor Kevin's visualizer-API)</h3>
+  <p>De primaire sleutels die de API verwacht zijn <code>style_id</code> en <code>color_palette_id</code>. De <code>ai_prompt_tags</code> zijn een samengevoegde lijst van prompt-fragmenten per stijl + palet (deduplicaten verwijderd). De foto wordt als base64 data-URL ingebed zodat het profiel als één bestand naar de AI-pipeline gaat.</p>
+  <pre><code>{
+  "style_id": "Industrial",
+  "color_palette_id": "Warm_Earth",
+  "customer_photo_url": "data:image/jpeg;base64,&hellip;",
+  "ai_prompt_tags": [
+    "exposed brick walls", "metal accents", "concrete floor",
+    "warm earth tones", "cream and beige palette", "amber accents"
+  ],
+  "meta": {
+    "style_label": "Industrieel",
+    "palette_label": "Warm &amp; Geborgen",
+    "ai_suggested": false,
+    "generated_at": "2026-04-27T&hellip;"
+  }
+}</code></pre>
+
+  <h3>Bijzonderheden</h3>
+  <ul>
+    <li><strong>"Inspireer me"</strong> &mdash; willekeurige greep uit acht populaire stijl-/paletcombinaties; springt direct naar stap 3 met <code>ai_suggested: true</code> in de output. Handig voor klanten die niet willen kiezen.</li>
+    <li><strong>Geen materiaal-stap</strong> &mdash; Kevin's diffusion-model leidt materialen zelf af uit de stijl; we vragen er niet expliciet naar om te voorkomen dat de keuze-trechter te smal wordt.</li>
+    <li><strong>Tile-visuals</strong> zijn CSS-gradient placeholders met SVG mood-iconen. Elk <code>.tile-image</code>-blok heeft een HTML-comment <code>&lt;!-- IMAGE-PLACEHOLDER {ID} --&gt;</code>; vervang het door <code>&lt;img src="&hellip;"&gt;</code> voor showroomfoto's.</li>
+    <li><strong>Adviseur-CTA</strong> &mdash; na het genereren van het profiel verschijnt een groene callout: <em>"Je persoonlijke stijl is vertaald naar jouw ruimte. Vraag nu een van onze adviseurs voor de fysieke stalen van dit ontwerp."</em></li>
+    <li><strong>Geen Supabase-koppeling</strong> &mdash; alle state leeft in de browser; foto wordt nooit naar een server geüpload tenzij de gebruiker de JSON elders postet.</li>
+  </ul>
 
   <a class="top-link" href="#top">&uarr; Terug naar boven</a>
 

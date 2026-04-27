@@ -818,9 +818,6 @@ function updateSelCount() {
   if (ca) ca.indeterminate = n > 0 && n < mappedRows.length;
 }
 
-// ── DB helpers (LS_KEY defined in db.js) ──
-function loadSaved() { return lsLoad(); }
-
 async function importSelected() {
   const bannerEl = document.getElementById('previewBanner');
   const btn      = document.getElementById('btnImport');
