@@ -24,12 +24,21 @@ create table if not exists artikelen (
   akoestiek            text default '',
   verzwaaringskoord    text default '',
   samenstelling        text default '',
+  geschikte_plooi      text default '',
+  geschikt_vouwgordijn text default '',
   updated_at           timestamptz default now()
 );
 
 -- Voeg ontbrekende kolommen toe aan een bestaande tabel (veilig om opnieuw te draaien):
 alter table artikelen add column if not exists gordijn_type        text default '';
 alter table artikelen add column if not exists verkoopprijs_per_m1 text default '';
+
+-- Toekomstige kolommen voor `geschikte_plooi` (komma-gescheiden lijst van
+-- plooitypes) en `geschikt_vouwgordijn` (Ja / Nee / Ja (ongevoerd)). Beide
+-- staan nu nog op `local_only: true` in db.js — verwijder die flag zodra
+-- onderstaande alters zijn uitgevoerd op productie.
+alter table artikelen add column if not exists geschikte_plooi      text default '';
+alter table artikelen add column if not exists geschikt_vouwgordijn text default '';
 
 -- Auto-update updated_at bij elke wijziging
 create or replace function _set_updated_at()

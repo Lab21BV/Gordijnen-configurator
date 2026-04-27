@@ -208,6 +208,11 @@
     .breakdown .step { color: var(--accent-dk); font-weight: 600; display: block; margin-top: 6px; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; }
 
     .tag { display: inline-block; font-size: .68rem; font-weight: 700; padding: 2px 7px; border-radius: 20px; letter-spacing: .04em; }
+    .tag-plooi-ok  { background: #e8f5e9; color: var(--success); }
+    .tag-plooi-nok { background: #f5f5f5; color: var(--muted); text-decoration: line-through; opacity: .7; }
+    .spec-tags { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px 0; }
+    .spec-tags .muted { color: var(--muted); font-size: .82rem; }
+    .plooi-warn-icon { color: var(--warn); font-weight: 700; margin-left: 4px; }
     hr.sep { border: none; border-top: 1px solid var(--border); margin: 12px 0; grid-column: 1/-1; }
 
     /* ── Info "i" knopje + panel ── */
@@ -475,6 +480,18 @@
           <div class="field">
             <label>Samenstelling</label>
             <input type="text" id="samenstelling" placeholder="bijv. 100% Polyester" />
+          </div>
+
+          <div class="section-label">Verwerkingsmogelijkheden</div>
+          <div class="field">
+            <label>Geschikte plooi</label>
+            <div id="spec_geschikte_plooi" class="spec-tags"><span class="muted">—</span></div>
+            <span class="unit">Plooitypes waarvoor deze stof geschikt is</span>
+          </div>
+          <div class="field">
+            <label>Geschikt als vouwgordijnen</label>
+            <input type="text" id="geschikt_vouwgordijn" placeholder="Ja / Nee / Ja (ongevoerd)" />
+            <span class="unit">Informatief — niet in de berekening</span>
           </div>
         </div>
       </div>
@@ -790,14 +807,7 @@ function onMatenChange() {
 
   // If an artikel is already selected, re-check feasibility and recompute
   if (_gekozenArtikel) {
-    const f = checkFeasibility(_gekozenArtikel, b, h);
-    if (f.mogelijk === false) {
-      setBanner(`Opgelet: dit artikel is niet geschikt voor deze maten. ${f.reden}.`, 'warning');
-    } else if (f.kantelenVereist) {
-      setBanner(`Let op: ${f.reden}. Deze stof is kantelbaar — verwerk gekanteld.`, 'warning');
-    } else {
-      setBanner('', '');
-    }
+    refreshBanner();
     compute();
   }
 }
@@ -937,6 +947,17 @@ function renderArtikelLijst() {
         ? `<span class="tag" style="background:#e8f0f8;color:var(--accent-dk)">Patroon${!isNaN(rapport) && rapport > 0 ? ' &middot; ' + rapport + '&nbsp;cm' : ''}</span>`
         : `<span class="tag" style="background:#f5f5f5;color:var(--muted)">Uni</span>`;
 
+    const plooiLijst = parseGeschiktePlooi(a.geschikte_plooi);
+    const plooiStr = plooiLijst.length === 0
+      ? '<span style="color:var(--muted)">Alle</span>'
+      : plooiLijst.map(p => `<span class="tag" style="background:#e8f5e9;color:var(--success);margin:1px 2px">${esc(p)}</span>`).join('');
+    const vouwRaw = String(a.geschikt_vouwgordijn || '').trim();
+    const vouwStr = !vouwRaw
+      ? '<span style="color:var(--muted)">—</span>'
+      : vouwRaw.toLowerCase().startsWith('ja')
+        ? `<span class="tag" style="background:#e8f5e9;color:var(--success)">${esc(vouwRaw)}</span>`
+        : `<span class="tag" style="background:#f5f5f5;color:var(--muted)">${esc(vouwRaw)}</span>`;
+
     return `<tr class="${rowClass} ${selected}" onclick="selectArtikel('${esc(k)}', ${f.mogelijk === false})">
       <td>
         ${badge}
@@ -955,6 +976,8 @@ function renderArtikelLijst() {
       <td>${prijsStr}</td>
       <td style="white-space:normal;max-width:150px">${esc(a.samenstelling || '—')}</td>
       <td>${kantelStr}</td>
+      <td style="white-space:normal;min-width:160px;max-width:240px">${plooiStr}</td>
+      <td>${vouwStr}</td>
       <td style="white-space:normal;min-width:260px;max-width:340px">${kleurenStr}</td>
     </tr>`;
   }).join('');
@@ -976,6 +999,8 @@ function renderArtikelLijst() {
             <th>Prijs/m&sup1;</th>
             <th>Samenstelling</th>
             <th>Kantelbaar</th>
+            <th>Geschikte plooi</th>
+            <th>Vouwgord.</th>
             <th>Kleuren</th>
           </tr>
         </thead>
@@ -1051,16 +1076,13 @@ function applyArtikel(a) {
   setVal('akoestiek',            a.akoestiek);
   setVal('verzwaaringskoord',    a.verzwaaringskoord);
   setVal('samenstelling',        a.samenstelling);
+  // Aside-velden expliciet leegmaken bij ontbrekende waarde — setVal zou anders
+  // de waarde van een vorig geselecteerd artikel laten staan.
+  el('geschikt_vouwgordijn').value = a.geschikt_vouwgordijn || '';
+  renderGeschiktePlooiSpec(a);
 
-  // Feasibility warning
-  const f = checkFeasibility(a, num('klaarbreedte'), num('klaarhoogte'));
-  if (f.mogelijk === false) {
-    setBanner(`Opgelet: dit artikel is niet geschikt voor de ingevoerde maten. ${f.reden}.`, 'warning');
-  } else if (f.kantelenVereist) {
-    setBanner(`Let op: ${f.reden}. Deze stof is kantelbaar — verwerk gekanteld.`, 'warning');
-  } else {
-    setBanner('', '');
-  }
+  // Feasibility warning + plooi-geschiktheid (banner toont eerste actuele issue).
+  refreshBanner();
 
   togglePatroon();
   toggleVoering();
@@ -1080,6 +1102,61 @@ function populateKleurOpties(a) {
     return;
   }
   sel.innerHTML = kleuren.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+}
+
+// Toon "Geschikte plooi" als badges in de aside. Toegestane plooien krijgen een
+// groene tag; ontbrekende plooien een doorgestreepte grijze tag (zodat de
+// gebruiker direct ziet welke uitsluitingen gelden). Leeg veld → "geen restrictie".
+function renderGeschiktePlooiSpec(a) {
+  const host = el('spec_geschikte_plooi');
+  if (!host) return;
+  const lijst = parseGeschiktePlooi(a && a.geschikte_plooi);
+  if (lijst.length === 0) {
+    host.innerHTML = '<span class="muted">Alle plooitypes — geen restrictie</span>';
+    return;
+  }
+  const lower = lijst.map(s => s.toLowerCase());
+  host.innerHTML = PLOOI_OPTIES.map(p => {
+    const ok = lower.includes(p.toLowerCase());
+    return `<span class="tag ${ok ? 'tag-plooi-ok' : 'tag-plooi-nok'}">${esc(p)}</span>`;
+  }).join('');
+
+  // Markeer ook de Plooi-dropdown opties zelf zodat niet-geschikte plooien
+  // direct herkenbaar zijn ("⚠ niet geschikt"). De optie blijft selecteerbaar
+  // — de gebruiker krijgt enkel een waarschuwingsbanner bij keuze.
+  const plooiSel = el('plooi');
+  if (plooiSel) {
+    Array.from(plooiSel.options).forEach(opt => {
+      const orig = opt.dataset.origLabel ?? opt.textContent;
+      opt.dataset.origLabel = orig;
+      const isOk = lijst.length === 0 || lower.includes(opt.value.toLowerCase());
+      opt.textContent = isOk ? orig : `${orig} — ⚠ niet geschikt`;
+      opt.classList.toggle('opt-niet-geschikt', !isOk);
+    });
+  }
+}
+
+// Centrale banner-update — combineert maten-feasibility en plooi-geschiktheid.
+// Maten-issues zijn blokkerend (warning/error); plooi-issue is een waarschuwing
+// die alleen verschijnt als maten OK zijn.
+function refreshBanner() {
+  if (!_gekozenArtikel) return;
+  const f = checkFeasibility(_gekozenArtikel, num('klaarbreedte'), num('klaarhoogte'));
+  if (f.mogelijk === false) {
+    setBanner(`Opgelet: dit artikel is niet geschikt voor de ingevoerde maten. ${f.reden}.`, 'warning');
+    return;
+  }
+  if (f.kantelenVereist) {
+    setBanner(`Let op: ${f.reden}. Deze stof is kantelbaar — verwerk gekanteld.`, 'warning');
+    return;
+  }
+  const plooiKeuze = sel('plooi');
+  if (plooiKeuze && !isPlooiGeschikt(_gekozenArtikel, plooiKeuze)) {
+    const lijst = parseGeschiktePlooi(_gekozenArtikel.geschikte_plooi).join(', ') || '—';
+    setBanner(`Let op: deze stof is niet geschikt voor plooi "${plooiKeuze}". Geschikt: ${lijst}.`, 'warning');
+    return;
+  }
+  setBanner('', '');
 }
 
 // Toggle een info-panel (uitleg achter het "i"-knopje).
@@ -1343,6 +1420,8 @@ function toggleLoodveter() {
 el('patroon').addEventListener('change', togglePatroon);
 el('voeren').addEventListener('change',  toggleVoering);
 el('verzwaaringskoord').addEventListener('change', toggleLoodveter);
+// Plooi-keuze hercheck tegen het artikel — banner verschijnt of verdwijnt direct.
+el('plooi').addEventListener('change', refreshBanner);
 
 // Artikel specificaties (linker aside) is alleen-lezen voor de eindgebruiker.
 document.querySelectorAll('aside input').forEach(n => { n.readOnly = true; });
@@ -1384,6 +1463,7 @@ async function seedKantelbaar(saved) {
   await seedKantelbaar(_savedArtikelen);
   await seedAfmetingenPlaceholders(_savedArtikelen);
   await seedKleuren(_savedArtikelen);
+  await seedGeschiktePlooiEnVouwgordijn(_savedArtikelen);
 
   // Auto-load if redirected from import page
   const LS_LOAD = 'gordijn_load_artikel';

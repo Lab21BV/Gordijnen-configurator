@@ -240,6 +240,7 @@
       <li><a href="#flow-metrage">Flow: aantal banen &amp; totaal metrage</a></li>
       <li><a href="#flow-prijs">Flow: verkoopprijs &amp; eindprijs</a></li>
       <li><a href="#flow-afwerking">Flow: afwerkingen onderling (lock / koord / loodveter)</a></li>
+      <li><a href="#flow-plooi-geschikt">Flow: plooi-geschiktheid &amp; vouwgordijn-flag</a></li>
       <li><a href="#effect-matrix">Effect-matrix: welk veld stuurt wat?</a></li>
     </ol>
   </div>
@@ -599,8 +600,58 @@
     </div>
   </div>
 
+  <!-- ────────── PLOOI-GESCHIKTHEID ────────── -->
+  <h2 id="flow-plooi-geschikt">9. Flow: plooi-geschiktheid &amp; vouwgordijn-flag</h2>
+  <p>Het artikel-veld <code>geschikte_plooi</code> (Multi-Select Picklist) bepaalt welke plooitypes voor deze stof zijn toegestaan. Bij keuze van een niet-geschikte plooi geeft de configurator een waarschuwing &mdash; de berekening blijft draaien, maar de gebruiker ziet duidelijk dat het advies is af te wijken.</p>
+
+  <div class="flow">
+    <div class="flow-title">Plooi-geschiktheid &mdash; per artikel</div>
+
+    <div class="flow-row">
+      <div class="node node-input">Artikel.geschikte_plooi<br/><small>Wave / Dubbel R / Enkel R / Dubbel / Enkel</small></div>
+      <div class="node node-input">Plooi-keuze<br/><small>uit Stap 6 dropdown</small></div>
+    </div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-decide">geschikte_plooi leeg?</div></div>
+    <div class="branch">
+      <div class="branch-col">
+        <div class="branch-label yes">Ja — geen restrictie</div>
+        <div class="flow-arrow-down"></div>
+        <div class="node node-output">Alle plooien toegestaan<br/><small>geen waarschuwing</small></div>
+      </div>
+      <div class="branch-col">
+        <div class="branch-label no">Nee — restrictie aanwezig</div>
+        <div class="flow-arrow-down"></div>
+        <div class="node node-decide">plooi-keuze in lijst?</div>
+        <div class="branch">
+          <div class="branch-col">
+            <div class="branch-label yes">Ja</div>
+            <div class="flow-arrow-down"></div>
+            <div class="node node-output">Geschikt<br/><small>geen melding</small></div>
+          </div>
+          <div class="branch-col">
+            <div class="branch-label no">Nee</div>
+            <div class="flow-arrow-down"></div>
+            <div class="node node-error" style="border-color:var(--warn);background:var(--warn-lt);color:#7b3a00">Waarschuwing<br/><small>"niet geschikt voor plooi X — geschikt: …"</small></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <hr style="border:0;border-top:1px dashed var(--border);margin:18px 0"/>
+    <div class="flow-row"><div class="node node-input">Artikel.geschikt_vouwgordijn<br/><small>Ja / Nee / Ja (ongevoerd)</small></div></div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-output">Informatief — niet in berekening<br/><small>Toont alleen welke stoffen óók als (Romeinse) vouwgordijn verwerkt mogen worden</small></div></div>
+  </div>
+
+  <p><strong>Waar zichtbaar?</strong></p>
+  <ul>
+    <li><strong>Stap 3 — artikellijst:</strong> aparte kolommen <em>Geschikte plooi</em> (badges) en <em>Vouwgord.</em> tonen per artikel.</li>
+    <li><strong>Aside &laquo;Artikel specificaties&raquo;:</strong> sectie <em>Verwerkingsmogelijkheden</em> &mdash; toegelaten plooien als groene tags, niet-toegelaten als doorgestreepte grijze tags.</li>
+    <li><strong>Plooi-dropdown (Stap 6):</strong> niet-geschikte opties krijgen het achtervoegsel <em>&laquo; ⚠ niet geschikt&raquo;</em>; bij selectie verschijnt de waarschuwingsbanner.</li>
+  </ul>
+
   <!-- ────────── EFFECT MATRIX ────────── -->
-  <h2 id="effect-matrix">9. Effect-matrix: welk veld stuurt wat?</h2>
+  <h2 id="effect-matrix">10. Effect-matrix: welk veld stuurt wat?</h2>
   <p>Snel naslagwerk: zoek een invoerveld in de eerste kolom, en zie welke andere velden of berekeningen daardoor veranderen.</p>
 
   <table class="effect-table">
@@ -673,8 +724,19 @@
         <td>
           &rarr; <strong>plooifactor</strong> (1.80&ndash;2.50)<br/>
           &rarr; <strong>retourMarge</strong> (alleen bij Enkel/Dubbel retour)<br/>
-          &rarr; <strong>benodigdeStofbreedte</strong>
+          &rarr; <strong>benodigdeStofbreedte</strong><br/>
+          &rarr; vergeleken met <strong>artikel.geschikte_plooi</strong> &rarr; waarschuwing als niet in lijst
         </td>
+      </tr>
+      <tr>
+        <td>Artikel.geschikte_plooi</td>
+        <td>3</td>
+        <td>Multi-Select lijst van toegestane plooien (Wave / Dubbel retour / Enkel retour / Dubbel / Enkel). Leeg = geen restrictie. Stuurt waarschuwing in stap 6 + badge-rendering in artikellijst en aside.</td>
+      </tr>
+      <tr>
+        <td>Artikel.geschikt_vouwgordijn</td>
+        <td>3</td>
+        <td>Picklist Ja / Nee / Ja (ongevoerd). Informatief — niet in metrage of prijs.</td>
       </tr>
       <tr>
         <td>Aantal delen</td>

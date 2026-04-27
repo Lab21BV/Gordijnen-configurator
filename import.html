@@ -280,6 +280,13 @@
       border-bottom: 1px dashed var(--border);
       font-size: .83rem;
     }
+    .veld-uitleg .zoho-col {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 3px;
+      min-width: 0;
+    }
     .veld-uitleg .zoho-api {
       font-family: 'Courier New', monospace;
       font-size: .75rem;
@@ -291,11 +298,20 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      max-width: 100%;
     }
     .veld-uitleg .zoho-api.local {
       color: var(--muted);
       background: #f5f5f5;
       font-style: italic;
+    }
+    .veld-uitleg .zoho-type {
+      font-size: .68rem;
+      font-weight: 600;
+      letter-spacing: .03em;
+      color: var(--muted);
+      text-transform: uppercase;
+      white-space: nowrap;
     }
     .veld-uitleg .veld:last-child { border-bottom: none; }
     .veld-uitleg dt {
@@ -314,6 +330,7 @@
     }
     @media (max-width: 720px) {
       .veld-uitleg .veld { grid-template-columns: 1fr; gap: 2px; }
+      .veld-uitleg .zoho-col { align-items: flex-start; }
       .veld-uitleg .zoho-api { text-align: left; display: inline-block; }
     }
   </style>
@@ -405,7 +422,7 @@
                   <td style="padding:5px 10px;font-weight:700;color:var(--accent-dk);border-right:1px solid var(--border)">Kamerhoog</td>
                   <td style="padding:5px 10px;font-weight:700;color:var(--accent-dk);border-right:1px solid var(--border)">Verzwaaringskoord</td>
                   <td style="padding:5px 10px;font-weight:700;color:var(--accent-dk);border-right:1px solid var(--border)">Kantelbaar</td>
-                  <td style="padding:5px 10px;font-weight:700;color:var(--accent-dk);border-right:1px solid var(--border)">Kleuren</td>
+                  <td style="padding:5px 10px;font-weight:700;color:var(--accent-dk);border-right:1px solid var(--border)">Geschikte plooi</td>
                   <td style="padding:5px 10px;font-weight:700;color:var(--accent-dk)">…</td>
                 </tr>
                 <tr>
@@ -420,7 +437,7 @@
                   <td style="padding:5px 10px;border-right:1px solid var(--border)">Ja</td>
                   <td style="padding:5px 10px;border-right:1px solid var(--border)">Nee</td>
                   <td style="padding:5px 10px;border-right:1px solid var(--border)">Ja</td>
-                  <td style="padding:5px 10px;border-right:1px solid var(--border)">Wit, Naturel, Beige</td>
+                  <td style="padding:5px 10px;border-right:1px solid var(--border)">Wave, Enkel, Dubbel</td>
                   <td style="padding:5px 10px;color:var(--muted)">…</td>
                 </tr>
                 <tr style="background:#fafbfc">
@@ -435,7 +452,7 @@
                   <td style="padding:5px 10px;border-right:1px solid var(--border)">Nee</td>
                   <td style="padding:5px 10px;border-right:1px solid var(--border)">Ja</td>
                   <td style="padding:5px 10px;border-right:1px solid var(--border)">Nee</td>
-                  <td style="padding:5px 10px;border-right:1px solid var(--border)">Grijs, Antraciet, Zwart</td>
+                  <td style="padding:5px 10px;border-right:1px solid var(--border)">Dubbel retour, Dubbel</td>
                   <td style="padding:5px 10px;color:var(--muted)">…</td>
                 </tr>
               </tbody>
@@ -582,6 +599,8 @@ const TEMPLATE_EXAMPLE = {
   akoestiek:            '—',
   verzwaaringskoord:    'Nee',
   samenstelling:        '100% Linnen',
+  geschikte_plooi:      'Wave, Enkel, Dubbel',
+  geschikt_vouwgordijn: 'Ja',
   kleuren:              'Wit, Naturel, Beige, Zand, Taupe, Grijs',
 };
 function downloadTemplate() {
@@ -764,6 +783,12 @@ function renderCell(key, val) {
     const n = parseFloat(v);
     return isNaN(n) ? esc(v) : `€ ${n.toFixed(2)}`;
   }
+  // Multi-select velden (kleuren, geschikte_plooi): toon als groepje badges.
+  if (f.render === 'tags') {
+    const items = String(v).split(/[;,]/).map(s => s.trim()).filter(Boolean);
+    if (items.length === 0) return dash;
+    return items.map(s => `<span class="tag" style="background:#e8f0f8;color:var(--accent-dk);margin:1px 2px">${esc(s)}</span>`).join('');
+  }
   return esc(v);
 }
 
@@ -835,6 +860,7 @@ async function refreshSaved() {
   await migrateGordijnType(_savedCache);
   await seedAfmetingenPlaceholders(_savedCache);
   await seedKleuren(_savedCache);
+  await seedGeschiktePlooiEnVouwgordijn(_savedCache);
   if (source === 'supabase') setDbStatus('ok');
   else if (!dbConfigured())  setDbStatus('local');
   else                        setDbStatus('error', error?.message);
@@ -921,6 +947,12 @@ function renderSaved() {
   };
   const renderText = v => v ? esc(v) : dashEmpty;
   const renderPercent = v => v && v !== '0' ? esc(v) + '%' : dashEmpty;
+  // Multi-select rendering voor 'tags' velden (kleuren, geschikte_plooi).
+  const renderTags = v => {
+    const items = String(v || '').split(/[;,]/).map(s => s.trim()).filter(Boolean);
+    if (items.length === 0) return dashEmpty;
+    return items.map(s => `<span class="tag" style="background:#e8f0f8;color:var(--accent-dk);margin:1px 2px">${esc(s)}</span>`).join('');
+  };
   // Verkoop incl. btw — handmatig veld heeft voorrang; auto-formule alleen voor testartikelen.
   const renderVerkoop = a => {
     const info = getVerkoopPrijs(a);
@@ -946,6 +978,7 @@ function renderSaved() {
     switch (field.render) {
       case 'yesno':    return renderYesNo(v);
       case 'currency': return renderCurrency(v);
+      case 'tags':     return renderTags(v);
       default:         return renderText(v);
     }
   }
@@ -953,6 +986,7 @@ function renderSaved() {
   const cellStyle = key => {
     if (key === 'lichtdoorlatenheid') return 'white-space:normal;max-width:110px';
     if (key === 'samenstelling')      return 'white-space:normal;max-width:130px';
+    if (key === 'geschikte_plooi')    return 'white-space:normal;max-width:180px';
     if (key === 'kleuren')            return 'white-space:normal;max-width:180px';
     return '';
   };
@@ -1069,6 +1103,8 @@ function buildHintAndUitleg() {
         verzwaaringskoord: ' <em>(Ja / Nee)</em>',
         akoestiek:     ' <em>(— / A / B)</em>',
         krimpercentage: ' <em>(informatief)</em>',
+        geschikte_plooi:      ' <em>(Wave / Dubbel retour / Enkel retour / Dubbel / Enkel — komma-gescheiden)</em>',
+        geschikt_vouwgordijn: ' <em>(Ja / Nee / Ja (ongevoerd))</em>',
         kleuren:       ' <em>(komma- of puntkomma-gescheiden)</em>',
       };
       return `<span class="hint-field">${star}${esc(f.label)}${enumHints[f.key] || ''}</span>`;
@@ -1081,10 +1117,13 @@ function buildHintAndUitleg() {
       const apiText = f.zoho_api
         ? `<span class="zoho-api" title="Zoho CRM Products API name">${esc(f.zoho_api)}</span>`
         : `<span class="zoho-api local" title="Niet gesynchroniseerd met Zoho">local-only</span>`;
+      const typeText = f.zoho_type
+        ? `<span class="zoho-type" title="Zoho CRM veldtype">${esc(f.zoho_type)}</span>`
+        : '';
       return `<div class="veld">
         <dt>${esc(f.label)}${star}</dt>
         <dd>${f.desc}</dd>
-        ${apiText}
+        <div class="zoho-col">${apiText}${typeText}</div>
       </div>`;
     }).join('');
   }

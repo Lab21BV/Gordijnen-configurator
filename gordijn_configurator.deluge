@@ -13,6 +13,15 @@
 //
 // Verkoopprijs/m¹ — handmatig (Verkoopprijs_M1) heeft voorrang;
 // als leeg of 0, fallback naar inkoop × 3 → xx.95 (testartikelen).
+//
+// Artikel-velden (informatief, géén invloed op metrage of prijs):
+//   Geschikte_Plooi (Multi-Select Picklist)
+//     — Wave / Dubbel retour / Enkel retour / Dubbel / Enkel.
+//       Index.html toont een waarschuwing als de gekozen plooi niet voorkomt.
+//   Geschikt_Vouwgordijn (Picklist) — Ja / Nee / Ja (ongevoerd).
+//       Geeft aan of de stof óók geschikt is voor (Romeinse) vouwgordijnen.
+// Beide nog niet als input verwerkt in dit script — voeg pas toe wanneer
+// de validatie ook in Zoho Creator gewenst is.
 // ============================================================
 
 // ------------------------------------------------------------

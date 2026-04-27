@@ -21,6 +21,8 @@ const LS_KEY    = 'gordijn_artikelen';
 //   required    — verplicht bij import.
 //   aliases     — andere namen die als CSV-header herkend worden.
 //   zoho_api    — kolomnaam in Zoho CRM (Products module). null = niet syncen.
+//   zoho_type   — Zoho CRM veldtype: Single Line | Picklist | Multi-Select Picklist
+//                 | Number | Decimal | Currency | Percent | Checkbox. null = local-only.
 //   render      — rendering-hint voor tabellen: text|number|currency|yesno|enum|tags.
 //   desc        — uitleg in de veld-uitleg tabel.
 //   preview     — true = kolom in CSV-preview tabel.
@@ -29,115 +31,153 @@ const LS_KEY    = 'gordijn_artikelen';
 const ARTIKEL_FIELDS = [
   { key: 'artikelnummer',        label: 'Artikelnummer',                    short: 'Artikelnr.',  required: true,
     aliases: ['artikelnummer','artikel nr','artikel_nr','article','artnr','art.nr','art nr','art_nr','code','sku','item'],
-    zoho_api: 'Product_Code', render: 'text',
+    zoho_api: 'Product_Code', zoho_type: 'Single Line', render: 'text',
     desc: 'Unieke code die dit artikel identificeert (bijv. <em>ART-001</em>). Verplicht veld.',
     preview: true,  saved: true },
   { key: 'gordijn_type',         label: 'Gordijn type',                     short: 'Type',        required: false,
     aliases: ['gordijn type','gordijn_type','type gordijn','type','overgordijn','inbetween','gordijntype'],
-    zoho_api: 'Gordijn_Type', render: 'enum',
+    zoho_api: 'Gordijn_Type', zoho_type: 'Picklist', render: 'enum',
     desc: '<em>Overgordijn</em> (zwaar, decoratief) of <em>Inbetween</em> (licht, lichtdoorlatend). Bepaalt het tabblad in de configurator.',
     preview: true,  saved: true },
   { key: 'omschrijving',         label: 'Omschrijving',                     short: 'Omschrijving', required: false,
     aliases: ['omschrijving','naam','name','description','desc','omschr'],
-    zoho_api: 'Product_Name', render: 'text',
+    zoho_api: 'Product_Name', zoho_type: 'Single Line', render: 'text',
     desc: 'Vrije naam of beschrijving van de stof, bijv. <em>"Linnen naturel"</em>.',
     preview: true,  saved: true },
   { key: 'hoogte_stof',          label: 'Hoogte stof (cm)',                 short: 'H stof',      required: false,
     aliases: ['hoogte stof','hoogte_stof','stofhoogte','height fabric','fabric height','hoogte','max hoogte'],
-    zoho_api: 'Hoogte_Stof', render: 'number',
+    zoho_api: 'Hoogte_Stof', zoho_type: 'Number', render: 'number',
     desc: 'Maximale hoogte van de stofrol. Voor banenstof onbeperkt (10000 = placeholder).',
     preview: true,  saved: true },
   { key: 'breedte_stof',         label: 'Breedte stof (cm)',                short: 'B stof',      required: false,
     aliases: ['breedte stof','breedte_stof','stofbreedte','fabric width','width fabric','breedte','rolbreedte'],
-    zoho_api: 'Breedte_Stof', render: 'number',
+    zoho_api: 'Breedte_Stof', zoho_type: 'Number', render: 'number',
     desc: 'Rolbreedte van de stof. Voor kamerhoog onbeperkt (10000 = placeholder).',
     preview: true,  saved: true },
   { key: 'patroon',              label: 'Patroon',                          short: 'Patroon',     required: false,
     aliases: ['patroon','pattern','patroontype'],
-    zoho_api: 'Patroon', render: 'enum',
+    zoho_api: 'Patroon', zoho_type: 'Picklist', render: 'enum',
     desc: '<em>Uni</em> (egaal) of <em>Patroon</em> (met herhaling). Bij patroon wordt de snijhoogte afgerond op hele rapporten.',
     preview: true,  saved: true },
   { key: 'patroonhoogte',        label: 'Patroonhoogte (cm)',               short: 'Patr.hoogte', required: false,
     aliases: ['patroonhoogte','patroon hoogte','rapport','patroonhoogte (cm)','pattern height'],
-    zoho_api: 'Patroonhoogte', render: 'number',
+    zoho_api: 'Patroonhoogte', zoho_type: 'Decimal', render: 'number',
     desc: 'Verticale rapporthoogte (cm). Alleen relevant bij Patroon.',
     preview: true,  saved: true },
   { key: 'patroonbreedte',       label: 'Patroonbreedte (cm)',              short: 'Patr.breedte', required: false,
     aliases: ['patroonbreedte','patroon breedte','pattern width'],
-    zoho_api: 'Patroonbreedte', render: 'number',
+    zoho_api: 'Patroonbreedte', zoho_type: 'Decimal', render: 'number',
     desc: 'Horizontale rapportbreedte (cm). Informatief; niet in de berekening gebruikt.',
     preview: false, saved: true },
   { key: 'prijs_per_m1',         label: 'Inkoopprijs per m¹ (€)',           short: 'Inkoop/m¹',   required: false,
     aliases: ['inkoopprijs','inkoopprijs per m1','inkoopprijs per m¹','inkoop','inkoop/m','inkoop per m','inkoop m1','prijs per m1','prijs per m¹','prijs/m1','prijs/m','prijs per meter','price','prijs','cost'],
-    zoho_api: 'Inkoopprijs_M1', render: 'currency',
+    zoho_api: 'Inkoopprijs_M1', zoho_type: 'Currency', render: 'currency',
     desc: 'Inkoopprijs per lopende meter stof. Basis voor de auto-verkoopprijs formule (testartikelen).',
     preview: true,  saved: true },
   { key: 'verkoopprijs_per_m1',  label: 'Verkoopprijs per m¹ incl. btw (€)', short: 'Verkoop/m¹', required: false,
     aliases: ['verkoopprijs','verkoop','verkoopprijs per m1','verkoopprijs per m¹','verkoop incl btw','verkoop/m','verkoop per m','sales price','retail price','rrp'],
-    zoho_api: 'Verkoopprijs_M1', render: 'currency', local_only: true,
+    zoho_api: 'Verkoopprijs_M1', zoho_type: 'Currency', render: 'currency', local_only: true,
     desc: 'Verkoopprijs per lopende meter incl. btw, handmatig ingevuld door Victor. Heeft voorrang op de auto-formule. <em>(Tijdelijk local-only tot de Supabase-kolom is toegevoegd.)</em>',
     preview: false, saved: true },
   { key: 'krimpercentage',       label: 'Krimpercentage (%)',               short: 'Krimp%',      required: false,
     aliases: ['krimpercentage','krimp','shrinkage','krimp %','krimpp'],
-    zoho_api: 'Krimpercentage', render: 'number',
+    zoho_api: 'Krimpercentage', zoho_type: 'Percent', render: 'number',
     desc: 'Verwachte krimp na wasbeurt. <em>Informatief</em> — niet in de berekening.',
     preview: true,  saved: true },
   { key: 'kamerhoog',            label: 'Kamerhoog',                        short: 'KH',          required: false,
     aliases: ['kamerhoog','kamerhoog?','room height','kamer hoog'],
-    zoho_api: 'Kamerhoog', render: 'yesno',
+    zoho_api: 'Kamerhoog', zoho_type: 'Checkbox', render: 'yesno',
     desc: '<em>Ja</em> = kamerhoge verwerking (1 baan). <em>Nee</em> = banenstof (meerdere banen).',
     preview: true,  saved: true },
   { key: 'lichtdoorlatenheid',   label: 'Lichtdoorlatenheid',               short: 'Licht',       required: false,
     aliases: ['lichtdoorlatenheid','licht','transparantie','transparancy','light','lichtdoorl'],
-    zoho_api: 'Lichtdoorlatenheid', render: 'enum',
+    zoho_api: 'Lichtdoorlatenheid', zoho_type: 'Picklist', render: 'enum',
     desc: 'Lichtklasse: Transparant / Semi transparant / Lichtblokkade / Dimout / Blackout.',
     preview: true,  saved: true },
   { key: 'voeren',               label: 'Voeren (default)',                 short: 'Voeren',      required: false,
     aliases: ['voeren','voering','lined','lining'],
-    zoho_api: 'Voering_Default', render: 'enum',
+    zoho_api: 'Voering_Default', zoho_type: 'Picklist', render: 'enum',
     desc: 'Default voering-suggestie. Eindgebruiker kiest in de configurator zelf: Geen voering / Semi-transparant / Verduisterend.',
     preview: true,  saved: true },
   { key: 'voering_prijs_per_m1', label: 'Voering prijs per m¹ (€)',         short: 'Voer.prijs',  required: false,
     aliases: ['voering prijs','voering_prijs','voering prijs per m1','voering prijs per m¹','lining price'],
-    zoho_api: 'Voering_Prijs_M1', render: 'currency',
+    zoho_api: 'Voering_Prijs_M1', zoho_type: 'Currency', render: 'currency',
     desc: 'Inkoopprijs voeringstof per meter. Laat 0 voor de 60%-fallback (60% van inkoopprijs stof).',
     preview: false, saved: true },
   { key: 'kantelbaar',           label: 'Kantelbaar',                       short: 'Kant.',       required: false,
     aliases: ['kantelbaar','tiltable','kantel'],
-    zoho_api: 'Kantelbaar', render: 'yesno',
+    zoho_api: 'Kantelbaar', zoho_type: 'Checkbox', render: 'yesno',
     desc: '<em>Ja</em> = mag 90° gekanteld verwerkt worden bij hoogte-overschrijding. Patroon-stof is automatisch <em>Nee</em>.',
     preview: true,  saved: true },
   { key: 'doubleface',           label: 'Doubleface',                       short: 'D.face',      required: false,
     aliases: ['doubleface','double face','double-face','reversible'],
-    zoho_api: 'Doubleface', render: 'yesno',
+    zoho_api: 'Doubleface', zoho_type: 'Checkbox', render: 'yesno',
     desc: 'Aan beide zijden afgewerkt; geschikt voor tweezijdig gebruik.',
     preview: false, saved: true },
   { key: 'brandvertragend',      label: 'Brandvertragend',                  short: 'BR',          required: false,
     aliases: ['brandvertragend','brandwerend','fire retardant','fire','fr'],
-    zoho_api: 'Brandvertragend', render: 'yesno',
+    zoho_api: 'Brandvertragend', zoho_type: 'Checkbox', render: 'yesno',
     desc: 'Voldoet aan brandvertragende normen (FR). Relevant voor projecten / publieke ruimtes.',
     preview: true,  saved: true },
   { key: 'akoestiek',            label: 'Akoestiek klasse',                 short: 'Akoest.',     required: false,
     aliases: ['akoestiek','akoestiek klasse','acoustic','acoustic class','akoestiekklasse'],
-    zoho_api: 'Akoestiek', render: 'enum',
+    zoho_api: 'Akoestiek', zoho_type: 'Picklist', render: 'enum',
     desc: 'Geluidsabsorberende klasse: — / A / B.',
     preview: false, saved: true },
   { key: 'verzwaaringskoord',    label: 'Verzwaaringskoord',                short: 'Verzw.',      required: false,
     aliases: ['verzwaaringskoord','verzwaring','weight cord','weighting'],
-    zoho_api: 'Verzwaaringskoord', render: 'yesno',
+    zoho_api: 'Verzwaaringskoord', zoho_type: 'Checkbox', render: 'yesno',
     desc: '<em>Ja</em> = onderzoom 2 cm (koord ingewerkt). <em>Nee</em> = onderzoom 15 cm. Loodveter wordt dan automatisch uitgeschakeld.',
     preview: false, saved: true },
   { key: 'samenstelling',        label: 'Samenstelling',                    short: 'Samenst.',    required: false,
     aliases: ['samenstelling','composition','materiaal','material','fiber','vezel'],
-    zoho_api: 'Samenstelling', render: 'text',
+    zoho_api: 'Samenstelling', zoho_type: 'Single Line', render: 'text',
     desc: 'Vezelsamenstelling, bijv. <em>"100% Polyester"</em>.',
     preview: true,  saved: true },
+  { key: 'geschikte_plooi',      label: 'Geschikte plooi',                  short: 'Geschikte plooi', required: false,
+    aliases: ['geschikte plooi','geschikt plooi','geschikt voor plooi','plooi geschikt','suitable pleat','pleat'],
+    zoho_api: 'Geschikte_Plooi', zoho_type: 'Multi-Select Picklist', render: 'tags', local_only: true,
+    desc: 'Welke plooitypes geschikt zijn voor deze stof. Eén of meer uit: <em>Wave, Dubbel retour, Enkel retour, Dubbel, Enkel</em>. Komma- of puntkomma-gescheiden. Leeg = geen restrictie. <em>(Tijdelijk local-only tot de Supabase-kolom is toegevoegd.)</em>',
+    preview: true,  saved: true },
+  { key: 'geschikt_vouwgordijn', label: 'Geschikt als vouwgordijnen',       short: 'Vouwgord.',   required: false,
+    aliases: ['vouwgordijn','vouwgordijnen','geschikt vouwgordijn','geschikt als vouwgordijn','geschikt als vouwgordijnen','roman','roman blind'],
+    zoho_api: 'Geschikt_Vouwgordijn', zoho_type: 'Picklist', render: 'enum', local_only: true,
+    desc: 'Of de stof geschikt is voor (Romeinse) vouwgordijnen. Keuze: <em>Ja / Nee / Ja (ongevoerd)</em>. Informatief — niet in de berekening. <em>(Tijdelijk local-only tot de Supabase-kolom is toegevoegd.)</em>',
+    preview: false, saved: true },
   { key: 'kleuren',              label: 'Kleuren',                          short: 'Kleuren',     required: false,
     aliases: ['kleuren','kleur','colors','colour','colours','color'],
-    zoho_api: null, render: 'tags', local_only: true,
+    zoho_api: null, zoho_type: null, render: 'tags', local_only: true,
     desc: 'Komma- of puntkomma-gescheiden kleurnamen. Vult de Kleur-dropdown in de configurator. Leeg → fictieve set toegekend.',
     preview: false, saved: true },
 ];
+
+// ── Plooi: gedeelde opties + helpers ─────────────────────────
+// Volgorde matcht de dropdown in index.html. Wijzigen? Update ook PLOOI in
+// index.html en de plooi_* constantes in gordijn_configurator.deluge.
+const PLOOI_OPTIES = ['Wave', 'Dubbel retour', 'Enkel retour', 'Dubbel', 'Enkel'];
+const VOUWGORDIJN_OPTIES = ['Ja', 'Nee', 'Ja (ongevoerd)'];
+
+// Parse de comma/puntkomma-string naar een lijst geldige plooi-namen.
+// Onbekende of foutgespelde waarden worden stilletjes overgeslagen.
+function parseGeschiktePlooi(str) {
+  if (!str) return [];
+  return String(str)
+    .split(/[;,]/)
+    .map(s => s.trim())
+    .filter(Boolean)
+    .map(s => PLOOI_OPTIES.find(p => p.toLowerCase() === s.toLowerCase()) || null)
+    .filter(Boolean);
+}
+
+// Is `plooiKeuze` toegestaan voor dit artikel?
+//   - Leeg veld of onparseable → true (geen restrictie).
+//   - Anders: case-insensitieve match tegen geparsete lijst.
+function isPlooiGeschikt(article, plooiKeuze) {
+  if (!article || !plooiKeuze) return true;
+  const lijst = parseGeschiktePlooi(article.geschikte_plooi);
+  if (lijst.length === 0) return true;
+  return lijst.some(p => p.toLowerCase() === String(plooiKeuze).toLowerCase());
+}
 
 // Afgeleid: kolommen die daadwerkelijk in Supabase staan.
 const DB_FIELDS = ARTIKEL_FIELDS.filter(f => !f.local_only).map(f => f.key);
@@ -320,6 +360,43 @@ async function seedAfmetingenPlaceholders(saved) {
     if (changed) toUpdate.push(a);
   });
   if (toUpdate.length > 0) await dbUpsertArticles(toUpdate);
+}
+
+// Vul `geschikte_plooi` en `geschikt_vouwgordijn` aan met fictieve waarden voor
+// bestaande artikelen die deze velden nog leeg hebben. Beide leven (voorlopig)
+// alleen in localStorage — local_only fields synchroniseren niet met Supabase.
+async function seedGeschiktePlooiEnVouwgordijn(saved) {
+  let changed = false;
+  // Roterende sets zodat bestaande testartikelen variatie tonen.
+  const PLOOI_SETS = [
+    PLOOI_OPTIES,                                       // alles geschikt
+    ['Wave', 'Enkel', 'Dubbel'],                        // standaard zonder retour
+    ['Dubbel retour', 'Enkel retour', 'Dubbel'],        // zware stoffen — retour
+    ['Wave', 'Enkel'],                                  // moderne, lichte uitstraling
+    ['Dubbel', 'Enkel'],                                // klassiek
+  ];
+  const VOUW_SETS = ['Ja', 'Ja (ongevoerd)', 'Nee'];
+  let i = 0, j = 0;
+  Object.keys(saved).sort().forEach(nr => {
+    const a = saved[nr];
+    if (!a.geschikte_plooi || parseGeschiktePlooi(a.geschikte_plooi).length === 0) {
+      a.geschikte_plooi = PLOOI_SETS[i % PLOOI_SETS.length].join(', ');
+      i++;
+      changed = true;
+    }
+    if (!a.geschikt_vouwgordijn) {
+      a.geschikt_vouwgordijn = VOUW_SETS[j % VOUW_SETS.length];
+      j++;
+      changed = true;
+    }
+  });
+  if (changed) {
+    const local = lsLoad();
+    Object.keys(saved).forEach(nr => {
+      local[nr] = { ...local[nr], ...saved[nr] };
+    });
+    lsSave(local);
+  }
 }
 
 // Vul fictieve kleuren aan (14–16 per artikel) voor artikelen met < 10 kleuren.

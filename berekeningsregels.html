@@ -179,6 +179,7 @@
       <li><a href="#s16">Architectuur &mdash; bestanden</a></li>
       <li><a href="#s17">Synchronisatie-regel</a></li>
       <li><a href="#s18">Zoho CRM &mdash; veld-mapping</a></li>
+      <li><a href="#s19">Plooi-geschiktheid &amp; vouwgordijn-flag</a></li>
     </ol>
   </div>
 
@@ -392,37 +393,62 @@ totaalPrijs = stofPrijs (+ voeringKosten als van toepassing)</pre>
   <p>&rarr; <code>gordijn_configurator.deluge</code> ook bijwerken in dezelfde commit.</p>
 
   <h2 id="s18">18. Zoho CRM &mdash; veld-mapping</h2>
-  <p>De configurator wordt aangesloten op Zoho CRM (module: <strong>Products</strong>). Onderstaande tabel mapt onze interne veld-keys op de Zoho API-namen. Het master-overzicht staat in <code>db.js</code> (<code>ARTIKEL_FIELDS</code>) en wordt in <code>import.html</code> automatisch getoond bij elke veld-uitleg.</p>
+  <p>De configurator wordt aangesloten op Zoho CRM (module: <strong>Products</strong>). Onderstaande tabel mapt onze interne veld-keys op de Zoho API-namen en het Zoho-veldtype dat in CRM aangemaakt moet worden. Het master-overzicht staat in <code>db.js</code> (<code>ARTIKEL_FIELDS</code>) en wordt in <code>import.html</code> automatisch getoond bij elke veld-uitleg.</p>
   <table>
-    <thead><tr><th>Interne key</th><th>Label</th><th>Zoho API (Products)</th><th>Type</th></tr></thead>
+    <thead><tr><th>Interne key</th><th>Label</th><th>Zoho API (Products)</th><th>Zoho veldtype</th></tr></thead>
     <tbody>
-      <tr><td><code>artikelnummer</code></td><td>Artikelnummer</td><td><code>Product_Code</code></td><td>text</td></tr>
-      <tr><td><code>gordijn_type</code></td><td>Gordijn type</td><td><code>Gordijn_Type</code></td><td>enum</td></tr>
-      <tr><td><code>omschrijving</code></td><td>Omschrijving</td><td><code>Product_Name</code></td><td>text</td></tr>
-      <tr><td><code>hoogte_stof</code></td><td>Hoogte stof (cm)</td><td><code>Hoogte_Stof</code></td><td>number</td></tr>
-      <tr><td><code>breedte_stof</code></td><td>Breedte stof (cm)</td><td><code>Breedte_Stof</code></td><td>number</td></tr>
-      <tr><td><code>patroon</code></td><td>Patroon</td><td><code>Patroon</code></td><td>enum</td></tr>
-      <tr><td><code>patroonhoogte</code></td><td>Patroonhoogte (cm)</td><td><code>Patroonhoogte</code></td><td>number</td></tr>
-      <tr><td><code>patroonbreedte</code></td><td>Patroonbreedte (cm)</td><td><code>Patroonbreedte</code></td><td>number</td></tr>
-      <tr><td><code>prijs_per_m1</code></td><td>Inkoopprijs per m¹</td><td><code>Inkoopprijs_M1</code></td><td>currency</td></tr>
-      <tr><td><code>verkoopprijs_per_m1</code></td><td>Verkoopprijs per m¹ incl. btw</td><td><code>Verkoopprijs_M1</code></td><td>currency</td></tr>
-      <tr><td><code>krimpercentage</code></td><td>Krimpercentage (%)</td><td><code>Krimpercentage</code></td><td>number</td></tr>
-      <tr><td><code>kamerhoog</code></td><td>Kamerhoog</td><td><code>Kamerhoog</code></td><td>yesno</td></tr>
-      <tr><td><code>lichtdoorlatenheid</code></td><td>Lichtdoorlatenheid</td><td><code>Lichtdoorlatenheid</code></td><td>enum</td></tr>
-      <tr><td><code>voeren</code></td><td>Voeren (default)</td><td><code>Voering_Default</code></td><td>enum</td></tr>
-      <tr><td><code>voering_prijs_per_m1</code></td><td>Voering prijs per m¹</td><td><code>Voering_Prijs_M1</code></td><td>currency</td></tr>
-      <tr><td><code>kantelbaar</code></td><td>Kantelbaar</td><td><code>Kantelbaar</code></td><td>yesno</td></tr>
-      <tr><td><code>doubleface</code></td><td>Doubleface</td><td><code>Doubleface</code></td><td>yesno</td></tr>
-      <tr><td><code>brandvertragend</code></td><td>Brandvertragend</td><td><code>Brandvertragend</code></td><td>yesno</td></tr>
-      <tr><td><code>akoestiek</code></td><td>Akoestiek klasse</td><td><code>Akoestiek</code></td><td>enum</td></tr>
-      <tr><td><code>verzwaaringskoord</code></td><td>Verzwaaringskoord</td><td><code>Verzwaaringskoord</code></td><td>yesno</td></tr>
-      <tr><td><code>samenstelling</code></td><td>Samenstelling</td><td><code>Samenstelling</code></td><td>text</td></tr>
-      <tr><td><code>kleuren</code></td><td>Kleuren</td><td><em>local-only</em></td><td>tags</td></tr>
+      <tr><td><code>artikelnummer</code></td><td>Artikelnummer</td><td><code>Product_Code</code></td><td>Single Line</td></tr>
+      <tr><td><code>gordijn_type</code></td><td>Gordijn type</td><td><code>Gordijn_Type</code></td><td>Picklist</td></tr>
+      <tr><td><code>omschrijving</code></td><td>Omschrijving</td><td><code>Product_Name</code></td><td>Single Line</td></tr>
+      <tr><td><code>hoogte_stof</code></td><td>Hoogte stof (cm)</td><td><code>Hoogte_Stof</code></td><td>Number</td></tr>
+      <tr><td><code>breedte_stof</code></td><td>Breedte stof (cm)</td><td><code>Breedte_Stof</code></td><td>Number</td></tr>
+      <tr><td><code>patroon</code></td><td>Patroon</td><td><code>Patroon</code></td><td>Picklist</td></tr>
+      <tr><td><code>patroonhoogte</code></td><td>Patroonhoogte (cm)</td><td><code>Patroonhoogte</code></td><td>Decimal</td></tr>
+      <tr><td><code>patroonbreedte</code></td><td>Patroonbreedte (cm)</td><td><code>Patroonbreedte</code></td><td>Decimal</td></tr>
+      <tr><td><code>prijs_per_m1</code></td><td>Inkoopprijs per m¹</td><td><code>Inkoopprijs_M1</code></td><td>Currency</td></tr>
+      <tr><td><code>verkoopprijs_per_m1</code></td><td>Verkoopprijs per m¹ incl. btw</td><td><code>Verkoopprijs_M1</code></td><td>Currency</td></tr>
+      <tr><td><code>krimpercentage</code></td><td>Krimpercentage (%)</td><td><code>Krimpercentage</code></td><td>Percent</td></tr>
+      <tr><td><code>kamerhoog</code></td><td>Kamerhoog</td><td><code>Kamerhoog</code></td><td>Checkbox</td></tr>
+      <tr><td><code>lichtdoorlatenheid</code></td><td>Lichtdoorlatenheid</td><td><code>Lichtdoorlatenheid</code></td><td>Picklist</td></tr>
+      <tr><td><code>voeren</code></td><td>Voeren (default)</td><td><code>Voering_Default</code></td><td>Picklist</td></tr>
+      <tr><td><code>voering_prijs_per_m1</code></td><td>Voering prijs per m¹</td><td><code>Voering_Prijs_M1</code></td><td>Currency</td></tr>
+      <tr><td><code>kantelbaar</code></td><td>Kantelbaar</td><td><code>Kantelbaar</code></td><td>Checkbox</td></tr>
+      <tr><td><code>doubleface</code></td><td>Doubleface</td><td><code>Doubleface</code></td><td>Checkbox</td></tr>
+      <tr><td><code>brandvertragend</code></td><td>Brandvertragend</td><td><code>Brandvertragend</code></td><td>Checkbox</td></tr>
+      <tr><td><code>akoestiek</code></td><td>Akoestiek klasse</td><td><code>Akoestiek</code></td><td>Picklist</td></tr>
+      <tr><td><code>verzwaaringskoord</code></td><td>Verzwaaringskoord</td><td><code>Verzwaaringskoord</code></td><td>Checkbox</td></tr>
+      <tr><td><code>samenstelling</code></td><td>Samenstelling</td><td><code>Samenstelling</code></td><td>Single Line</td></tr>
+      <tr><td><code>geschikte_plooi</code></td><td>Geschikte plooi</td><td><code>Geschikte_Plooi</code></td><td>Multi-Select Picklist</td></tr>
+      <tr><td><code>geschikt_vouwgordijn</code></td><td>Geschikt als vouwgordijnen</td><td><code>Geschikt_Vouwgordijn</code></td><td>Picklist</td></tr>
+      <tr><td><code>kleuren</code></td><td>Kleuren</td><td><em>local-only</em></td><td>&mdash;</td></tr>
     </tbody>
   </table>
+  <p style="font-size:.82rem;color:var(--muted);margin-top:6px"><em>Geschikte_Plooi en Geschikt_Vouwgordijn zijn tijdelijk <strong>local-only</strong> (alleen localStorage) tot de Supabase-kolommen zijn toegevoegd &mdash; zie <code>schema.sql</code>.</em></p>
 
   <h3>Zoho Creator (Deluge) form-velden</h3>
   <p>Het Zoho Creator script <code>gordijn_configurator.deluge</code> verwacht dezelfde API-namen op het input-formulier (<code>input.Inkoopprijs_M1</code>, <code>input.Verkoopprijs_M1</code>, <code>input.Hoogte_Stof</code>, &hellip;). Configuratie-keuzes (<code>KlaarBreedte</code>, <code>KlaarHoogte</code>, <code>Plooi</code>, <code>Stuk</code>, <code>Voering</code>, <code>Lock</code>, <code>Band</code>) zijn formulier-velden, geen Products-veldEN.</p>
+
+  <h2 id="s19">19. Plooi-geschiktheid &amp; vouwgordijn-flag</h2>
+  <p>Twee artikel-velden bepalen welke verwerkingen voor een stof zijn toegestaan; ze zijn <em>niet</em> in de metrage- of prijsberekening, maar sturen wel UI-waarschuwingen.</p>
+
+  <h3>Geschikte plooi</h3>
+  <ul>
+    <li>Veld: <code>geschikte_plooi</code> &mdash; Multi-Select Picklist met de waarden uit dropdown <em>Plooi</em>: <strong>Wave</strong>, <strong>Dubbel retour</strong>, <strong>Enkel retour</strong>, <strong>Dubbel</strong>, <strong>Enkel</strong>.</li>
+    <li>Opslag: komma- of puntkomma-gescheiden string (bijv. <code>"Wave, Enkel, Dubbel"</code>).</li>
+    <li>Leeg / onbekend &rarr; geen restrictie (alle plooien toegestaan).</li>
+    <li>Bij keuze van een plooi die niet in de lijst staat, toont de configurator een waarschuwingsbanner met de toegelaten plooien. De berekening blijft doorlopen &mdash; de keuze wordt niet geblokkeerd.</li>
+    <li>De plooi-dropdown markeert niet-geschikte opties met &laquo; ⚠ niet geschikt&raquo;.</li>
+    <li>De aside-sectie <em>Verwerkingsmogelijkheden</em> toont alle vijf plooien als badges: groen voor toegelaten, doorgestreept-grijs voor uitgesloten.</li>
+  </ul>
+
+  <h3>Geschikt als vouwgordijnen</h3>
+  <ul>
+    <li>Veld: <code>geschikt_vouwgordijn</code> &mdash; Picklist met waarden <strong>Ja</strong>, <strong>Nee</strong>, <strong>Ja (ongevoerd)</strong>.</li>
+    <li>Informatief &mdash; geeft aan of de stof óók als (Romeins) vouwgordijn verwerkt mag worden. Niet in metrage of prijs.</li>
+    <li>Wordt getoond in de artikellijst (kolom <em>Vouwgord.</em>) en in de aside.</li>
+  </ul>
+
+  <p>Volgorde plooi-dropdown matcht <code>PLOOI_OPTIES</code> in <code>db.js</code>; deze wordt gedeeld door <code>index.html</code> en de seed-helpers. Synchroon houden met <code>gordijn_configurator.deluge</code> (constanten <code>plooi_*</code>).</p>
 
   <p style="text-align:center;margin-top:32px"><a href="#top" class="top-link">&uarr; Terug naar boven</a></p>
 

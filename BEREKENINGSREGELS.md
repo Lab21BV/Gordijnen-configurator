@@ -308,30 +308,32 @@ De configurator gaat aangesloten worden op Zoho CRM (module: **Products**). De
 mapping tussen onze interne keys en Zoho API-namen is master-gedefinieerd in
 `ARTIKEL_FIELDS` in `db.js`. `import.html` toont deze mapping in de veld-uitleg.
 
-| Interne key | Zoho API (Products) | Type |
+| Interne key | Zoho API (Products) | Zoho veldtype |
 |---|---|---|
-| artikelnummer | Product_Code | text |
-| gordijn_type | Gordijn_Type | enum |
-| omschrijving | Product_Name | text |
-| hoogte_stof | Hoogte_Stof | number |
-| breedte_stof | Breedte_Stof | number |
-| patroon | Patroon | enum |
-| patroonhoogte | Patroonhoogte | number |
-| patroonbreedte | Patroonbreedte | number |
-| prijs_per_m1 | Inkoopprijs_M1 | currency |
-| verkoopprijs_per_m1 | Verkoopprijs_M1 | currency |
-| krimpercentage | Krimpercentage | number |
-| kamerhoog | Kamerhoog | yesno |
-| lichtdoorlatenheid | Lichtdoorlatenheid | enum |
-| voeren | Voering_Default | enum |
-| voering_prijs_per_m1 | Voering_Prijs_M1 | currency |
-| kantelbaar | Kantelbaar | yesno |
-| doubleface | Doubleface | yesno |
-| brandvertragend | Brandvertragend | yesno |
-| akoestiek | Akoestiek | enum |
-| verzwaaringskoord | Verzwaaringskoord | yesno |
-| samenstelling | Samenstelling | text |
-| kleuren | *(local-only)* | tags |
+| artikelnummer | Product_Code | Single Line |
+| gordijn_type | Gordijn_Type | Picklist |
+| omschrijving | Product_Name | Single Line |
+| hoogte_stof | Hoogte_Stof | Number |
+| breedte_stof | Breedte_Stof | Number |
+| patroon | Patroon | Picklist |
+| patroonhoogte | Patroonhoogte | Decimal |
+| patroonbreedte | Patroonbreedte | Decimal |
+| prijs_per_m1 | Inkoopprijs_M1 | Currency |
+| verkoopprijs_per_m1 | Verkoopprijs_M1 | Currency |
+| krimpercentage | Krimpercentage | Percent |
+| kamerhoog | Kamerhoog | Checkbox |
+| lichtdoorlatenheid | Lichtdoorlatenheid | Picklist |
+| voeren | Voering_Default | Picklist |
+| voering_prijs_per_m1 | Voering_Prijs_M1 | Currency |
+| kantelbaar | Kantelbaar | Checkbox |
+| doubleface | Doubleface | Checkbox |
+| brandvertragend | Brandvertragend | Checkbox |
+| akoestiek | Akoestiek | Picklist |
+| verzwaaringskoord | Verzwaaringskoord | Checkbox |
+| samenstelling | Samenstelling | Single Line |
+| geschikte_plooi | Geschikte_Plooi *(local-only voor nu)* | Multi-Select Picklist |
+| geschikt_vouwgordijn | Geschikt_Vouwgordijn *(local-only voor nu)* | Picklist |
+| kleuren | *(local-only)* | — |
 
 `gordijn_configurator.deluge` gebruikt deze API-namen voor `input.<Field>` —
 zie sectie 2 van het deluge-bestand.
@@ -352,3 +354,25 @@ zie sectie 2 van het deluge-bestand.
 - aantalDelen-toeslag
 
 → `gordijn_configurator.deluge` ook bijwerken in dezelfde commit.
+
+---
+
+## 19. Plooi-geschiktheid & vouwgordijn-flag
+
+Twee artikel-velden sturen UI-waarschuwingen, niet de berekening.
+
+**`geschikte_plooi`** — Multi-Select Picklist (`Wave`, `Dubbel retour`,
+`Enkel retour`, `Dubbel`, `Enkel`). Komma-/puntkomma-gescheiden in de DB.
+
+- Leeg → geen restrictie (alle plooien toegestaan).
+- Bij keuze van niet-geschikte plooi: waarschuwingsbanner — niet blokkerend.
+- Plooi-dropdown markeert niet-geschikte opties met "⚠ niet geschikt".
+- Aside-sectie *Verwerkingsmogelijkheden* toont badges: groen = toegelaten,
+  doorgestreept-grijs = uitgesloten.
+
+**`geschikt_vouwgordijn`** — Picklist (`Ja`, `Nee`, `Ja (ongevoerd)`).
+Informatief — niet in metrage of prijs.
+
+Volgorde van `PLOOI_OPTIES` (in `db.js`) is leidend — gedeeld door
+`index.html`, de configurator-dropdown en seed-helpers. Wijziging vereist
+ook update van `plooi_*` constanten in `gordijn_configurator.deluge`.
