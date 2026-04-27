@@ -1,0 +1,374 @@
+/* ════════════════════════════════════════════════════════════════════
+   STYLE ENGINE — gedeelde CSS voor style-configurator.html en
+   product-selector.html. Page-specifieke componenten (tabs, cart-panel,
+   raam-cards, top4-grid, profile-summary etc.) blijven inline op de
+   pagina zelf zodat dit bestand stabiel blijft.
+   ════════════════════════════════════════════════════════════════════ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #f4f5f7;
+  --surface:   #ffffff;
+  --border:    #d9dde8;
+  --accent:    #2c5f8a;
+  --accent-lt: #e8f0f8;
+  --accent-dk: #1e4166;
+  --success:   #2e7d32;
+  --success-lt:#e7f5e8;
+  --error:     #c62828;
+  --error-lt:  #fde8e8;
+  --warn:      #e65100;
+  --warn-lt:   #fff3e0;
+  --text:      #1a1a2e;
+  --muted:     #5a6072;
+  --radius:    10px;
+  --shadow:    0 2px 8px rgba(0,0,0,.10);
+  --shadow-lg: 0 6px 24px rgba(20,30,60,.16);
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+/* ── Header ───────────────────────────────────────────────── */
+header {
+  background: var(--accent); color: #fff; padding: 14px 28px;
+  display: flex; align-items: center; gap: 14px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.25);
+  position: sticky; top: 0; z-index: 100;
+}
+header svg { flex-shrink: 0; }
+header h1 { font-size: 1.15rem; font-weight: 600; letter-spacing: .02em; }
+header nav { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+header nav a {
+  color: rgba(255,255,255,.85); text-decoration: none; font-size: .82rem;
+  font-weight: 500; padding: 5px 12px; border-radius: 5px;
+  border: 1px solid rgba(255,255,255,.3); transition: background .15s;
+}
+header nav a:hover { background: rgba(255,255,255,.15); color: #fff; }
+
+.page { max-width: 1100px; margin: 0 auto; padding: 28px 24px 80px; }
+
+/* ── Voortgangsbalk ──────────────────────────────────────── */
+.progress-wrap {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px 22px;
+  box-shadow: var(--shadow); margin-bottom: 24px;
+}
+.progress-row {
+  display: grid; gap: 6px; margin-bottom: 12px;
+  /* grid-template-columns wordt per pagina gezet (3, 4 of 6 kolommen). */
+}
+.progress-step {
+  display: flex; align-items: center; gap: 8px;
+  font-size: .82rem; color: var(--muted); min-width: 0;
+}
+.progress-step .num {
+  flex-shrink: 0; width: 26px; height: 26px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; font-size: .78rem; font-weight: 700;
+  background: #eef0f4; color: var(--muted);
+  border: 2px solid transparent; transition: all .25s;
+}
+.progress-step .label {
+  font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.progress-step.active .num   { background: var(--accent); color: #fff; transform: scale(1.06); }
+.progress-step.active .label { color: var(--accent-dk); }
+.progress-step.done .num     { background: var(--success); color: #fff; }
+.progress-step.done .label   { color: var(--success); }
+.progress-step.skipped       { opacity: .35; }
+.progress-step.skipped .num  { background: #eef0f4; color: var(--muted); }
+.progress-bar { height: 6px; background: #eef0f4; border-radius: 3px; overflow: hidden; }
+.progress-bar .fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--accent), #4a8bc2);
+  transition: width .35s ease;
+}
+
+/* ── Banner-rij bovenaan (cross-link / inspireer-CTA) ───── */
+/* Eén stijl voor zowel "Vrije Keuze ←→ Style Engine" cross-link als de
+   "Inspireer me" knop in Style Engine. Geel-oranje gradient zodat de
+   gebruiker direct ziet dat dit een alternatief / shortcut is. */
+.luck-bar, .switch-bar {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  border: 1px solid #ffcc80; color: #7b3a00;
+  padding: 10px 14px; border-radius: 8px;
+  font-size: .84rem; margin-bottom: 16px;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.luck-bar a, .switch-bar a {
+  color: #5a2c00; font-weight: 700; text-decoration: underline;
+}
+.luck-bar .btn, .switch-bar .btn { color: #5a2c00; border-color: #c98a3c; }
+.luck-bar .btn:hover, .switch-bar .btn:hover { background: rgba(255,255,255,.5); }
+
+/* ── Buttons ────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: inherit; font-size: .82rem; font-weight: 600;
+  padding: 8px 14px; border-radius: 6px; cursor: pointer;
+  border: 1px solid transparent; transition: all .15s; line-height: 1.2;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-dk); }
+.btn-primary:disabled { background: #bcc4d2; cursor: not-allowed; }
+.btn-outline { background: transparent; color: var(--accent); border-color: var(--accent); }
+.btn-outline:hover { background: var(--accent-lt); }
+.btn-ghost   { background: transparent; color: var(--muted); }
+.btn-ghost:hover { background: var(--accent-lt); color: var(--accent-dk); }
+.btn-success { background: var(--success); color: #fff; }
+.btn-success:hover { background: #1f5d23; }
+.btn-danger  { background: transparent; color: var(--error); border-color: var(--error); }
+.btn-danger:hover { background: var(--error-lt); }
+.btn-lg { padding: 11px 20px; font-size: .9rem; }
+.btn-sm { padding: 5px 10px; font-size: .76rem; }
+
+/* ── Stap-card (gedeelde container) ─────────────────────── */
+.step {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 32px 28px 28px;
+  animation: fadeIn .35s ease;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.step-eyebrow {
+  font-size: .72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .12em; color: var(--accent); margin-bottom: 6px;
+}
+.step-title { font-size: 1.6rem; font-weight: 700; color: var(--accent-dk); margin-bottom: 8px; }
+.step-lead  { color: var(--muted); font-size: .95rem; max-width: 720px; margin-bottom: 28px; }
+.step-actions {
+  margin-top: 28px; display: flex; gap: 10px;
+  align-items: center; justify-content: space-between; flex-wrap: wrap;
+}
+
+/* ── Tile-grid (visuele keuze) ─────────────────────────── */
+.tiles {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+}
+.tile {
+  position: relative; cursor: pointer; text-align: left;
+  background: var(--surface); border: 2px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+  display: flex; flex-direction: column;
+  transition: transform .2s, box-shadow .2s, border-color .2s;
+  font-family: inherit; font-size: inherit; color: inherit;
+  padding: 0;
+}
+.tile:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: var(--accent); }
+.tile.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-lt), var(--shadow-lg);
+}
+.tile.selected::after {
+  content: '✓';
+  position: absolute; top: 10px; right: 10px;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--accent); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0,0,0,.25);
+}
+.tile.dimmed { opacity: .35; filter: grayscale(.6); pointer-events: none; }
+.tile-image {
+  aspect-ratio: 4 / 3; width: 100%;
+  position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.tile-image svg {
+  width: 64%; height: 64%;
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,.18));
+}
+.tile-body { padding: 14px 16px 18px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.tile-title { font-size: 1.02rem; font-weight: 700; color: var(--accent-dk); }
+.tile-sub   { font-size: .82rem; color: var(--muted); line-height: 1.45; }
+
+/* ── Tile gradient-achtergronden (placeholders voor showroomfoto's) ── */
+.bg-industrial    { background: linear-gradient(135deg,#5a4938 0%,#2e2a26 50%,#15110f 100%); }
+.bg-scandinavian  { background: linear-gradient(135deg,#fafafa 0%,#e9ecef 60%,#cdd2d8 100%); }
+.bg-modern        { background: linear-gradient(135deg,#dadde2 0%,#a8b0bd 60%,#6c7480 100%); }
+.bg-country       { background: linear-gradient(135deg,#e8d5a8 0%,#c8a571 50%,#8a6438 100%); }
+.bg-warm-earth    { background: linear-gradient(135deg,#fbeacb 0%,#e3c79b 50%,#ad8456 100%); }
+.bg-cool-fresh    { background: linear-gradient(135deg,#f3f5f8 0%,#c8d0db 60%,#7e8a9c 100%); }
+.bg-bold-contrast { background: linear-gradient(135deg,#3a3d44 0%,#1c1e23 50%,#0a0c10 100%); }
+.bg-natural-green { background: linear-gradient(135deg,#d3dfa8 0%,#7d9461 50%,#3e5430 100%); }
+.icon-light { color: rgba(255,255,255,.92); }
+.icon-dark  { color: rgba(0,0,0,.65); }
+
+/* ── Meubel-inventarisatie (gedeeld pattern) ──────────── */
+.furniture-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 14px; }
+.furniture-item {
+  display: grid; grid-template-columns: 110px 1fr auto;
+  gap: 14px; align-items: center;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px 14px;
+}
+.furniture-thumb {
+  width: 110px; height: 80px; border-radius: 6px;
+  background: linear-gradient(135deg,#eef0f4,#dadde2);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--muted); font-size: 1.6rem; cursor: pointer; overflow: hidden; position: relative;
+}
+.furniture-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.furniture-thumb input { display: none; }
+.furniture-fields {
+  display: grid; grid-template-columns: 1fr repeat(3, 80px);
+  gap: 8px; align-items: end;
+}
+.furniture-fields label {
+  font-size: .72rem; font-weight: 600; color: var(--muted);
+  display: flex; flex-direction: column; gap: 3px;
+}
+.furniture-fields input, .furniture-fields select {
+  font: inherit; padding: 6px 8px; border: 1px solid var(--border);
+  border-radius: 5px; font-size: .85rem; background: #fff; color: var(--text);
+}
+.furniture-remove {
+  background: transparent; border: 1px solid var(--border);
+  color: var(--error); border-radius: 5px; padding: 6px 10px;
+  cursor: pointer; font-size: .82rem;
+}
+.furniture-remove:hover { background: var(--error-lt); border-color: var(--error); }
+
+.commerce-bias {
+  background: var(--accent-lt); border: 1px solid #c4d4e6;
+  color: var(--accent-dk); padding: 11px 14px; border-radius: 8px;
+  font-size: .85rem; margin-bottom: 16px;
+}
+
+.add-btn {
+  width: 100%; padding: 10px;
+  border: 2px dashed var(--border); background: transparent;
+  color: var(--muted); border-radius: 8px; cursor: pointer;
+  font-size: .9rem; font-weight: 600; transition: all .15s;
+}
+.add-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── Notice (auto-waarschuwingen) ───────────────────────── */
+.notice {
+  display: flex; align-items: flex-start; gap: 8px;
+  background: var(--warn-lt); border: 1px solid #ffcc80;
+  color: #7b3a00; padding: 9px 12px; border-radius: 6px;
+  font-size: .8rem; margin-bottom: 8px; line-height: 1.45;
+}
+.notice .icon { font-size: 1rem; line-height: 1.2; flex-shrink: 0; }
+
+/* ── Foto-upload (slot-photo voor stap N) ─────────────── */
+.upload-zone {
+  border: 2px dashed var(--border); border-radius: var(--radius);
+  background: #fafbfd; padding: 36px 20px; text-align: center;
+  transition: border-color .2s, background .2s;
+  cursor: pointer; position: relative;
+}
+.upload-zone:hover, .upload-zone.dragover {
+  border-color: var(--accent); background: var(--accent-lt);
+}
+.upload-zone input[type="file"] { display: none; }
+.upload-zone .icon  { font-size: 2.6rem; margin-bottom: 10px; line-height: 1; }
+.upload-zone .title { font-size: 1.05rem; font-weight: 700; color: var(--accent-dk); margin-bottom: 4px; }
+.upload-zone .hint  { font-size: .82rem; color: var(--muted); }
+
+.photo-preview {
+  margin-top: 18px;
+  display: grid; grid-template-columns: minmax(200px, 1fr) 2fr;
+  gap: 18px; align-items: start;
+}
+.photo-preview img {
+  width: 100%; border-radius: 8px;
+  border: 1px solid var(--border); box-shadow: var(--shadow);
+}
+.photo-meta {
+  font-size: .85rem; color: var(--muted);
+  background: #fafbfd; border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px 14px;
+}
+.photo-meta b { color: var(--text); }
+.photo-meta .row { display: flex; justify-content: space-between; padding: 3px 0; }
+
+@media (max-width: 720px) {
+  .photo-preview { grid-template-columns: 1fr; }
+  .furniture-item { grid-template-columns: 1fr; }
+  .furniture-fields { grid-template-columns: 1fr 1fr; }
+}
+
+/* ── Plattegrond-upload (top of page) ─────────────────── */
+.plan-upload {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 12px 16px;
+  margin-bottom: 16px;
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  transition: border-color .15s, background .15s;
+}
+.plan-upload.dragover { border-color: var(--accent); background: var(--accent-lt); }
+.plan-upload.has-file { border-color: var(--success); background: var(--success-lt); }
+.plan-upload .pu-icon  { font-size: 1.6rem; flex-shrink: 0; }
+.plan-upload .pu-thumb {
+  width: 56px; height: 48px; border-radius: 5px;
+  border: 1px solid var(--border); background: #f4f5f7;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; overflow: hidden; flex-shrink: 0;
+}
+.plan-upload .pu-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.plan-upload .pu-text  { flex: 1; min-width: 200px; }
+.plan-upload .pu-title { font-size: .92rem; font-weight: 700; color: var(--accent-dk); margin-bottom: 2px; }
+.plan-upload.has-file .pu-title { color: #1b5e20; }
+.plan-upload .pu-sub   { font-size: .78rem; color: var(--muted); line-height: 1.45; }
+.plan-upload .pu-actions { display: flex; gap: 6px; align-items: center; }
+.plan-upload .pu-actions label { cursor: pointer; }
+.plan-upload input[type="file"] { display: none; }
+
+/* ── Adviseur-CTA (eind van flow) ────────────────────── */
+.final-note {
+  margin-top: 24px; padding: 18px 22px;
+  background: linear-gradient(135deg, var(--success-lt) 0%, #d8efdb 100%);
+  border: 1px solid #a5d6a7; border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(46,125,50,.15);
+  display: flex; align-items: flex-start; gap: 14px;
+  animation: fadeIn .4s ease;
+}
+.final-note-icon  { font-size: 1.6rem; line-height: 1; flex-shrink: 0; }
+.final-note-title { font-size: 1.02rem; font-weight: 700; color: #1b5e20; margin-bottom: 4px; }
+.final-note-body  { font-size: .9rem; color: #2e5b32; line-height: 1.5; }
+
+/* ── JSON output ─────────────────────────────────────── */
+pre.json-out {
+  background: #0f1320; color: #e6e9ef;
+  padding: 18px 20px; border-radius: 8px;
+  font-family: 'Courier New', Consolas, monospace;
+  font-size: .82rem; line-height: 1.55;
+  overflow-x: auto; max-height: 380px; overflow-y: auto;
+}
+pre.json-out .k { color: #82b8ff; }
+pre.json-out .s { color: #d8a76a; }
+pre.json-out .n { color: #b1cf85; }
+pre.json-out .b { color: #ce9178; }
+
+/* ── Toast ───────────────────────────────────────────── */
+.toast {
+  position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+  background: var(--accent-dk); color: #fff;
+  padding: 10px 18px; border-radius: 6px;
+  box-shadow: var(--shadow-lg);
+  font-size: .85rem; font-weight: 600;
+  opacity: 0; pointer-events: none;
+  transition: opacity .2s; z-index: 200;
+}
+.toast.show { opacity: 1; }
+
+/* ── Mobile ──────────────────────────────────────────── */
+@media (max-width: 540px) {
+  .step { padding: 22px 18px 18px; }
+  .step-title { font-size: 1.3rem; }
+  .progress-step .label { display: none; }
+  .progress-row { gap: 4px; }
+}

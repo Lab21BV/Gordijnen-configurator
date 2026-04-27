@@ -4,197 +4,24 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vrije Keuze — Product Selector</title>
+  <link rel="stylesheet" href="style-engine.css" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* ── Page-specifieke CSS voor Vrije Keuze (product-selector) ──
+       Alle gedeelde basis (header, btn, step, tile, upload-zone, toast,
+       final-note, plan-upload, etc.) zit in style-engine.css. Hier alleen
+       wat enkel op deze pagina voorkomt: tabs, filter-bar, product-grid,
+       cart-panel, ctx-card en de 4-staps progress-bar. */
 
-    :root {
-      --bg:        #f4f5f7;
-      --surface:   #ffffff;
-      --border:    #d9dde8;
-      --accent:    #2c5f8a;
-      --accent-lt: #e8f0f8;
-      --accent-dk: #1e4166;
-      --success:   #2e7d32;
-      --success-lt:#e7f5e8;
-      --error:     #c62828;
-      --error-lt:  #fde8e8;
-      --warn:      #e65100;
-      --warn-lt:   #fff3e0;
-      --text:      #1a1a2e;
-      --muted:     #5a6072;
-      --radius:    10px;
-      --shadow:    0 2px 8px rgba(0,0,0,.10);
-      --shadow-lg: 0 6px 24px rgba(20,30,60,.16);
-    }
+    .progress-row { grid-template-columns: repeat(4, 1fr); }
+    /* Compactere padding zodat het twee-koloms layout (main + cart) past. */
+    .page { max-width: 1300px; padding: 22px 22px 80px; }
 
-    body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: var(--bg); color: var(--text);
-      min-height: 100vh; line-height: 1.5;
-    }
-
-    /* ── Header ─────────────────────────────────────────────── */
-    header {
-      background: var(--accent); color: #fff; padding: 14px 28px;
-      display: flex; align-items: center; gap: 14px;
-      box-shadow: 0 2px 6px rgba(0,0,0,.25);
-      position: sticky; top: 0; z-index: 100;
-    }
-    header svg { flex-shrink: 0; }
-    header h1 { font-size: 1.15rem; font-weight: 600; letter-spacing: .02em; }
-    header nav { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
-    header nav a {
-      color: rgba(255,255,255,.85); text-decoration: none; font-size: .82rem;
-      font-weight: 500; padding: 5px 12px; border-radius: 5px;
-      border: 1px solid rgba(255,255,255,.3); transition: background .15s;
-    }
-    header nav a:hover { background: rgba(255,255,255,.15); color: #fff; }
-
-    .page { max-width: 1300px; margin: 0 auto; padding: 22px 22px 80px; }
-
-    /* ── Voortgang ─────────────────────────────────────────── */
-    .progress-wrap {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 16px 20px;
-      box-shadow: var(--shadow); margin-bottom: 20px;
-    }
-    .progress-row {
-      display: grid; grid-template-columns: repeat(4, 1fr);
-      gap: 8px; margin-bottom: 10px;
-    }
-    .progress-step {
-      display: flex; align-items: center; gap: 8px;
-      font-size: .82rem; color: var(--muted);
-    }
-    .progress-step .num {
-      flex-shrink: 0; width: 26px; height: 26px;
-      display: flex; align-items: center; justify-content: center;
-      border-radius: 50%; font-size: .78rem; font-weight: 700;
-      background: #eef0f4; color: var(--muted);
-      transition: all .25s;
-    }
-    .progress-step .label { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .progress-step.active .num   { background: var(--accent); color: #fff; transform: scale(1.06); }
-    .progress-step.active .label { color: var(--accent-dk); }
-    .progress-step.done .num     { background: var(--success); color: #fff; }
-    .progress-step.done .label   { color: var(--success); }
-    .progress-bar { height: 6px; background: #eef0f4; border-radius: 3px; overflow: hidden; }
-    .progress-bar .fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--accent), #4a8bc2);
-      width: 0%; transition: width .35s ease;
-    }
-
-    .switch-bar {
-      background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
-      border: 1px solid #ffcc80; color: #7b3a00;
-      padding: 10px 14px; border-radius: 8px;
-      font-size: .85rem; margin-bottom: 16px;
-      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-    }
-    .switch-bar a { color: #5a2c00; font-weight: 700; text-decoration: underline; }
-
-    /* ── Buttons ───────────────────────────────────────────── */
-    .btn {
-      display: inline-flex; align-items: center; gap: 6px;
-      font-family: inherit; font-size: .82rem; font-weight: 600;
-      padding: 8px 14px; border-radius: 6px; cursor: pointer;
-      border: 1px solid transparent; transition: all .15s; line-height: 1.2;
-    }
-    .btn-primary { background: var(--accent); color: #fff; }
-    .btn-primary:hover { background: var(--accent-dk); }
-    .btn-primary:disabled { background: #bcc4d2; cursor: not-allowed; }
-    .btn-outline { background: transparent; color: var(--accent); border-color: var(--accent); }
-    .btn-outline:hover { background: var(--accent-lt); }
-    .btn-ghost   { background: transparent; color: var(--muted); }
-    .btn-ghost:hover { background: var(--accent-lt); color: var(--accent-dk); }
-    .btn-success { background: var(--success); color: #fff; }
-    .btn-success:hover { background: #1f5d23; }
-    .btn-danger  { background: transparent; color: var(--error); border-color: var(--error); }
-    .btn-danger:hover { background: var(--error-lt); }
-    .btn-lg { padding: 11px 20px; font-size: .9rem; }
-    .btn-sm { padding: 5px 10px; font-size: .76rem; }
-
-    /* ── Layout: main + cart ───────────────────────────────── */
+    /* ── Layout: main + cart (sticky right column op desktop) ── */
     .layout {
       display: grid; grid-template-columns: 1fr 320px; gap: 20px;
       align-items: start;
     }
     @media (max-width: 980px) { .layout { grid-template-columns: 1fr; } }
-
-    /* ── Step card ─────────────────────────────────────────── */
-    .step {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); box-shadow: var(--shadow);
-      padding: 26px 24px; animation: fadeIn .3s ease;
-    }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-    .step-eyebrow {
-      font-size: .72rem; font-weight: 700; text-transform: uppercase;
-      letter-spacing: .12em; color: var(--accent); margin-bottom: 6px;
-    }
-    .step-title { font-size: 1.5rem; font-weight: 700; color: var(--accent-dk); margin-bottom: 8px; }
-    .step-lead { color: var(--muted); font-size: .92rem; margin-bottom: 22px; max-width: 720px; }
-    .step-actions {
-      margin-top: 22px; display: flex; gap: 10px;
-      align-items: center; justify-content: space-between; flex-wrap: wrap;
-    }
-
-    /* ── Scope tegels ──────────────────────────────────────── */
-    .scope-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 14px; margin-bottom: 12px;
-    }
-    .scope-tile {
-      cursor: pointer; user-select: none;
-      background: var(--surface); border: 2px solid var(--border);
-      border-radius: 8px; padding: 18px 16px;
-      display: flex; flex-direction: column; gap: 6px;
-      transition: all .15s;
-    }
-    .scope-tile:hover { border-color: var(--accent); box-shadow: var(--shadow); transform: translateY(-2px); }
-    .scope-tile.selected {
-      border-color: var(--success);
-      box-shadow: 0 0 0 3px var(--success-lt);
-    }
-    .scope-tile.disabled { opacity: .35; cursor: not-allowed; pointer-events: none; }
-    .scope-tile .icon { font-size: 1.6rem; }
-    .scope-tile .name { font-size: 1rem; font-weight: 700; color: var(--accent-dk); }
-    .scope-tile .sub  { font-size: .82rem; color: var(--muted); line-height: 1.4; }
-    .scope-tile .future { font-size: .68rem; font-weight: 600; color: var(--warn); text-transform: uppercase; letter-spacing: .04em; }
-
-    /* ── Furniture / inventaris (deelt patroon met Style Engine) ── */
-    .furniture-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
-    .furniture-item {
-      display: grid; grid-template-columns: 90px 1fr auto;
-      gap: 12px; align-items: center;
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 8px; padding: 10px 12px;
-    }
-    .furniture-thumb {
-      width: 90px; height: 70px; border-radius: 6px;
-      background: linear-gradient(135deg,#eef0f4,#dadde2);
-      display: flex; align-items: center; justify-content: center;
-      color: var(--muted); font-size: 1.4rem; cursor: pointer; overflow: hidden;
-    }
-    .furniture-thumb img { width: 100%; height: 100%; object-fit: cover; }
-    .furniture-thumb input { display: none; }
-    .furniture-fields { display: grid; grid-template-columns: 1fr repeat(3, 70px); gap: 6px; align-items: end; }
-    .furniture-fields label {
-      font-size: .7rem; font-weight: 600; color: var(--muted);
-      display: flex; flex-direction: column; gap: 2px;
-    }
-    .furniture-fields input, .furniture-fields select {
-      font: inherit; padding: 5px 7px; border: 1px solid var(--border);
-      border-radius: 4px; font-size: .82rem; background: #fff; color: var(--text);
-    }
-    .add-btn {
-      width: 100%; padding: 10px;
-      border: 2px dashed var(--border); background: transparent;
-      color: var(--muted); border-radius: 8px; cursor: pointer;
-      font-size: .9rem; font-weight: 600; transition: all .15s;
-    }
-    .add-btn:hover { border-color: var(--accent); color: var(--accent); }
 
     /* ── Tabs (productgroepen) ──────────────────────────── */
     .tabs {
@@ -221,10 +48,7 @@
       display: flex; flex-wrap: wrap; gap: 8px;
       align-items: center; margin-bottom: 14px;
     }
-    .filter-bar .filter-label {
-      font-size: .76rem; font-weight: 700;
-      color: var(--muted); margin-right: 4px;
-    }
+    .filter-bar .filter-label { font-size: .76rem; font-weight: 700; color: var(--muted); margin-right: 4px; }
     .filter-chip {
       cursor: pointer; user-select: none;
       font-size: .76rem; font-weight: 600;
@@ -232,10 +56,8 @@
       background: #f4f5f7; border: 1px solid var(--border);
       color: var(--muted); transition: all .15s;
     }
-    .filter-chip:hover { border-color: var(--accent); color: var(--accent-dk); }
-    .filter-chip.active {
-      background: var(--accent); color: #fff; border-color: var(--accent);
-    }
+    .filter-chip:hover  { border-color: var(--accent); color: var(--accent-dk); }
+    .filter-chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 
     /* ── Product grid ─────────────────────────────────────── */
     .product-grid {
@@ -243,7 +65,7 @@
       gap: 14px;
     }
     .product-card {
-      cursor: pointer; user-select: none;
+      cursor: pointer; user-select: none; position: relative;
       background: var(--surface); border: 2px solid var(--border);
       border-radius: 8px; overflow: hidden;
       display: flex; flex-direction: column;
@@ -254,27 +76,6 @@
       border-color: var(--success);
       box-shadow: 0 0 0 3px var(--success-lt);
     }
-    .product-preview {
-      aspect-ratio: 4/3; width: 100%; position: relative; overflow: hidden;
-    }
-    .product-preview .pattern-vis {
-      position: absolute; inset: 0;
-      background-size: 40px 40px;
-    }
-    .product-body { padding: 10px 12px; flex: 1; }
-    .product-name {
-      font-size: .88rem; font-weight: 700; color: var(--accent-dk);
-      margin-bottom: 2px; line-height: 1.3;
-    }
-    .product-meta {
-      font-size: .72rem; color: var(--muted); line-height: 1.4;
-    }
-    .product-id {
-      font-family: 'Courier New', monospace; font-size: .68rem;
-      color: var(--accent); background: var(--accent-lt);
-      padding: 1px 5px; border-radius: 3px;
-      display: inline-block; margin-top: 5px;
-    }
     .product-card.in-cart::after {
       content: '✓'; position: absolute; top: 8px; right: 8px;
       width: 24px; height: 24px; border-radius: 50%;
@@ -283,7 +84,17 @@
       font-size: .9rem; font-weight: 700;
       box-shadow: 0 1px 4px rgba(0,0,0,.25);
     }
-    .product-card { position: relative; }
+    .product-preview { aspect-ratio: 4/3; width: 100%; position: relative; overflow: hidden; }
+    .product-preview .pattern-vis { position: absolute; inset: 0; background-size: 40px 40px; }
+    .product-body { padding: 10px 12px; flex: 1; }
+    .product-name { font-size: .88rem; font-weight: 700; color: var(--accent-dk); margin-bottom: 2px; line-height: 1.3; }
+    .product-meta { font-size: .72rem; color: var(--muted); line-height: 1.4; }
+    .product-id {
+      font-family: 'Courier New', monospace; font-size: .68rem;
+      color: var(--accent); background: var(--accent-lt);
+      padding: 1px 5px; border-radius: 3px;
+      display: inline-block; margin-top: 5px;
+    }
 
     /* ── Window context (boven raamdecor catalog) ─────────── */
     .ctx-card {
@@ -294,8 +105,14 @@
       font-size: .82rem; font-weight: 700; color: var(--accent-dk);
       margin-bottom: 8px;
     }
-    .ctx-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
-    .ctx-fields label { font-size: .72rem; font-weight: 600; color: var(--muted); display: flex; flex-direction: column; gap: 3px; }
+    .ctx-fields {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+    }
+    .ctx-fields label {
+      font-size: .72rem; font-weight: 600; color: var(--muted);
+      display: flex; flex-direction: column; gap: 3px;
+    }
     .ctx-fields select, .ctx-fields input {
       font: inherit; padding: 6px 8px; border: 1px solid var(--border);
       border-radius: 5px; font-size: .82rem; background: #fff; color: var(--text);
@@ -308,13 +125,8 @@
       padding: 18px; position: sticky; top: 76px;
       max-height: calc(100vh - 96px); overflow-y: auto;
     }
-    .cart-title {
-      font-size: 1rem; font-weight: 700; color: var(--accent-dk);
-      margin-bottom: 4px;
-    }
-    .cart-sub {
-      font-size: .76rem; color: var(--muted); margin-bottom: 14px;
-    }
+    .cart-title { font-size: 1rem; font-weight: 700; color: var(--accent-dk); margin-bottom: 4px; }
+    .cart-sub   { font-size: .76rem; color: var(--muted); margin-bottom: 14px; }
     .cart-section { margin-bottom: 14px; }
     .cart-section-title {
       font-size: .68rem; font-weight: 700; text-transform: uppercase;
@@ -326,9 +138,7 @@
       padding: 7px 0; border-bottom: 1px dashed var(--border);
     }
     .cart-item:last-child { border-bottom: none; }
-    .cart-item .swatch {
-      width: 36px; height: 28px; border-radius: 4px; border: 1px solid var(--border);
-    }
+    .cart-item .swatch { width: 36px; height: 28px; border-radius: 4px; border: 1px solid var(--border); }
     .cart-item .name { font-size: .82rem; font-weight: 600; color: var(--accent-dk); line-height: 1.25; }
     .cart-item .id   { font-family: 'Courier New', monospace; font-size: .68rem; color: var(--muted); }
     .cart-item button {
@@ -354,88 +164,7 @@
       text-decoration: underline; cursor: pointer;
     }
 
-    /* ── Foto upload (stap 4) ─────────────────────────────── */
-    .upload-zone {
-      border: 2px dashed var(--border); background: #fafbfd;
-      border-radius: var(--radius); padding: 32px 18px; text-align: center;
-      transition: border-color .2s, background .2s; cursor: pointer; position: relative;
-    }
-    .upload-zone:hover, .upload-zone.dragover {
-      border-color: var(--accent); background: var(--accent-lt);
-    }
-    .upload-zone input[type="file"] { display: none; }
-    .upload-zone .icon { font-size: 2.4rem; margin-bottom: 8px; }
-    .upload-zone .title { font-size: 1rem; font-weight: 700; color: var(--accent-dk); }
-    .upload-zone .hint  { font-size: .8rem; color: var(--muted); }
-    .photo-preview { margin-top: 16px; display: grid; grid-template-columns: 1fr 2fr; gap: 14px; }
-    .photo-preview img { width: 100%; border-radius: 6px; border: 1px solid var(--border); box-shadow: var(--shadow); }
-    .photo-meta {
-      font-size: .82rem; color: var(--muted);
-      background: #fafbfd; border: 1px solid var(--border);
-      border-radius: 6px; padding: 10px 12px;
-    }
-    .photo-meta .row { display: flex; justify-content: space-between; padding: 2px 0; }
-    @media (max-width: 720px) { .photo-preview { grid-template-columns: 1fr; } }
-
-    pre.json-out {
-      background: #0f1320; color: #e6e9ef; padding: 16px 18px; border-radius: 8px;
-      font-family: 'Courier New', Consolas, monospace; font-size: .8rem; line-height: 1.55;
-      overflow-x: auto; max-height: 360px; overflow-y: auto;
-    }
-    pre.json-out .k { color: #82b8ff; } pre.json-out .s { color: #d8a76a; }
-    pre.json-out .n { color: #b1cf85; } pre.json-out .b { color: #ce9178; }
-
-    .final-note {
-      margin-top: 22px; padding: 16px 20px;
-      background: linear-gradient(135deg, var(--success-lt) 0%, #d8efdb 100%);
-      border: 1px solid #a5d6a7; border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(46,125,50,.15);
-      display: flex; align-items: flex-start; gap: 12px;
-    }
-    .final-note-icon { font-size: 1.5rem; flex-shrink: 0; }
-    .final-note-title { font-size: 1rem; font-weight: 700; color: #1b5e20; margin-bottom: 3px; }
-    .final-note-body  { font-size: .88rem; color: #2e5b32; line-height: 1.5; }
-
-    /* ── Plattegrond / bouwtekening upload (top of page) ── */
-    .plan-upload {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 12px 16px;
-      margin-bottom: 16px;
-      display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
-      transition: border-color .15s, background .15s;
-    }
-    .plan-upload.dragover { border-color: var(--accent); background: var(--accent-lt); }
-    .plan-upload.has-file { border-color: var(--success); background: var(--success-lt); }
-    .plan-upload .pu-icon { font-size: 1.6rem; flex-shrink: 0; }
-    .plan-upload .pu-thumb {
-      width: 56px; height: 48px; border-radius: 5px;
-      border: 1px solid var(--border); background: #f4f5f7;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.4rem; overflow: hidden; flex-shrink: 0;
-    }
-    .plan-upload .pu-thumb img { width: 100%; height: 100%; object-fit: cover; }
-    .plan-upload .pu-text { flex: 1; min-width: 200px; }
-    .plan-upload .pu-title { font-size: .92rem; font-weight: 700; color: var(--accent-dk); margin-bottom: 2px; }
-    .plan-upload .pu-sub   { font-size: .78rem; color: var(--muted); line-height: 1.45; }
-    .plan-upload.has-file .pu-title { color: #1b5e20; }
-    .plan-upload .pu-actions { display: flex; gap: 6px; align-items: center; }
-    .plan-upload .pu-actions label { cursor: pointer; }
-    .plan-upload input[type="file"] { display: none; }
-
-    .toast {
-      position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-      background: var(--accent-dk); color: #fff; padding: 9px 16px;
-      border-radius: 6px; box-shadow: var(--shadow-lg);
-      font-size: .85rem; font-weight: 600; opacity: 0; pointer-events: none;
-      transition: opacity .2s; z-index: 200;
-    }
-    .toast.show { opacity: 1; }
-
     @media (max-width: 540px) {
-      .progress-step .label { display: none; }
-      .step { padding: 18px 16px; }
-      .furniture-item { grid-template-columns: 1fr; }
-      .furniture-fields { grid-template-columns: 1fr 1fr; }
       .cart-panel { position: static; max-height: none; }
     }
   </style>
@@ -599,13 +328,38 @@ const state = {
   floorPlanDataUrl: null,
 };
 
-// ── Scope-tegels (multi-select) ─────────────────────────────
+// ── Scope-tegels (multi-select) — zelfde tile-stijl als Style Engine ──
 const SCOPES = [
-  { id: 'flooring',     label: 'Vloer',        sub: 'PVC, Laminaat of Parket — plank of visgraat.', icon: '🪵' },
-  { id: 'window_decor', label: 'Raamdecoratie',sub: 'Inbetween, gordijnen, jaloezie, duette of rolgordijn.', icon: '🪟' },
-  { id: 'wall',         label: 'Muur',         sub: 'Behang en schilderwerk — binnenkort beschikbaar.',     icon: '🎨', future: true },
-  { id: 'furniture',    label: 'Meubelen',     sub: 'Nieuwe bank, tafel of kast — binnenkort beschikbaar.', icon: '🛋️', future: true },
+  { id: 'flooring',     label: 'Vloer',        sub: 'PVC, Laminaat of Parket — plank of visgraat.',
+    bgClass: 'bg-warm-earth',    iconColor: 'icon-dark' },
+  { id: 'window_decor', label: 'Raamdecoratie',sub: 'Inbetween, gordijnen, jaloezie, duette of rolgordijn.',
+    bgClass: 'bg-cool-fresh',    iconColor: 'icon-dark' },
+  { id: 'wall',         label: 'Muur',         sub: 'Behang en schilderwerk — binnenkort beschikbaar.',
+    bgClass: 'bg-natural-green', iconColor: 'icon-light', future: true },
+  { id: 'furniture',    label: 'Meubelen',     sub: 'Nieuwe bank, tafel of kast — binnenkort beschikbaar.',
+    bgClass: 'bg-bold-contrast', iconColor: 'icon-light', future: true },
 ];
+
+// SVG-iconen voor de scope-tegels — identieke set als in style-configurator.html
+// (gemirrored, niet ge-importeerd, omdat beide pagina's standalone moeten blijven).
+const SCOPE_ICONS = {
+  flooring: `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M8 22h48M8 32h48M8 42h48M8 52h48"/><path d="M20 22v30M40 22v30"/>
+  </svg>`,
+  window_decor: `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="14" y="10" width="36" height="44" rx="2"/>
+    <path d="M14 18h36M32 18v36M22 18v36M42 18v36"/>
+  </svg>`,
+  wall: `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="8" y="10" width="48" height="44"/>
+    <path d="M8 24h48M8 38h48"/><path d="M22 10v14M40 24v14M20 38v16"/>
+  </svg>`,
+  furniture: `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10 30h44v18H10z"/>
+    <path d="M14 30v-8a4 4 0 0 1 4-4h28a4 4 0 0 1 4 4v8"/>
+    <path d="M14 48v6M50 48v6"/><path d="M14 36h36"/>
+  </svg>`,
+};
 
 // ── Rendering helpers ───────────────────────────────────────
 function $(s) { return document.querySelector(s); }
@@ -726,7 +480,7 @@ function renderStep1() {
     <h2 class="step-title">Wat wil je in je nieuwe interieur aanpassen?</h2>
     <p class="step-lead">Kies één of meerdere zones. Per zone krijg je in stap 3 een eigen catalogus
        met filters en een live texture-preview. <em>Muur en Meubelen</em> komen in een volgende release.</p>
-    <div class="scope-grid" id="scopeGrid"></div>
+    <div class="tiles" id="scopeGrid"></div>
     <div class="step-actions">
       <span style="font-size:.78rem;color:var(--muted)" id="scopeHint">Selecteer minimaal één scope om verder te gaan.</span>
       <button class="btn btn-primary btn-lg" type="button" id="next1" disabled>Volgende →</button>
@@ -748,16 +502,27 @@ function renderStep1() {
       : `${state.scope.length} scope(s) gekozen — klik op Volgende.`;
   }
 
+  // Render gedeelde .tile component (zelfde stijl als Style Engine).
+  // Future-scopes (Muur, Meubelen) gebruiken .dimmed zodat ze visueel matchen
+  // met het uitgesloten-palette patroon in Style Engine.
   SCOPES.forEach(s => {
-    const tile = el('div', {
-      class: `scope-tile ${s.future ? 'disabled' : ''} ${state.scope.includes(s.id) ? 'selected' : ''}`,
+    const tile = el('button', {
+      type: 'button',
+      class: `tile ${s.future ? 'dimmed' : ''} ${state.scope.includes(s.id) ? 'selected' : ''}`,
       'data-id': s.id,
     });
+    const futureBadge = s.future
+      ? '<div style="position:absolute;top:8px;left:8px;background:rgba(255,255,255,.85);color:var(--warn);font-size:.62rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 7px;border-radius:10px">Binnenkort</div>'
+      : '';
     tile.innerHTML = `
-      <div class="icon">${s.icon}</div>
-      <div class="name">${escHtml(s.label)}</div>
-      <div class="sub">${escHtml(s.sub)}</div>
-      ${s.future ? '<div class="future">Binnenkort</div>' : ''}`;
+      ${futureBadge}
+      <div class="tile-image ${s.bgClass}">
+        <span class="${s.iconColor}">${SCOPE_ICONS[s.id] || ''}</span>
+      </div>
+      <div class="tile-body">
+        <div class="tile-title">${escHtml(s.label)}</div>
+        <div class="tile-sub">${escHtml(s.sub)}</div>
+      </div>`;
     if (!s.future) {
       tile.addEventListener('click', () => {
         if (state.scope.includes(s.id)) state.scope = state.scope.filter(x => x !== s.id);

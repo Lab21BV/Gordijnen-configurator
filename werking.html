@@ -970,8 +970,13 @@ function filterRaamOplossingen(goals: string[]): RaamOplossing[] {
       <tr><td>Productkeuze</td><td>AI suggereert (Top 4 uit matrix)</td><td>Klant kiest zelf uit grid</td></tr>
       <tr><td>Output naar AI</td><td><code>style_id</code> + <code>color_palette_id</code> + tags</td><td><code>Product_ID</code> + <code>texture_map</code> per item</td></tr>
       <tr><td>Cross-link</td><td>"🛍️ Vrije keuze" in luck-bar</td><td>"Help me kiezen op basis van mijn stijl" in switch-bar</td></tr>
+      <tr><td>Visueel design</td><td colspan="2">Identiek &mdash; gedeelde stylesheet <code>style-engine.css</code></td></tr>
     </tbody>
   </table>
+
+  <h3>Gedeelde stylesheet (DRY)</h3>
+  <p>Beide pagina's linken <code>style-engine.css</code> voor alle visuele basis: header, voortgangsbalk, knoppen, <code>.tile</code>, <code>.upload-zone</code>, <code>.toast</code>, <code>.final-note</code>, <code>.plan-upload</code>, gradient-achtergronden en mobile-tweaks. De scope-tegels in stap 1 (Vrije Keuze) en stap 4 (Style Engine) gebruiken nu dezelfde <code>.tile</code> + <code>bg-*</code> + SVG-icoon combinatie zodat de twee paden 1-op-1 dezelfde look-and-feel hebben.</p>
+  <p>Page-specifieke componenten (Style Engine: <em>raam-cards, top4-grid, profile-summary, advanced-details</em>; Vrije Keuze: <em>tabs, filter-bar, product-grid, cart-panel, ctx-card</em>) blijven inline op de pagina zelf &mdash; dat is bewust, ze hoeven niet gedeeld te worden en houden het CSS-bestand klein.</p>
 
   <a class="top-link" href="#top">&uarr; Terug naar boven</a>
 
