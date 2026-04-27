@@ -216,6 +216,7 @@
   <nav>
     <a href="index.html">&larr; Configurator</a>
     <a href="style-configurator.html">&#10024; Style Engine</a>
+    <a href="product-selector.html">&#128722; Vrije keuze</a>
     <a href="import.html">&larr; Artikel import</a>
     <a href="berekeningsregels.html">&#128218; Berekeningsregels</a>
   </nav>
@@ -244,6 +245,7 @@
       <li><a href="#flow-plooi-geschikt">Flow: plooi-geschiktheid &amp; vouwgordijn-flag</a></li>
       <li><a href="#effect-matrix">Effect-matrix: welk veld stuurt wat?</a></li>
       <li><a href="#flow-style-engine">Flow: Style Engine (interieur-configurator)</a></li>
+      <li><a href="#flow-vrije-keuze">Flow: Vrije Keuze (product-selector)</a></li>
     </ol>
   </div>
 
@@ -890,6 +892,79 @@ function filterRaamOplossingen(goals: string[]): RaamOplossing[] {
     <li><strong>Adviseur-CTA</strong> &mdash; na het genereren van het profiel verschijnt een groene callout: <em>"Je persoonlijke stijl is vertaald naar jouw ruimte. Vraag nu een van onze adviseurs voor de fysieke stalen van dit ontwerp."</em></li>
     <li><strong>Geen Supabase-koppeling</strong> &mdash; alle state leeft in de browser; foto's (woonkamer + meubels) worden als base64 ingebed in de uiteindelijke JSON.</li>
   </ul>
+
+  <!-- ────────── VRIJE KEUZE ────────── -->
+  <h2 id="flow-vrije-keuze">12. Flow: Vrije Keuze (product-selector)</h2>
+  <p>De pagina <a href="product-selector.html"><code>product-selector.html</code></a> is een <em>parallel pad</em> voor klanten die geen stijl- of kleuradvies willen, maar direct uit een catalogus kiezen. De Style Engine en de Product Selector zijn cross-linked &mdash; de gebruiker kan op elk moment switchen.</p>
+
+  <div class="flow">
+    <div class="flow-title">4-staps shopping-flow &mdash; van scope tot render-input</div>
+
+    <div class="flow-row"><div class="node node-input">Stap 1 &mdash; Scope (multi-select)<small>Vloer / Raamdecoratie / Muur* / Meubels* (* = roadmap)</small></div></div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-input">Stap 2 &mdash; Eigen meubels<small>foto + L&times;B&times;H per object dat blijft staan</small></div></div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row">
+      <div class="node node-input">Stap 3 &mdash; Producten<small>tabs (Vloer / Raamdecor) + filters + grid + winkelmandje</small></div>
+      <div class="node node-decide" style="margin-left:14px">Validatie<br/><small>kozijn-conflict?<br/>combinatie-assistent?</small></div>
+    </div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-input">Stap 4 &mdash; Foto-upload<small>JPG / PNG / WEBP &mdash; ruimte van de klant</small></div></div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-output">Free-Selection JSON<small>mode: "free_selection" + Product_IDs + Texture_Maps</small></div></div>
+  </div>
+
+  <h3>Validatie-regels in de winkelmand</h3>
+  <p>Het winkelmandje (sticky zijpaneel) draait <code>validateCart()</code> live na elke productwijziging en toont waarschuwingen + alternatieven:</p>
+  <ul>
+    <li><strong>Kozijn-conflict</strong> &mdash; kunststof of aluminium kozijn + product dat alleen <code>drill</code> ondersteunt → boren niet toegestaan, suggereer Duette/Rolgordijn met klem-bevestiging.</li>
+    <li><strong>Draai-/kiepraam</strong> &mdash; geselecteerd product blokkeert het kantelen → suggereer Duette of Jaloezie met top-down/bottom-up.</li>
+    <li><strong>Combinatie-assistent</strong> &mdash; alleen Inbetween geselecteerd → "Geen privacy 's avonds; combineer met Duette of Rolgordijn".</li>
+    <li><strong>Doel zonder match</strong> &mdash; filter "Verduistering" actief maar geen verduisterend product in de mand → expliciete waarschuwing.</li>
+  </ul>
+  <p>Elke notice heeft een klikbaar alternatief; één klik voegt het voorgestelde product direct aan de mand toe.</p>
+
+  <h3>Free-Selection JSON-output</h3>
+  <p>Het schema volgt de briefing exact, met arrays waar combinaties mogelijk zijn (Inbetween + Duette). <code>texture_map</code> wijst naar een statische CDN-URL die Kevin's diffusion-pipeline inlaadt.</p>
+  <pre><code>{
+  "mode": "free_selection",
+  "project_scope": ["flooring", "window_decor"],
+  "selected_products": {
+    "floor": {
+      "id": "PVC_OAK_HERR_001", "pattern": "visgraat", "material": "PVC",
+      "texture_map": "/textures/floor/PVC_OAK_HERR_001.jpg"
+    },
+    "window": [
+      { "id": "DUE_BLK_003", "product_type": "duette",
+        "mount": "clamp_on_frame",
+        "texture_map": "/textures/window/DUE_BLK_003.jpg" },
+      { "id": "INB_LIN_NAT_001", "product_type": "inbetween",
+        "mount": "wall_mount",
+        "texture_map": "/textures/window/INB_LIN_NAT_001.jpg" }
+    ]
+  },
+  "window_context": { "frame_material": "kunststof", "draaikiep": true, "mounting": "in_de_dag" },
+  "custom_furniture": [
+    { "id": "user_sofa_1", "type": "Bank", "dimensions": [220, 90, 80], "image_url": "data:&hellip;" }
+  ],
+  "room_photo": "data:image/jpeg;base64,&hellip;",
+  "validation_notices": [
+    { "icon": "ℹ", "message": "Draai-/kiepraam: gekozen producten blokkeren kantelen &hellip;" }
+  ],
+  "meta": { "floor_count": 1, "window_count": 2, "furniture_count": 1, "&hellip;": "&hellip;" }
+}</code></pre>
+
+  <h3>Verschillen Style Engine vs. Vrije Keuze</h3>
+  <table class="effect-table">
+    <thead><tr><th style="width:30%">Aspect</th><th>Style Engine</th><th>Vrije Keuze</th></tr></thead>
+    <tbody>
+      <tr><td>Instap</td><td>Stijl + kleur als anker</td><td>Direct in de catalogus</td></tr>
+      <tr><td>JSON-mode</td><td><em>(impliciet)</em></td><td><code>"mode": "free_selection"</code></td></tr>
+      <tr><td>Productkeuze</td><td>AI suggereert (Top 4 uit matrix)</td><td>Klant kiest zelf uit grid</td></tr>
+      <tr><td>Output naar AI</td><td><code>style_id</code> + <code>color_palette_id</code> + tags</td><td><code>Product_ID</code> + <code>texture_map</code> per item</td></tr>
+      <tr><td>Cross-link</td><td>"🛍️ Vrije keuze" in luck-bar</td><td>"Help me kiezen op basis van mijn stijl" in switch-bar</td></tr>
+    </tbody>
+  </table>
 
   <a class="top-link" href="#top">&uarr; Terug naar boven</a>
 

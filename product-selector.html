@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vrije Keuze — Product Selector</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #f4f5f7;
+      --surface:   #ffffff;
+      --border:    #d9dde8;
+      --accent:    #2c5f8a;
+      --accent-lt: #e8f0f8;
+      --accent-dk: #1e4166;
+      --success:   #2e7d32;
+      --success-lt:#e7f5e8;
+      --error:     #c62828;
+      --error-lt:  #fde8e8;
+      --warn:      #e65100;
+      --warn-lt:   #fff3e0;
+      --text:      #1a1a2e;
+      --muted:     #5a6072;
+      --radius:    10px;
+      --shadow:    0 2px 8px rgba(0,0,0,.10);
+      --shadow-lg: 0 6px 24px rgba(20,30,60,.16);
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg); color: var(--text);
+      min-height: 100vh; line-height: 1.5;
+    }
+
+    /* ── Header ─────────────────────────────────────────────── */
+    header {
+      background: var(--accent); color: #fff; padding: 14px 28px;
+      display: flex; align-items: center; gap: 14px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.25);
+      position: sticky; top: 0; z-index: 100;
+    }
+    header svg { flex-shrink: 0; }
+    header h1 { font-size: 1.15rem; font-weight: 600; letter-spacing: .02em; }
+    header nav { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+    header nav a {
+      color: rgba(255,255,255,.85); text-decoration: none; font-size: .82rem;
+      font-weight: 500; padding: 5px 12px; border-radius: 5px;
+      border: 1px solid rgba(255,255,255,.3); transition: background .15s;
+    }
+    header nav a:hover { background: rgba(255,255,255,.15); color: #fff; }
+
+    .page { max-width: 1300px; margin: 0 auto; padding: 22px 22px 80px; }
+
+    /* ── Voortgang ─────────────────────────────────────────── */
+    .progress-wrap {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px 20px;
+      box-shadow: var(--shadow); margin-bottom: 20px;
+    }
+    .progress-row {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 8px; margin-bottom: 10px;
+    }
+    .progress-step {
+      display: flex; align-items: center; gap: 8px;
+      font-size: .82rem; color: var(--muted);
+    }
+    .progress-step .num {
+      flex-shrink: 0; width: 26px; height: 26px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%; font-size: .78rem; font-weight: 700;
+      background: #eef0f4; color: var(--muted);
+      transition: all .25s;
+    }
+    .progress-step .label { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .progress-step.active .num   { background: var(--accent); color: #fff; transform: scale(1.06); }
+    .progress-step.active .label { color: var(--accent-dk); }
+    .progress-step.done .num     { background: var(--success); color: #fff; }
+    .progress-step.done .label   { color: var(--success); }
+    .progress-bar { height: 6px; background: #eef0f4; border-radius: 3px; overflow: hidden; }
+    .progress-bar .fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), #4a8bc2);
+      width: 0%; transition: width .35s ease;
+    }
+
+    .switch-bar {
+      background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+      border: 1px solid #ffcc80; color: #7b3a00;
+      padding: 10px 14px; border-radius: 8px;
+      font-size: .85rem; margin-bottom: 16px;
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .switch-bar a { color: #5a2c00; font-weight: 700; text-decoration: underline; }
+
+    /* ── Buttons ───────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: inherit; font-size: .82rem; font-weight: 600;
+      padding: 8px 14px; border-radius: 6px; cursor: pointer;
+      border: 1px solid transparent; transition: all .15s; line-height: 1.2;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-dk); }
+    .btn-primary:disabled { background: #bcc4d2; cursor: not-allowed; }
+    .btn-outline { background: transparent; color: var(--accent); border-color: var(--accent); }
+    .btn-outline:hover { background: var(--accent-lt); }
+    .btn-ghost   { background: transparent; color: var(--muted); }
+    .btn-ghost:hover { background: var(--accent-lt); color: var(--accent-dk); }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-success:hover { background: #1f5d23; }
+    .btn-danger  { background: transparent; color: var(--error); border-color: var(--error); }
+    .btn-danger:hover { background: var(--error-lt); }
+    .btn-lg { padding: 11px 20px; font-size: .9rem; }
+    .btn-sm { padding: 5px 10px; font-size: .76rem; }
+
+    /* ── Layout: main + cart ───────────────────────────────── */
+    .layout {
+      display: grid; grid-template-columns: 1fr 320px; gap: 20px;
+      align-items: start;
+    }
+    @media (max-width: 980px) { .layout { grid-template-columns: 1fr; } }
+
+    /* ── Step card ─────────────────────────────────────────── */
+    .step {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 26px 24px; animation: fadeIn .3s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .step-eyebrow {
+      font-size: .72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .12em; color: var(--accent); margin-bottom: 6px;
+    }
+    .step-title { font-size: 1.5rem; font-weight: 700; color: var(--accent-dk); margin-bottom: 8px; }
+    .step-lead { color: var(--muted); font-size: .92rem; margin-bottom: 22px; max-width: 720px; }
+    .step-actions {
+      margin-top: 22px; display: flex; gap: 10px;
+      align-items: center; justify-content: space-between; flex-wrap: wrap;
+    }
+
+    /* ── Scope tegels ──────────────────────────────────────── */
+    .scope-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px; margin-bottom: 12px;
+    }
+    .scope-tile {
+      cursor: pointer; user-select: none;
+      background: var(--surface); border: 2px solid var(--border);
+      border-radius: 8px; padding: 18px 16px;
+      display: flex; flex-direction: column; gap: 6px;
+      transition: all .15s;
+    }
+    .scope-tile:hover { border-color: var(--accent); box-shadow: var(--shadow); transform: translateY(-2px); }
+    .scope-tile.selected {
+      border-color: var(--success);
+      box-shadow: 0 0 0 3px var(--success-lt);
+    }
+    .scope-tile.disabled { opacity: .35; cursor: not-allowed; pointer-events: none; }
+    .scope-tile .icon { font-size: 1.6rem; }
+    .scope-tile .name { font-size: 1rem; font-weight: 700; color: var(--accent-dk); }
+    .scope-tile .sub  { font-size: .82rem; color: var(--muted); line-height: 1.4; }
+    .scope-tile .future { font-size: .68rem; font-weight: 600; color: var(--warn); text-transform: uppercase; letter-spacing: .04em; }
+
+    /* ── Furniture / inventaris (deelt patroon met Style Engine) ── */
+    .furniture-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+    .furniture-item {
+      display: grid; grid-template-columns: 90px 1fr auto;
+      gap: 12px; align-items: center;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 12px;
+    }
+    .furniture-thumb {
+      width: 90px; height: 70px; border-radius: 6px;
+      background: linear-gradient(135deg,#eef0f4,#dadde2);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--muted); font-size: 1.4rem; cursor: pointer; overflow: hidden;
+    }
+    .furniture-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .furniture-thumb input { display: none; }
+    .furniture-fields { display: grid; grid-template-columns: 1fr repeat(3, 70px); gap: 6px; align-items: end; }
+    .furniture-fields label {
+      font-size: .7rem; font-weight: 600; color: var(--muted);
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .furniture-fields input, .furniture-fields select {
+      font: inherit; padding: 5px 7px; border: 1px solid var(--border);
+      border-radius: 4px; font-size: .82rem; background: #fff; color: var(--text);
+    }
+    .add-btn {
+      width: 100%; padding: 10px;
+      border: 2px dashed var(--border); background: transparent;
+      color: var(--muted); border-radius: 8px; cursor: pointer;
+      font-size: .9rem; font-weight: 600; transition: all .15s;
+    }
+    .add-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Tabs (productgroepen) ──────────────────────────── */
+    .tabs {
+      display: flex; gap: 2px;
+      border-bottom: 2px solid var(--border); margin-bottom: 16px;
+    }
+    .tab {
+      cursor: pointer; padding: 10px 18px;
+      font-size: .9rem; font-weight: 600; color: var(--muted);
+      background: transparent; border: none;
+      border-bottom: 2px solid transparent; margin-bottom: -2px;
+      transition: all .15s;
+    }
+    .tab:hover { color: var(--accent-dk); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-empty {
+      padding: 20px; text-align: center; color: var(--muted);
+      font-size: .85rem; background: #fafbfd;
+      border: 1px dashed var(--border); border-radius: 6px;
+    }
+
+    /* ── Filters ─────────────────────────────────────────── */
+    .filter-bar {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      align-items: center; margin-bottom: 14px;
+    }
+    .filter-bar .filter-label {
+      font-size: .76rem; font-weight: 700;
+      color: var(--muted); margin-right: 4px;
+    }
+    .filter-chip {
+      cursor: pointer; user-select: none;
+      font-size: .76rem; font-weight: 600;
+      padding: 5px 11px; border-radius: 16px;
+      background: #f4f5f7; border: 1px solid var(--border);
+      color: var(--muted); transition: all .15s;
+    }
+    .filter-chip:hover { border-color: var(--accent); color: var(--accent-dk); }
+    .filter-chip.active {
+      background: var(--accent); color: #fff; border-color: var(--accent);
+    }
+
+    /* ── Product grid ─────────────────────────────────────── */
+    .product-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 14px;
+    }
+    .product-card {
+      cursor: pointer; user-select: none;
+      background: var(--surface); border: 2px solid var(--border);
+      border-radius: 8px; overflow: hidden;
+      display: flex; flex-direction: column;
+      transition: all .15s;
+    }
+    .product-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); border-color: var(--accent); }
+    .product-card.in-cart {
+      border-color: var(--success);
+      box-shadow: 0 0 0 3px var(--success-lt);
+    }
+    .product-preview {
+      aspect-ratio: 4/3; width: 100%; position: relative; overflow: hidden;
+    }
+    .product-preview .pattern-vis {
+      position: absolute; inset: 0;
+      background-size: 40px 40px;
+    }
+    .product-body { padding: 10px 12px; flex: 1; }
+    .product-name {
+      font-size: .88rem; font-weight: 700; color: var(--accent-dk);
+      margin-bottom: 2px; line-height: 1.3;
+    }
+    .product-meta {
+      font-size: .72rem; color: var(--muted); line-height: 1.4;
+    }
+    .product-id {
+      font-family: 'Courier New', monospace; font-size: .68rem;
+      color: var(--accent); background: var(--accent-lt);
+      padding: 1px 5px; border-radius: 3px;
+      display: inline-block; margin-top: 5px;
+    }
+    .product-card.in-cart::after {
+      content: '✓'; position: absolute; top: 8px; right: 8px;
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--success); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .9rem; font-weight: 700;
+      box-shadow: 0 1px 4px rgba(0,0,0,.25);
+    }
+    .product-card { position: relative; }
+
+    /* ── Window context (boven raamdecor catalog) ─────────── */
+    .ctx-card {
+      background: var(--accent-lt); border: 1px solid #c4d4e6;
+      border-radius: 8px; padding: 12px 14px; margin-bottom: 14px;
+    }
+    .ctx-card .ctx-title {
+      font-size: .82rem; font-weight: 700; color: var(--accent-dk);
+      margin-bottom: 8px;
+    }
+    .ctx-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+    .ctx-fields label { font-size: .72rem; font-weight: 600; color: var(--muted); display: flex; flex-direction: column; gap: 3px; }
+    .ctx-fields select, .ctx-fields input {
+      font: inherit; padding: 6px 8px; border: 1px solid var(--border);
+      border-radius: 5px; font-size: .82rem; background: #fff; color: var(--text);
+    }
+
+    /* ── Cart panel (rechterkolom, sticky) ────────────────── */
+    .cart-panel {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 18px; position: sticky; top: 76px;
+      max-height: calc(100vh - 96px); overflow-y: auto;
+    }
+    .cart-title {
+      font-size: 1rem; font-weight: 700; color: var(--accent-dk);
+      margin-bottom: 4px;
+    }
+    .cart-sub {
+      font-size: .76rem; color: var(--muted); margin-bottom: 14px;
+    }
+    .cart-section { margin-bottom: 14px; }
+    .cart-section-title {
+      font-size: .68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--accent); margin-bottom: 6px;
+    }
+    .cart-item {
+      display: grid; grid-template-columns: 36px 1fr auto;
+      gap: 8px; align-items: center;
+      padding: 7px 0; border-bottom: 1px dashed var(--border);
+    }
+    .cart-item:last-child { border-bottom: none; }
+    .cart-item .swatch {
+      width: 36px; height: 28px; border-radius: 4px; border: 1px solid var(--border);
+    }
+    .cart-item .name { font-size: .82rem; font-weight: 600; color: var(--accent-dk); line-height: 1.25; }
+    .cart-item .id   { font-family: 'Courier New', monospace; font-size: .68rem; color: var(--muted); }
+    .cart-item button {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--error); border-radius: 4px;
+      width: 26px; height: 26px; cursor: pointer; font-size: .9rem; line-height: 1;
+    }
+    .cart-item button:hover { background: var(--error-lt); border-color: var(--error); }
+    .cart-empty {
+      padding: 14px; text-align: center; color: var(--muted);
+      font-size: .82rem; font-style: italic;
+    }
+    .cart-notice {
+      background: var(--warn-lt); border: 1px solid #ffcc80;
+      color: #7b3a00; padding: 8px 11px; border-radius: 6px;
+      font-size: .78rem; margin-top: 8px; line-height: 1.45;
+      display: flex; gap: 6px; align-items: flex-start;
+    }
+    .cart-notice .icon { flex-shrink: 0; font-size: .95rem; line-height: 1.3; }
+    .cart-notice .alt-btn {
+      display: inline-block; margin-top: 4px;
+      font-size: .72rem; font-weight: 700; color: var(--accent-dk);
+      text-decoration: underline; cursor: pointer;
+    }
+
+    /* ── Foto upload (stap 4) ─────────────────────────────── */
+    .upload-zone {
+      border: 2px dashed var(--border); background: #fafbfd;
+      border-radius: var(--radius); padding: 32px 18px; text-align: center;
+      transition: border-color .2s, background .2s; cursor: pointer; position: relative;
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: var(--accent); background: var(--accent-lt);
+    }
+    .upload-zone input[type="file"] { display: none; }
+    .upload-zone .icon { font-size: 2.4rem; margin-bottom: 8px; }
+    .upload-zone .title { font-size: 1rem; font-weight: 700; color: var(--accent-dk); }
+    .upload-zone .hint  { font-size: .8rem; color: var(--muted); }
+    .photo-preview { margin-top: 16px; display: grid; grid-template-columns: 1fr 2fr; gap: 14px; }
+    .photo-preview img { width: 100%; border-radius: 6px; border: 1px solid var(--border); box-shadow: var(--shadow); }
+    .photo-meta {
+      font-size: .82rem; color: var(--muted);
+      background: #fafbfd; border: 1px solid var(--border);
+      border-radius: 6px; padding: 10px 12px;
+    }
+    .photo-meta .row { display: flex; justify-content: space-between; padding: 2px 0; }
+    @media (max-width: 720px) { .photo-preview { grid-template-columns: 1fr; } }
+
+    pre.json-out {
+      background: #0f1320; color: #e6e9ef; padding: 16px 18px; border-radius: 8px;
+      font-family: 'Courier New', Consolas, monospace; font-size: .8rem; line-height: 1.55;
+      overflow-x: auto; max-height: 360px; overflow-y: auto;
+    }
+    pre.json-out .k { color: #82b8ff; } pre.json-out .s { color: #d8a76a; }
+    pre.json-out .n { color: #b1cf85; } pre.json-out .b { color: #ce9178; }
+
+    .final-note {
+      margin-top: 22px; padding: 16px 20px;
+      background: linear-gradient(135deg, var(--success-lt) 0%, #d8efdb 100%);
+      border: 1px solid #a5d6a7; border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(46,125,50,.15);
+      display: flex; align-items: flex-start; gap: 12px;
+    }
+    .final-note-icon { font-size: 1.5rem; flex-shrink: 0; }
+    .final-note-title { font-size: 1rem; font-weight: 700; color: #1b5e20; margin-bottom: 3px; }
+    .final-note-body  { font-size: .88rem; color: #2e5b32; line-height: 1.5; }
+
+    .toast {
+      position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+      background: var(--accent-dk); color: #fff; padding: 9px 16px;
+      border-radius: 6px; box-shadow: var(--shadow-lg);
+      font-size: .85rem; font-weight: 600; opacity: 0; pointer-events: none;
+      transition: opacity .2s; z-index: 200;
+    }
+    .toast.show { opacity: 1; }
+
+    @media (max-width: 540px) {
+      .progress-step .label { display: none; }
+      .step { padding: 18px 16px; }
+      .furniture-item { grid-template-columns: 1fr; }
+      .furniture-fields { grid-template-columns: 1fr 1fr; }
+      .cart-panel { position: static; max-height: none; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="3" width="18" height="2" rx="1"/>
+    <line x1="6"  y1="5" x2="6"  y2="21"/><line x1="18" y1="5" x2="18" y2="21"/>
+    <path d="M6 8 Q9 10 12 8 Q15 6 18 8"/><path d="M6 13 Q9 15 12 13 Q15 11 18 13"/><path d="M6 18 Q9 20 12 18 Q15 16 18 18"/>
+  </svg>
+  <h1>Vrije Keuze — product-selector</h1>
+  <nav>
+    <a href="style-configurator.html">✨ Style Engine</a>
+    <a href="index.html">← Gordijn-configurator</a>
+    <a href="werking.html" target="_blank" rel="noopener">📈 Werking</a>
+  </nav>
+</header>
+
+<div class="page" id="top">
+
+  <div class="switch-bar">
+    <span style="font-size:1.1rem">🛍️</span>
+    <span><strong>Vrije keuze-modus.</strong> Je bladert direct door de catalogus &mdash; geen stijl- of kleuradvies vooraf.
+          Vastgelopen? <a href="style-configurator.html">Help me kiezen op basis van mijn stijl →</a></span>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-row" id="progressRow">
+      <div class="progress-step active" data-step="1"><span class="num">1</span><span class="label">Scope</span></div>
+      <div class="progress-step"        data-step="2"><span class="num">2</span><span class="label">Eigen meubels</span></div>
+      <div class="progress-step"        data-step="3"><span class="num">3</span><span class="label">Producten</span></div>
+      <div class="progress-step"        data-step="4"><span class="num">4</span><span class="label">Foto &amp; render</span></div>
+    </div>
+    <div class="progress-bar"><div class="fill" id="progressFill"></div></div>
+  </div>
+
+  <div class="layout">
+    <div id="stepHost"></div>
+    <aside id="cartPanel" class="cart-panel"></aside>
+  </div>
+
+</div>
+
+<div class="toast" id="toast">Toegevoegd ✓</div>
+
+<script>
+// ============================================================
+// VRIJE KEUZE — Product Selector
+// Alternatief pad voor klanten die direct producten willen kiezen i.p.v.
+// stijl-/kleuradvies. Output: een gestructureerd JSON-profiel met
+// mode='free_selection' dat Kevin's image-to-image AI als input neemt.
+// ============================================================
+
+// ── Catalog ──────────────────────────────────────────────────
+// Synthetische catalogus voor de MVP. In productie vervang je deze door
+// een fetch naar de echte product-API; behoud de schema-velden:
+//   id              — unieke product-ID die Kevin's AI kent
+//   texture_map     — pad naar de PBR-textuur die de AI inlaadt
+//   mount_compatible — welke montagevarianten dit product accepteert
+//                      ('drill' = boren, 'clamp' = klem, 'tension' = ingespannen)
+const FLOOR_CATALOG = [
+  { id: 'PVC_OAK_HERR_001',   name: 'PVC Eiken Visgraat',       material: 'PVC',      pattern: 'visgraat', color: '#a87a4d', texture_map: '/textures/floor/PVC_OAK_HERR_001.jpg' },
+  { id: 'PVC_GREY_PLANK_002', name: 'PVC Grijs Plank',          material: 'PVC',      pattern: 'plank',    color: '#8a8a8a', texture_map: '/textures/floor/PVC_GREY_PLANK_002.jpg' },
+  { id: 'LAM_OAK_PLANK_003',  name: 'Laminaat Eiken Plank',     material: 'Laminaat', pattern: 'plank',    color: '#dec299', texture_map: '/textures/floor/LAM_OAK_PLANK_003.jpg' },
+  { id: 'LAM_DARK_HERR_004',  name: 'Laminaat Donker Visgraat', material: 'Laminaat', pattern: 'visgraat', color: '#5a4938', texture_map: '/textures/floor/LAM_DARK_HERR_004.jpg' },
+  { id: 'PAR_NAT_PLANK_005',  name: 'Parket Naturel Plank',     material: 'Parket',   pattern: 'plank',    color: '#bf7f4d', texture_map: '/textures/floor/PAR_NAT_PLANK_005.jpg' },
+  { id: 'PAR_DARK_HERR_006',  name: 'Parket Donker Visgraat',   material: 'Parket',   pattern: 'visgraat', color: '#4f2e15', texture_map: '/textures/floor/PAR_DARK_HERR_006.jpg' },
+  { id: 'PVC_WHITE_PLANK_007',name: 'PVC Wit Plank',            material: 'PVC',      pattern: 'plank',    color: '#f3f5f8', texture_map: '/textures/floor/PVC_WHITE_PLANK_007.jpg' },
+  { id: 'LAM_WALN_HERR_008',  name: 'Laminaat Walnoot Visgraat',material: 'Laminaat', pattern: 'visgraat', color: '#6b4623', texture_map: '/textures/floor/LAM_WALN_HERR_008.jpg' },
+];
+
+const WINDOW_CATALOG = [
+  { id: 'INB_LIN_NAT_001',  name: 'Linnen Inbetween Naturel',    product_type: 'inbetween',
+    goals: ['sfeer','privacy'], color: '#fbeacb',
+    mount_compatible: ['drill','clamp'], texture_map: '/textures/window/INB_LIN_NAT_001.jpg' },
+  { id: 'OG_VEL_TER_002',   name: 'Velvet Overgordijn Terra',    product_type: 'overgordijn',
+    goals: ['sfeer','privacy','akoestiek','warmte','verduistering'], color: '#8c5126',
+    mount_compatible: ['drill','clamp'], texture_map: '/textures/window/OG_VEL_TER_002.jpg' },
+  { id: 'DUE_BLK_003',      name: 'Duette Blackout',             product_type: 'duette',
+    goals: ['privacy','verduistering','hitte_uv','akoestiek','warmte'], color: '#1c1e23',
+    mount_compatible: ['clamp','tension'], texture_map: '/textures/window/DUE_BLK_003.jpg' },
+  { id: 'DUE_TRA_004',      name: 'Duette Transparant',          product_type: 'duette_transparant',
+    goals: ['sfeer','privacy','warmte'], color: '#e3c79b',
+    mount_compatible: ['clamp','tension'], texture_map: '/textures/window/DUE_TRA_004.jpg' },
+  { id: 'JAL_HOUT_005',     name: 'Houten Jaloezie',             product_type: 'jaloezie',
+    goals: ['privacy','doorkijk','hitte_uv','inkijk'], color: '#a87a4d',
+    mount_compatible: ['drill'], texture_map: '/textures/window/JAL_HOUT_005.jpg' },
+  { id: 'JAL_ALU_006',      name: 'Aluminium Jaloezie',          product_type: 'jaloezie',
+    goals: ['privacy','doorkijk','hitte_uv'], color: '#c8d0db',
+    mount_compatible: ['clamp','tension'], texture_map: '/textures/window/JAL_ALU_006.jpg' },
+  { id: 'ROL_VER_007',      name: 'Rolgordijn Verduisterend',    product_type: 'rolgordijn',
+    goals: ['privacy','verduistering','hitte_uv'], color: '#3a3d44',
+    mount_compatible: ['clamp','tension','drill'], texture_map: '/textures/window/ROL_VER_007.jpg' },
+  { id: 'ROL_TRA_008',      name: 'Rolgordijn Transparant',      product_type: 'rolgordijn',
+    goals: ['sfeer','privacy'], color: '#f3f5f8',
+    mount_compatible: ['clamp','tension','drill'], texture_map: '/textures/window/ROL_TRA_008.jpg' },
+];
+
+const FLOOR_MATERIALS = ['PVC', 'Laminaat', 'Parket'];
+const FLOOR_PATTERNS  = ['plank', 'visgraat'];
+
+// Klant-doelen — gespiegeld uit de oplossingen-matrix in style-configurator.
+const RAAM_DOELEN = [
+  { id: 'sfeer',         label: 'Sfeer' },
+  { id: 'privacy',       label: 'Privacy' },
+  { id: 'doorkijk',      label: 'Doorkijk wanneer dicht' },
+  { id: 'hitte_uv',      label: 'Hitte & UV' },
+  { id: 'verduistering', label: 'Verduistering' },
+  { id: 'akoestiek',     label: 'Akoestiek' },
+  { id: 'warmte',        label: 'Warmte-isolatie' },
+  { id: 'inkijk',        label: 'Inkijk reguleren' },
+];
+
+// Productlabels (gespiegeld; gebruikt voor combinatie-suggesties).
+const PRODUCT_LABELS = {
+  inbetween:           'Inbetween',
+  overgordijn:         'Overgordijn',
+  jaloezie:            'Jaloezie',
+  duette:              'Duette',
+  duette_transparant:  'Duette transparant',
+  rolgordijn:          'Rolgordijn',
+};
+
+// Welke producten passen goed naast welke (combinatie-assistent).
+const COMBINEERT_GOED = {
+  inbetween:    ['overgordijn', 'duette', 'rolgordijn', 'jaloezie'],
+  overgordijn:  ['inbetween', 'duette_transparant'],
+  jaloezie:     ['inbetween', 'overgordijn'],
+  duette:       ['inbetween', 'overgordijn'],
+  rolgordijn:   ['inbetween', 'overgordijn'],
+};
+
+// ── State ──────────────────────────────────────────────────
+const state = {
+  step: 1,
+  scope: [],                              // ['flooring', 'window_decor', ...]
+  furniture: [],                          // [{id, type, l, w, h, photoUrl}]
+  windowContext: {                        // technische context voor validatie
+    frame_material: 'kunststof',
+    draaikiep: false,
+    mounting:  'in_de_dag',
+  },
+  selectedFloor:   null,                  // single floor product
+  selectedWindows: [],                    // array of window products
+  filters: {
+    floor:  { material: '', pattern: '' },
+    window: { goals: [] },
+  },
+  activeTab: null,                        // wordt bepaald in stap 3
+  photoFile: null,
+  photoDataUrl: null,
+};
+
+// ── Scope-tegels (multi-select) ─────────────────────────────
+const SCOPES = [
+  { id: 'flooring',     label: 'Vloer',        sub: 'PVC, Laminaat of Parket — plank of visgraat.', icon: '🪵' },
+  { id: 'window_decor', label: 'Raamdecoratie',sub: 'Inbetween, gordijnen, jaloezie, duette of rolgordijn.', icon: '🪟' },
+  { id: 'wall',         label: 'Muur',         sub: 'Behang en schilderwerk — binnenkort beschikbaar.',     icon: '🎨', future: true },
+  { id: 'furniture',    label: 'Meubelen',     sub: 'Nieuwe bank, tafel of kast — binnenkort beschikbaar.', icon: '🛋️', future: true },
+];
+
+// ── Rendering helpers ───────────────────────────────────────
+function $(s) { return document.querySelector(s); }
+function escHtml(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function el(tag, attrs = {}, html = '') {
+  const n = document.createElement(tag);
+  Object.entries(attrs).forEach(([k,v]) => {
+    if (k === 'class') n.className = v;
+    else if (k.startsWith('on')) n.addEventListener(k.slice(2), v);
+    else n.setAttribute(k, v);
+  });
+  if (html) n.innerHTML = html;
+  return n;
+}
+
+function renderProgress() {
+  const total = 4;
+  $('#progressFill').style.width = ((state.step - 1) / (total - 1) * 100) + '%';
+  document.querySelectorAll('.progress-step').forEach(node => {
+    const n = parseInt(node.dataset.step, 10);
+    node.classList.toggle('active', n === state.step);
+    node.classList.toggle('done',   n < state.step);
+  });
+}
+
+// ── STAP 1 — Scope ─────────────────────────────────────────
+function renderStep1() {
+  const host = $('#stepHost');
+  host.innerHTML = '';
+  const card = el('div', { class: 'step' });
+  card.innerHTML = `
+    <div class="step-eyebrow">Stap 1 van 4 · Scope</div>
+    <h2 class="step-title">Wat wil je in je nieuwe interieur aanpassen?</h2>
+    <p class="step-lead">Kies één of meerdere zones. Per zone krijg je in stap 3 een eigen catalogus
+       met filters en een live texture-preview. <em>Muur en Meubelen</em> komen in een volgende release.</p>
+    <div class="scope-grid" id="scopeGrid"></div>
+    <div class="step-actions">
+      <span style="font-size:.78rem;color:var(--muted)" id="scopeHint">Selecteer minimaal één scope om verder te gaan.</span>
+      <button class="btn btn-primary btn-lg" type="button" id="next1" disabled>Volgende →</button>
+    </div>`;
+  host.appendChild(card);
+
+  const grid = card.querySelector('#scopeGrid');
+  const next = card.querySelector('#next1');
+  const hint = card.querySelector('#scopeHint');
+
+  function refresh() {
+    Array.from(grid.children).forEach(t => {
+      const id = t.dataset.id;
+      t.classList.toggle('selected', state.scope.includes(id));
+    });
+    next.disabled = state.scope.length === 0;
+    hint.textContent = state.scope.length === 0
+      ? 'Selecteer minimaal één scope om verder te gaan.'
+      : `${state.scope.length} scope(s) gekozen — klik op Volgende.`;
+  }
+
+  SCOPES.forEach(s => {
+    const tile = el('div', {
+      class: `scope-tile ${s.future ? 'disabled' : ''} ${state.scope.includes(s.id) ? 'selected' : ''}`,
+      'data-id': s.id,
+    });
+    tile.innerHTML = `
+      <div class="icon">${s.icon}</div>
+      <div class="name">${escHtml(s.label)}</div>
+      <div class="sub">${escHtml(s.sub)}</div>
+      ${s.future ? '<div class="future">Binnenkort</div>' : ''}`;
+    if (!s.future) {
+      tile.addEventListener('click', () => {
+        if (state.scope.includes(s.id)) state.scope = state.scope.filter(x => x !== s.id);
+        else state.scope = [...state.scope, s.id];
+        refresh();
+      });
+    }
+    grid.appendChild(tile);
+  });
+  refresh();
+
+  next.addEventListener('click', () => gotoStep(2));
+}
+
+// ── STAP 2 — Eigen meubels ─────────────────────────────────
+function renderStep2() {
+  const host = $('#stepHost');
+  host.innerHTML = '';
+  const card = el('div', { class: 'step' });
+  card.innerHTML = `
+    <div class="step-eyebrow">Stap 2 van 4 · Inventarisatie</div>
+    <h2 class="step-title">Welke eigen meubels moet de AI vrijhouden?</h2>
+    <p class="step-lead">Upload foto's van meubels die in de ruimte blijven staan en geef de afmetingen op.
+       Kevin's render-engine herkent ze en zal niet over deze objecten heenrenderen.</p>
+
+    <div class="furniture-list" id="furnitureList"></div>
+    <button type="button" class="add-btn" id="addFurnBtn">+ Meubel toevoegen</button>
+
+    <div class="step-actions">
+      <button class="btn btn-ghost"   type="button" id="back2">← Scope</button>
+      <button class="btn btn-primary btn-lg" type="button" id="next2">Volgende →</button>
+    </div>`;
+  host.appendChild(card);
+  renderFurnitureList();
+
+  card.querySelector('#back2').addEventListener('click', () => gotoStep(1));
+  card.querySelector('#next2').addEventListener('click', () => gotoStep(3));
+  card.querySelector('#addFurnBtn').addEventListener('click', () => {
+    state.furniture.push({
+      id: 'f' + Date.now() + Math.floor(Math.random()*1000),
+      type: 'Bank', l: '', w: '', h: '', photoUrl: null,
+    });
+    renderFurnitureList();
+  });
+}
+
+function renderFurnitureList() {
+  const host = document.getElementById('furnitureList');
+  if (!host) return;
+  if (state.furniture.length === 0) {
+    host.innerHTML = '<div class="tab-empty">Nog geen meubels — voeg er één toe of sla deze stap over.</div>';
+    return;
+  }
+  const TYPES = ['Bank','Eettafel','Eetkamerstoel','Salontafel','Kast','Dressoir','Bed','Fauteuil','Bureau','TV-meubel','Vloerkleed','Anders'];
+  host.innerHTML = '';
+  state.furniture.forEach(f => {
+    const item = el('div', { class: 'furniture-item' });
+    item.innerHTML = `
+      <label class="furniture-thumb">
+        ${f.photoUrl ? `<img src="${escHtml(f.photoUrl)}" alt="${escHtml(f.type)}">` : '📦'}
+        <input type="file" accept="image/*">
+      </label>
+      <div class="furniture-fields">
+        <label>Type
+          <select data-field="type">
+            ${TYPES.map(t => `<option ${f.type === t ? 'selected' : ''}>${escHtml(t)}</option>`).join('')}
+          </select>
+        </label>
+        <label>L (cm)<input type="number" min="0" step="1" value="${escHtml(f.l)}" data-field="l"></label>
+        <label>B (cm)<input type="number" min="0" step="1" value="${escHtml(f.w)}" data-field="w"></label>
+        <label>H (cm)<input type="number" min="0" step="1" value="${escHtml(f.h)}" data-field="h"></label>
+      </div>
+      <button class="btn btn-danger btn-sm" type="button" data-action="remove">✕</button>`;
+    item.querySelectorAll('[data-field]').forEach(inp => {
+      inp.addEventListener('change', e => f[e.target.dataset.field] = e.target.value);
+    });
+    item.querySelector('input[type="file"]').addEventListener('change', e => {
+      const file = e.target.files[0]; if (!file) return;
+      const r = new FileReader();
+      r.onload = ev => { f.photoUrl = ev.target.result; renderFurnitureList(); };
+      r.readAsDataURL(file);
+    });
+    item.querySelector('[data-action="remove"]').addEventListener('click', () => {
+      state.furniture = state.furniture.filter(x => x.id !== f.id);
+      renderFurnitureList();
+    });
+    host.appendChild(item);
+  });
+}
+
+// ── STAP 3 — Productselectie (tabs + filters + grid) ──────
+function renderStep3() {
+  const host = $('#stepHost');
+  host.innerHTML = '';
+
+  // Bepaal welke tabs zichtbaar zijn op basis van de scope.
+  const tabs = [];
+  if (state.scope.includes('flooring'))     tabs.push({ id: 'floor',  label: 'Vloer'        });
+  if (state.scope.includes('window_decor')) tabs.push({ id: 'window', label: 'Raamdecoratie'});
+  if (!state.activeTab || !tabs.find(t => t.id === state.activeTab)) {
+    state.activeTab = tabs[0]?.id;
+  }
+
+  const card = el('div', { class: 'step' });
+  card.innerHTML = `
+    <div class="step-eyebrow">Stap 3 van 4 · Catalogus</div>
+    <h2 class="step-title">Kies je producten</h2>
+    <p class="step-lead">Filter op materiaal of doel, klik op een product om het in je winkelmand te leggen.
+       Bij conflicten met je raamtechniek zie je rechts direct een waarschuwing of alternatief.</p>
+
+    <div class="tabs" id="tabs">
+      ${tabs.map(t => `<button class="tab ${state.activeTab === t.id ? 'active' : ''}" data-tab="${escHtml(t.id)}">${escHtml(t.label)}</button>`).join('')}
+    </div>
+    <div id="tabContent"></div>
+
+    <div class="step-actions">
+      <button class="btn btn-ghost"   type="button" id="back3">← Meubels</button>
+      <button class="btn btn-primary btn-lg" type="button" id="next3">Volgende →</button>
+    </div>`;
+  host.appendChild(card);
+
+  card.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+    state.activeTab = t.dataset.tab; renderStep3();
+  }));
+  card.querySelector('#back3').addEventListener('click', () => gotoStep(2));
+  card.querySelector('#next3').addEventListener('click', () => gotoStep(4));
+
+  if (state.activeTab === 'floor')  renderFloorTab();
+  if (state.activeTab === 'window') renderWindowTab();
+}
+
+function renderFloorTab() {
+  const host = document.getElementById('tabContent');
+  const f = state.filters.floor;
+  const filtered = FLOOR_CATALOG.filter(p =>
+    (!f.material || p.material === f.material) &&
+    (!f.pattern  || p.pattern  === f.pattern)
+  );
+
+  host.innerHTML = `
+    <div class="filter-bar">
+      <span class="filter-label">Materiaal:</span>
+      <span class="filter-chip ${!f.material ? 'active' : ''}" data-mat="">Alles</span>
+      ${FLOOR_MATERIALS.map(m => `<span class="filter-chip ${f.material === m ? 'active' : ''}" data-mat="${escHtml(m)}">${escHtml(m)}</span>`).join('')}
+      <span style="width:14px"></span>
+      <span class="filter-label">Patroon:</span>
+      <span class="filter-chip ${!f.pattern ? 'active' : ''}" data-pat="">Alles</span>
+      ${FLOOR_PATTERNS.map(p => `<span class="filter-chip ${f.pattern === p ? 'active' : ''}" data-pat="${escHtml(p)}">${escHtml(p)}</span>`).join('')}
+    </div>
+    <div class="product-grid" id="floorGrid"></div>`;
+
+  host.querySelectorAll('[data-mat]').forEach(c => c.addEventListener('click', () => {
+    state.filters.floor.material = c.dataset.mat; renderFloorTab();
+  }));
+  host.querySelectorAll('[data-pat]').forEach(c => c.addEventListener('click', () => {
+    state.filters.floor.pattern = c.dataset.pat; renderFloorTab();
+  }));
+
+  const grid = host.querySelector('#floorGrid');
+  if (filtered.length === 0) {
+    grid.outerHTML = '<div class="tab-empty">Geen vloer-producten met deze filters.</div>';
+    return;
+  }
+  filtered.forEach(p => grid.appendChild(renderProductCard(p, 'floor')));
+}
+
+function renderWindowTab() {
+  const host = document.getElementById('tabContent');
+  const ctx = state.windowContext;
+  const goals = state.filters.window.goals;
+  const filtered = WINDOW_CATALOG.filter(p =>
+    goals.length === 0 || goals.every(g => p.goals.includes(g))
+  );
+
+  host.innerHTML = `
+    <div class="ctx-card">
+      <div class="ctx-title">Raamtechniek — voor automatische compatibiliteit</div>
+      <div class="ctx-fields">
+        <label>Kozijn-materiaal
+          <select data-ctx="frame_material">
+            <option value="kunststof" ${ctx.frame_material === 'kunststof' ? 'selected' : ''}>Kunststof</option>
+            <option value="hout"      ${ctx.frame_material === 'hout'      ? 'selected' : ''}>Hout</option>
+            <option value="alu"       ${ctx.frame_material === 'alu'       ? 'selected' : ''}>Aluminium</option>
+          </select>
+        </label>
+        <label>Draai-/kiepraam
+          <select data-ctx="draaikiep">
+            <option value="false" ${!ctx.draaikiep ? 'selected' : ''}>Nee</option>
+            <option value="true"  ${ ctx.draaikiep ? 'selected' : ''}>Ja</option>
+          </select>
+        </label>
+        <label>Montage
+          <select data-ctx="mounting">
+            <option value="in_de_dag" ${ctx.mounting === 'in_de_dag' ? 'selected' : ''}>In de dag</option>
+            <option value="wand"      ${ctx.mounting === 'wand'      ? 'selected' : ''}>Wand op de dag</option>
+            <option value="plafond"   ${ctx.mounting === 'plafond'   ? 'selected' : ''}>Plafond</option>
+            <option value="kozijn"    ${ctx.mounting === 'kozijn'    ? 'selected' : ''}>Op het kozijn</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <span class="filter-label">Doel:</span>
+      <span class="filter-chip ${goals.length === 0 ? 'active' : ''}" data-goal="">Alles</span>
+      ${RAAM_DOELEN.map(d => `<span class="filter-chip ${goals.includes(d.id) ? 'active' : ''}" data-goal="${escHtml(d.id)}">${escHtml(d.label)}</span>`).join('')}
+    </div>
+    <div class="product-grid" id="winGrid"></div>`;
+
+  host.querySelectorAll('[data-ctx]').forEach(sel => sel.addEventListener('change', () => {
+    const k = sel.dataset.ctx;
+    ctx[k] = k === 'draaikiep' ? sel.value === 'true' : sel.value;
+    renderWindowTab();
+    renderCart();  // validatie kan veranderd zijn
+  }));
+  host.querySelectorAll('[data-goal]').forEach(c => c.addEventListener('click', () => {
+    const id = c.dataset.goal;
+    if (id === '') state.filters.window.goals = [];
+    else if (state.filters.window.goals.includes(id))
+      state.filters.window.goals = state.filters.window.goals.filter(g => g !== id);
+    else state.filters.window.goals = [...state.filters.window.goals, id];
+    renderWindowTab();
+  }));
+
+  const grid = host.querySelector('#winGrid');
+  if (filtered.length === 0) {
+    grid.outerHTML = '<div class="tab-empty">Geen raamdecoratie-producten met deze doelen.</div>';
+    return;
+  }
+  filtered.forEach(p => grid.appendChild(renderProductCard(p, 'window')));
+}
+
+// ── Product card (gedeelde renderer) ─────────────────────
+function renderProductCard(product, kind) {
+  const inCart = kind === 'floor'
+    ? state.selectedFloor && state.selectedFloor.id === product.id
+    : state.selectedWindows.some(w => w.id === product.id);
+  const card = el('div', {
+    class: `product-card ${inCart ? 'in-cart' : ''}`,
+    'data-id': product.id,
+  });
+  // Texture-preview placeholder: gradient + (voor vloer) een patroon-overlay.
+  // ── REPLACE: vervang deze div door <img src="${product.texture_map}"> wanneer
+  //    de echte textuur-CDN online is. ──
+  const overlay = kind === 'floor'
+    ? `<div class="pattern-vis" style="background-image: ${product.pattern === 'visgraat'
+        ? `repeating-linear-gradient(45deg, rgba(0,0,0,.15) 0 8px, rgba(255,255,255,.05) 8px 16px)`
+        : `repeating-linear-gradient(0deg, rgba(0,0,0,.15) 0 18px, rgba(255,255,255,.04) 18px 38px)`}"></div>`
+    : '';
+  const meta = kind === 'floor'
+    ? `${escHtml(product.material)} · ${escHtml(product.pattern)}`
+    : `${escHtml(PRODUCT_LABELS[product.product_type] || product.product_type)} · dekt ${product.goals.length} doel(en)`;
+
+  card.innerHTML = `
+    <div class="product-preview" style="background:${product.color}">${overlay}</div>
+    <div class="product-body">
+      <div class="product-name">${escHtml(product.name)}</div>
+      <div class="product-meta">${meta}</div>
+      <span class="product-id">${escHtml(product.id)}</span>
+    </div>`;
+  card.addEventListener('click', () => {
+    if (kind === 'floor') {
+      // Vloer = single-select. Wisselen = nieuwe keuze; klik op huidige = afkoppelen.
+      state.selectedFloor = inCart ? null : product;
+      showToast(inCart ? 'Vloer verwijderd' : 'Vloer toegevoegd ✓');
+    } else {
+      if (inCart) {
+        state.selectedWindows = state.selectedWindows.filter(w => w.id !== product.id);
+        showToast('Verwijderd');
+      } else {
+        state.selectedWindows = [...state.selectedWindows, product];
+        showToast('Toegevoegd ✓');
+      }
+    }
+    renderStep3();
+    renderCart();
+  });
+  return card;
+}
+
+// ── Validatie tegen kozijn / combinatie-assistent ────────
+// Retourneert een lijst van {icon, text, alt? } objecten voor weergave in
+// het winkelmandje. Implementeert de logica uit de briefing:
+//   - Kozijn-conflict: kunststof/alu kozijn + product dat alleen 'drill' kan
+//   - Draaikiep + product dat geen top-down/bottom-up biedt (alleen Duette
+//     en Jaloezie ondersteunen die mode in onze catalogus)
+//   - Solo Inbetween → suggereer combinatie voor verduistering/akoestiek
+function validateCart() {
+  const notices = [];
+  const ctx = state.windowContext;
+  const winSel = state.selectedWindows;
+
+  // 1. Per geselecteerd window-product: mount-compat tegen kozijn.
+  winSel.forEach(p => {
+    const ok = p.mount_compatible.some(m => {
+      if ((ctx.frame_material === 'kunststof' || ctx.frame_material === 'alu') && m === 'drill') return false;
+      return true;
+    });
+    if (!ok) {
+      const altType = p.product_type === 'jaloezie' ? 'duette' : 'rolgordijn';
+      const alt = WINDOW_CATALOG.find(w => w.product_type === altType && w.mount_compatible.includes('clamp'));
+      notices.push({
+        icon: '⚠',
+        text: `${p.name} vereist boren — niet toegestaan bij ${ctx.frame_material === 'kunststof' ? 'kunststof' : 'aluminium'} kozijn.`,
+        altLabel: alt ? `Bekijk alternatief: ${alt.name}` : null,
+        altId: alt && alt.id,
+      });
+    }
+  });
+
+  // 2. Draaikiep raam: alleen Duette en Jaloezie geven praktische top-down/bottom-up
+  //    toegang; gordijnen of rolgordijnen blokkeren het raam volledig.
+  if (ctx.draaikiep && winSel.length > 0) {
+    const heeftKiepVriendelijk = winSel.some(p => ['duette','jaloezie'].includes(p.product_type));
+    if (!heeftKiepVriendelijk) {
+      const alt = WINDOW_CATALOG.find(w => w.product_type === 'duette' && w.mount_compatible.includes('clamp'));
+      notices.push({
+        icon: 'ℹ',
+        text: 'Draai-/kiepraam: gekozen producten belemmeren het kantelen. Een Duette of Jaloezie met top-down/bottom-up bediening werkt beter.',
+        altLabel: alt ? `Bekijk alternatief: ${alt.name}` : null,
+        altId: alt && alt.id,
+      });
+    }
+  }
+
+  // 3. Combinatie-assistent: solo Inbetween geeft geen privacy 's avonds.
+  if (winSel.length === 1 && winSel[0].product_type === 'inbetween') {
+    const alt = WINDOW_CATALOG.find(w => w.product_type === 'duette' && w.goals.includes('verduistering'));
+    notices.push({
+      icon: '💡',
+      text: 'Alleen Inbetween: geen privacy of verduistering ’s avonds. Combineer voor een complete oplossing met een Duette of Rolgordijn.',
+      altLabel: alt ? `Voeg combinatie toe: ${alt.name}` : null,
+      altId: alt && alt.id,
+    });
+  }
+
+  // 4. Verduistering-doel actief maar geen verduisterend product.
+  if (state.filters.window.goals.includes('verduistering') && winSel.length > 0) {
+    const heeftVerd = winSel.some(p => p.goals.includes('verduistering'));
+    if (!heeftVerd) {
+      notices.push({
+        icon: '⚠',
+        text: 'Doel “Verduistering” gekozen, maar geen enkel geselecteerd product dekt dat. Voeg een Duette Blackout, Rolgordijn Verduisterend of Velvet Overgordijn toe.',
+        altLabel: null, altId: null,
+      });
+    }
+  }
+
+  return notices;
+}
+
+// ── Cart panel rendering ─────────────────────────────────
+function renderCart() {
+  const host = document.getElementById('cartPanel');
+  if (!host) return;
+
+  const totalItems = (state.selectedFloor ? 1 : 0) + state.selectedWindows.length;
+
+  if (state.step === 1) {
+    // Op stap 1 toont het cart-paneel een korte 'wat-komt-er' uitleg.
+    host.innerHTML = `
+      <div class="cart-title">Hoe het werkt</div>
+      <p class="cart-sub">Kies in stap 1 één of meerdere zones (vloer, raamdecoratie). In stap 3 verschijnt
+         dan een catalogus per zone met live texture-previews.</p>
+      <p class="cart-sub" style="border-top:1px dashed var(--border);padding-top:12px">
+         Per gekozen product slaan we een <code>Product_ID</code> en <code>Texture_Map</code> op die direct
+         door Kevin's AI ingelezen worden bij de render in stap 4.</p>`;
+    return;
+  }
+
+  const notices = validateCart();
+  host.innerHTML = `
+    <div class="cart-title">🛒 Winkelmand</div>
+    <div class="cart-sub">${totalItems} product(en) geselecteerd</div>
+
+    ${state.selectedFloor ? `
+      <div class="cart-section">
+        <div class="cart-section-title">Vloer</div>
+        <div class="cart-item" data-rm-floor>
+          <div class="swatch" style="background:${state.selectedFloor.color}"></div>
+          <div>
+            <div class="name">${escHtml(state.selectedFloor.name)}</div>
+            <div class="id">${escHtml(state.selectedFloor.id)}</div>
+          </div>
+          <button title="Verwijder" data-rm-floor-btn>✕</button>
+        </div>
+      </div>` : ''}
+
+    ${state.selectedWindows.length > 0 ? `
+      <div class="cart-section">
+        <div class="cart-section-title">Raamdecoratie (${state.selectedWindows.length})</div>
+        ${state.selectedWindows.map(w => `
+          <div class="cart-item">
+            <div class="swatch" style="background:${w.color}"></div>
+            <div>
+              <div class="name">${escHtml(w.name)}</div>
+              <div class="id">${escHtml(w.id)}</div>
+            </div>
+            <button title="Verwijder" data-rm-win="${escHtml(w.id)}">✕</button>
+          </div>`).join('')}
+      </div>` : ''}
+
+    ${totalItems === 0 ? '<div class="cart-empty">Nog niets geselecteerd. Klik in stap 3 op een product.</div>' : ''}
+
+    ${notices.map(n => `
+      <div class="cart-notice">
+        <span class="icon">${n.icon}</span>
+        <span>${escHtml(n.text)}${n.altLabel ? `<br><span class="alt-btn" data-add-alt="${escHtml(n.altId)}">${escHtml(n.altLabel)} →</span>` : ''}</span>
+      </div>`).join('')}`;
+
+  // Verwijder vloer.
+  const rmFloor = host.querySelector('[data-rm-floor-btn]');
+  if (rmFloor) rmFloor.addEventListener('click', () => {
+    state.selectedFloor = null;
+    if (state.step === 3) renderStep3();
+    renderCart();
+  });
+  // Verwijder raamdecor.
+  host.querySelectorAll('[data-rm-win]').forEach(btn => btn.addEventListener('click', () => {
+    state.selectedWindows = state.selectedWindows.filter(w => w.id !== btn.dataset.rmWin);
+    if (state.step === 3) renderStep3();
+    renderCart();
+  }));
+  // Klik op alternatief in een notice → product toevoegen aan cart.
+  host.querySelectorAll('[data-add-alt]').forEach(btn => btn.addEventListener('click', () => {
+    const id = btn.dataset.addAlt;
+    const prod = WINDOW_CATALOG.find(w => w.id === id);
+    if (prod && !state.selectedWindows.some(w => w.id === id)) {
+      state.selectedWindows = [...state.selectedWindows, prod];
+      showToast('Alternatief toegevoegd ✓');
+    }
+    if (state.step === 3) renderStep3();
+    renderCart();
+  }));
+}
+
+// ── STAP 4 — Foto + JSON ─────────────────────────────────
+function renderStep4() {
+  const host = $('#stepHost');
+  host.innerHTML = '';
+  const card = el('div', { class: 'step' });
+  card.innerHTML = `
+    <div class="step-eyebrow">Stap 4 van 4 · Render-input</div>
+    <h2 class="step-title">Upload je ruimte — Kevin's AI rendert je selectie</h2>
+    <p class="step-lead">Het profiel hieronder wordt samen met de foto verstuurd. De AI gebruikt de
+       <code>Product_ID</code>'s en <code>Texture_Map</code>'s om jouw selectie precies in te tekenen.</p>
+
+    <label class="upload-zone" id="dropZone">
+      <input type="file" id="photoInput" accept="image/*" />
+      <div class="icon">📷</div>
+      <div class="title" id="dropTitle">Sleep een foto hierheen of klik om te kiezen</div>
+      <div class="hint" id="dropHint">JPG, PNG of WEBP — bij voorkeur 1500px breed of meer</div>
+    </label>
+
+    <div id="photoPreviewWrap" style="display:none">
+      <div class="photo-preview">
+        <img id="photoImg" alt="Geüploade foto" />
+        <div class="photo-meta" id="photoMeta"></div>
+      </div>
+    </div>
+
+    <div class="step-actions">
+      <button class="btn btn-ghost" type="button" id="back4">← Producten</button>
+      <button class="btn btn-success btn-lg" type="button" id="genJson" disabled>✓ Genereer profiel</button>
+    </div>
+
+    <div id="jsonWrap" style="display:none;margin-top:22px">
+      <h3 style="font-size:1rem;color:var(--accent-dk);margin-bottom:8px">Free-Selection Profile (JSON)</h3>
+      <p style="font-size:.82rem;color:var(--muted);margin-bottom:8px">Met <code>mode: "free_selection"</code> &mdash; klaar voor Kevin's API.</p>
+      <pre class="json-out" id="jsonOut"></pre>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+        <button class="btn btn-primary" type="button" id="copyJson">📋 Kopieer JSON</button>
+        <button class="btn btn-outline" type="button" id="downloadJson">⬇ Download JSON</button>
+        <button class="btn btn-ghost"   type="button" id="resetAll">↺ Opnieuw</button>
+      </div>
+
+      <div class="final-note" id="finalNote">
+        <span class="final-note-icon">✨</span>
+        <div>
+          <div class="final-note-title">Je persoonlijke selectie is klaar voor de visualisatie.</div>
+          <div class="final-note-body">Vraag een van onze adviseurs voor de fysieke stalen van deze producten.</div>
+        </div>
+      </div>
+    </div>`;
+  host.appendChild(card);
+
+  card.querySelector('#back4').addEventListener('click', () => gotoStep(3));
+  const dropZone = card.querySelector('#dropZone');
+  const fileInput = card.querySelector('#photoInput');
+  const genBtn = card.querySelector('#genJson');
+
+  ['dragenter','dragover'].forEach(ev =>
+    dropZone.addEventListener(ev, e => { e.preventDefault(); dropZone.classList.add('dragover'); }));
+  ['dragleave','drop'].forEach(ev =>
+    dropZone.addEventListener(ev, e => { e.preventDefault(); dropZone.classList.remove('dragover'); }));
+  dropZone.addEventListener('drop', e => {
+    if (e.dataTransfer.files.length) handlePhoto(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', e => {
+    if (e.target.files.length) handlePhoto(e.target.files[0]);
+  });
+  genBtn.addEventListener('click', () => showJson(buildProfile()));
+
+  if (state.photoDataUrl) showPhotoPreview();
+}
+
+function handlePhoto(file) {
+  if (!file || !file.type.startsWith('image/')) {
+    alert('Kies een afbeeldingsbestand (JPG / PNG / WEBP).');
+    return;
+  }
+  const MAX = 8 * 1024 * 1024;
+  if (file.size > MAX && !confirm(`Foto is ${(file.size/1024/1024).toFixed(1)} MB — base64 wordt erg groot. Toch doorgaan?`)) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    state.photoFile = file; state.photoDataUrl = ev.target.result;
+    showPhotoPreview();
+    document.getElementById('genJson').disabled = false;
+  };
+  r.readAsDataURL(file);
+}
+
+function showPhotoPreview() {
+  const wrap = document.getElementById('photoPreviewWrap');
+  const img = document.getElementById('photoImg');
+  const meta = document.getElementById('photoMeta');
+  if (!wrap || !state.photoDataUrl) return;
+  img.src = state.photoDataUrl;
+  const f = state.photoFile;
+  meta.innerHTML = `
+    <div class="row"><span>Bestand</span><b>${escHtml(f ? f.name : 'foto')}</b></div>
+    <div class="row"><span>Grootte</span><b>${escHtml(f ? (f.size/1024/1024).toFixed(2) : '?')} MB</b></div>
+    <div class="row"><span>Type</span><b>${escHtml(f ? f.type : '—')}</b></div>`;
+  wrap.style.display = '';
+  document.getElementById('dropTitle').textContent = 'Foto klaar — klik om te vervangen';
+  document.getElementById('dropHint').textContent = state.photoFile ? state.photoFile.name : '';
+  const genBtn = document.getElementById('genJson'); if (genBtn) genBtn.disabled = false;
+}
+
+// ── Profile builder + JSON output ────────────────────────
+// Schema volgt de briefing exact: mode='free_selection', selected_products
+// met floor/window keys, custom_furniture, room_photo. Voor raamdecor breiden
+// we naar een array uit zodat combinaties (Inbetween + Duette) gerepresenteerd
+// kunnen worden — een single-product klant krijgt gewoon een lijst van 1.
+function buildProfile() {
+  const floor = state.selectedFloor ? {
+    id: state.selectedFloor.id,
+    pattern: state.selectedFloor.pattern,
+    material: state.selectedFloor.material,
+    texture_map: state.selectedFloor.texture_map,
+  } : null;
+
+  const window = state.selectedWindows.length > 0 ? state.selectedWindows.map(w => ({
+    id: w.id,
+    product_type: w.product_type,
+    mount: state.windowContext.frame_material === 'kunststof' || state.windowContext.frame_material === 'alu'
+      ? 'clamp_on_frame'
+      : 'wall_mount',
+    texture_map: w.texture_map,
+  })) : [];
+
+  const custom_furniture = state.furniture
+    .filter(f => f.type || f.l || f.w || f.h || f.photoUrl)
+    .map(f => ({
+      id: f.id,
+      type: f.type,
+      dimensions: [parseInt(f.l,10) || 0, parseInt(f.w,10) || 0, parseInt(f.h,10) || 0],
+      image_url: f.photoUrl || null,
+    }));
+
+  return {
+    mode: 'free_selection',
+    project_scope: [...state.scope],
+    selected_products: { floor, window },
+    window_context: { ...state.windowContext },
+    custom_furniture,
+    room_photo: state.photoDataUrl,
+    validation_notices: validateCart().map(n => ({ icon: n.icon, message: n.text })),
+    meta: {
+      floor_count:  state.selectedFloor ? 1 : 0,
+      window_count: state.selectedWindows.length,
+      furniture_count: custom_furniture.length,
+      generated_at: new Date().toISOString(),
+    },
+  };
+}
+
+function showJson(profile) {
+  const wrap = document.getElementById('jsonWrap');
+  const out  = document.getElementById('jsonOut');
+  // Truncate room_photo voor leesbaarheid op het scherm.
+  const display = JSON.parse(JSON.stringify(profile));
+  if (display.room_photo && display.room_photo.length > 100) {
+    const head = display.room_photo.slice(0, 60);
+    display.room_photo = `${head}…[+${profile.room_photo.length - 60} bytes base64]`;
+  }
+  out.innerHTML = highlight(JSON.stringify(display, null, 2));
+  wrap.style.display = '';
+  document.getElementById('copyJson').onclick     = () => copyJson(profile);
+  document.getElementById('downloadJson').onclick = () => downloadJson(profile);
+  document.getElementById('resetAll').onclick     = resetAll;
+  wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function highlight(str) {
+  return escHtml(str)
+    .replace(/(&quot;[^&]*?&quot;)(\s*:)/g, '<span class="k">$1</span>$2')
+    .replace(/:\s*(&quot;[^&]*?&quot;)/g, ': <span class="s">$1</span>')
+    .replace(/:\s*(true|false|null)/g, ': <span class="b">$1</span>')
+    .replace(/:\s*(-?\d+(\.\d+)?)/g, ': <span class="n">$1</span>');
+}
+
+function copyJson(profile) {
+  const text = JSON.stringify(profile, null, 2);
+  navigator.clipboard.writeText(text).then(() => showToast('Gekopieerd ✓')).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    showToast('Gekopieerd ✓');
+  });
+}
+function downloadJson(profile) {
+  const text = JSON.stringify(profile, null, 2);
+  const blob = new Blob([text], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `free_selection_${(profile.selected_products.floor?.id || 'noflr')}_${(profile.selected_products.window[0]?.id || 'nowin')}.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function showToast(msg = 'Gekopieerd ✓') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._tid); t._tid = setTimeout(() => t.classList.remove('show'), 1400);
+}
+
+// ── Navigation ──────────────────────────────────────────
+function gotoStep(n) {
+  if (n > 1 && state.scope.length === 0) n = 1;
+  state.step = n;
+  renderProgress();
+  if (n === 1) renderStep1();
+  if (n === 2) renderStep2();
+  if (n === 3) renderStep3();
+  if (n === 4) renderStep4();
+  renderCart();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function resetAll() {
+  state.step = 1;
+  state.scope = [];
+  state.furniture = [];
+  state.selectedFloor = null;
+  state.selectedWindows = [];
+  state.filters.floor = { material: '', pattern: '' };
+  state.filters.window.goals = [];
+  state.activeTab = null;
+  state.photoFile = state.photoDataUrl = null;
+  gotoStep(1);
+}
+
+// ── Init ───────────────────────────────────────────────
+gotoStep(1);
+</script>
+</body>
+</html>
