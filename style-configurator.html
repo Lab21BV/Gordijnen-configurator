@@ -530,6 +530,35 @@
     }
     .add-btn:hover { border-color: var(--accent); color: var(--accent); }
 
+    /* ── Plattegrond / bouwtekening upload (top of page) ── */
+    .plan-upload {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      display: flex; align-items: center; gap: 14px;
+      flex-wrap: wrap;
+      transition: border-color .15s, background .15s;
+    }
+    .plan-upload.dragover { border-color: var(--accent); background: var(--accent-lt); }
+    .plan-upload.has-file { border-color: var(--success); background: var(--success-lt); }
+    .plan-upload .pu-icon { font-size: 1.6rem; flex-shrink: 0; }
+    .plan-upload .pu-thumb {
+      width: 56px; height: 48px; border-radius: 5px;
+      border: 1px solid var(--border); background: #f4f5f7;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; overflow: hidden; flex-shrink: 0;
+    }
+    .plan-upload .pu-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .plan-upload .pu-text { flex: 1; min-width: 200px; }
+    .plan-upload .pu-title { font-size: .92rem; font-weight: 700; color: var(--accent-dk); margin-bottom: 2px; }
+    .plan-upload .pu-sub   { font-size: .78rem; color: var(--muted); line-height: 1.45; }
+    .plan-upload.has-file .pu-title { color: #1b5e20; }
+    .plan-upload .pu-actions { display: flex; gap: 6px; align-items: center; }
+    .plan-upload .pu-actions label { cursor: pointer; }
+    .plan-upload input[type="file"] { display: none; }
+
     /* ── Afsluitende boodschap ───────────────────────────── */
     .final-note {
       margin-top: 24px;
@@ -607,6 +636,11 @@
     <span>Geen tijd om te kiezen?</span>
     <button class="btn btn-outline btn-sm" id="btnInspireer" type="button">✨ Inspireer me</button>
   </div>
+
+  <!-- Plattegrond / bouwtekening uploaden — wordt ingebed in de JSON-output
+       zodat de adviseur er handmatige berekeningen op kan doen (oppervlakte,
+       maten, posities). Optioneel; geen invloed op de stappen-flow. -->
+  <div class="plan-upload" id="planUpload"></div>
 
   <!-- ── Step host (één step zichtbaar tegelijk) ── -->
   <div id="stepHost"></div>
@@ -847,6 +881,10 @@ const state = {
   windows: [],            // [{id, name, height, width, frame_material, ... goals[], chosenComboId}]
   photoFile: null,
   photoDataUrl: null,
+  // Plattegrond / bouwtekening — optioneel; gaat als base64 mee in JSON zodat
+  // de adviseur er maten / oppervlakte handmatig op kan uitrekenen.
+  floorPlanFile: null,
+  floorPlanDataUrl: null,
   aiSuggested: false,
 };
 
@@ -940,6 +978,88 @@ function el(tag, attrs = {}, html = '') {
 function escHtml(s) {
   return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Plattegrond / bouwtekening upload (gedeeld pattern) ─────
+// Compacte component bovenaan de pagina. Accepteert JPG/PNG/WEBP en PDF;
+// slaat het bestand als base64 op in state.floorPlanDataUrl. Geen blokkade
+// voor de stappen-flow — puur context voor de adviseur.
+function setupPlanUpload() {
+  const card = document.getElementById('planUpload');
+  if (!card) return;
+  ['dragenter','dragover'].forEach(ev =>
+    card.addEventListener(ev, e => { e.preventDefault(); card.classList.add('dragover'); }));
+  ['dragleave','drop'].forEach(ev =>
+    card.addEventListener(ev, e => { e.preventDefault(); card.classList.remove('dragover'); }));
+  card.addEventListener('drop', e => {
+    if (e.dataTransfer.files.length) handleFloorPlan(e.dataTransfer.files[0]);
+  });
+  card.addEventListener('change', e => {
+    if (e.target.matches('input[type="file"]') && e.target.files.length)
+      handleFloorPlan(e.target.files[0]);
+  });
+  card.addEventListener('click', e => {
+    if (e.target.id === 'planRemove') {
+      state.floorPlanFile = null;
+      state.floorPlanDataUrl = null;
+      renderPlanUpload();
+    }
+  });
+  renderPlanUpload();
+}
+
+function handleFloorPlan(file) {
+  const isImage = file.type.startsWith('image/');
+  const isPdf   = file.type === 'application/pdf';
+  if (!isImage && !isPdf) {
+    alert('Kies een afbeelding (JPG/PNG/WEBP) of een PDF.');
+    return;
+  }
+  const MAX = 8 * 1024 * 1024;
+  if (file.size > MAX && !confirm(`Plattegrond is ${(file.size/1024/1024).toFixed(1)} MB — base64 wordt erg groot. Toch insluiten?`)) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    state.floorPlanFile = file;
+    state.floorPlanDataUrl = ev.target.result;
+    renderPlanUpload();
+  };
+  r.readAsDataURL(file);
+}
+
+function renderPlanUpload() {
+  const card = document.getElementById('planUpload');
+  if (!card) return;
+  if (!state.floorPlanFile) {
+    card.classList.remove('has-file');
+    card.innerHTML = `
+      <span class="pu-icon">📐</span>
+      <div class="pu-text">
+        <div class="pu-title">Plattegrond of bouwtekening (optioneel)</div>
+        <div class="pu-sub">Upload een PDF of afbeelding — wij rekenen oppervlakte en maten voor je uit. Sleep het bestand hierheen of kies het hieronder.</div>
+      </div>
+      <div class="pu-actions">
+        <label class="btn btn-outline btn-sm">📎 Bestand kiezen
+          <input type="file" accept="image/*,application/pdf">
+        </label>
+      </div>`;
+    return;
+  }
+  const f = state.floorPlanFile;
+  const sizeMB = (f.size/1024/1024).toFixed(2);
+  const isImg = f.type.startsWith('image/');
+  card.classList.add('has-file');
+  card.innerHTML = `
+    <div class="pu-thumb">${isImg ? `<img src="${escHtml(state.floorPlanDataUrl)}" alt="">` : '📄'}</div>
+    <div class="pu-text">
+      <div class="pu-title">${escHtml(f.name)} ✓</div>
+      <div class="pu-sub">${escHtml(sizeMB)} MB · ${escHtml(f.type || 'onbekend')} · wordt meegestuurd in het profiel voor handmatige berekening.</div>
+    </div>
+    <div class="pu-actions">
+      <label class="btn btn-outline btn-sm">Vervang
+        <input type="file" accept="image/*,application/pdf">
+      </label>
+      <button class="btn btn-ghost btn-sm" type="button" id="planRemove">Verwijder</button>
+    </div>`;
 }
 
 // Voortgangsbalk synchroniseren met state.step. Stap 5 (raamdecor) wordt
@@ -1638,12 +1758,21 @@ function buildStyleProfile() {
   const tags = [...styleObj.tags, ...paletteObj.tags];
   const uniqueTags = Array.from(new Set(tags));
 
+  // Plattegrond/bouwtekening — alleen aanwezig als de klant er één geüpload heeft.
+  const floor_plan = state.floorPlanFile ? {
+    filename: state.floorPlanFile.name,
+    mime_type: state.floorPlanFile.type,
+    size_bytes: state.floorPlanFile.size,
+    data_url: state.floorPlanDataUrl,
+  } : null;
+
   return {
     style_id: state.style,
     color_palette_id: state.palette,
     project_scope: scopeArr,
     existing_furniture,
     window_specs,
+    floor_plan,
     customer_photo_url: state.photoDataUrl,
     ai_prompt_tags: uniqueTags,
     meta: {
@@ -1652,6 +1781,7 @@ function buildStyleProfile() {
       ai_suggested: state.aiSuggested,
       furniture_count: existing_furniture.length,
       window_count: window_specs.length,
+      has_floor_plan: !!floor_plan,
       generated_at: new Date().toISOString(),
     },
   };
@@ -1661,12 +1791,16 @@ function buildStyleProfile() {
 function showJson(profile) {
   const wrap = document.getElementById('jsonWrap');
   const out = document.getElementById('jsonOut');
-  // Voor de UI: photo-URL tot 80 chars + "[…+ N bytes]" zodat het scherm leesbaar blijft.
+  // Voor de UI: data-URLs (foto + plattegrond) afkappen op 60 chars + "[…+ N bytes]"
+  // zodat het scherm leesbaar blijft. Volledige base64 blijft in de download.
   const display = JSON.parse(JSON.stringify(profile));
   if (display.customer_photo_url && display.customer_photo_url.length > 100) {
     const full = display.customer_photo_url;
-    const head = full.slice(0, 60);
-    display.customer_photo_url = `${head}…[+${full.length - 60} bytes base64]`;
+    display.customer_photo_url = `${full.slice(0, 60)}…[+${full.length - 60} bytes base64]`;
+  }
+  if (display.floor_plan && display.floor_plan.data_url && display.floor_plan.data_url.length > 100) {
+    const full = display.floor_plan.data_url;
+    display.floor_plan.data_url = `${full.slice(0, 60)}…[+${full.length - 60} bytes base64]`;
   }
   out.innerHTML = highlightJson(JSON.stringify(display, null, 2));
   wrap.style.display = '';
@@ -1777,12 +1911,15 @@ function resetAll() {
   state.furniture = [];
   state.windows = [];
   state.photoFile = state.photoDataUrl = null;
+  state.floorPlanFile = state.floorPlanDataUrl = null;
   state.aiSuggested = false;
+  renderPlanUpload();
   gotoStep(1);
 }
 
 // ── Init ───────────────────────────────────────────────────
 document.getElementById('btnInspireer').addEventListener('click', inspireerMe);
+setupPlanUpload();
 gotoStep(1);
 </script>
 </body>

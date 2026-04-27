@@ -891,6 +891,7 @@ function filterRaamOplossingen(goals: string[]): RaamOplossing[] {
     <li><strong>Tile-visuals</strong> zijn CSS-gradient placeholders met SVG mood-iconen. Elk <code>.tile-image</code>-blok heeft een HTML-comment <code>&lt;!-- IMAGE-PLACEHOLDER {ID} --&gt;</code>; vervang het door <code>&lt;img src="&hellip;"&gt;</code> voor showroomfoto's.</li>
     <li><strong>Adviseur-CTA</strong> &mdash; na het genereren van het profiel verschijnt een groene callout: <em>"Je persoonlijke stijl is vertaald naar jouw ruimte. Vraag nu een van onze adviseurs voor de fysieke stalen van dit ontwerp."</em></li>
     <li><strong>Geen Supabase-koppeling</strong> &mdash; alle state leeft in de browser; foto's (woonkamer + meubels) worden als base64 ingebed in de uiteindelijke JSON.</li>
+    <li><strong>Plattegrond / bouwtekening</strong> &mdash; bovenaan de pagina staat een optionele upload-component (PDF of afbeelding). Het bestand wordt als <code>floor_plan</code>-object in de JSON ingebed (filename + mime_type + size_bytes + base64 data_url) zodat een adviseur er handmatige berekeningen op kan doen (oppervlakte, posities, materiaalhoeveelheden).</li>
   </ul>
 
   <!-- ────────── VRIJE KEUZE ────────── -->
@@ -947,6 +948,12 @@ function filterRaamOplossingen(goals: string[]): RaamOplossing[] {
   "custom_furniture": [
     { "id": "user_sofa_1", "type": "Bank", "dimensions": [220, 90, 80], "image_url": "data:&hellip;" }
   ],
+  "floor_plan": {
+    "filename": "plattegrond_woonkamer.pdf",
+    "mime_type": "application/pdf",
+    "size_bytes": 234567,
+    "data_url": "data:application/pdf;base64,&hellip;"
+  },
   "room_photo": "data:image/jpeg;base64,&hellip;",
   "validation_notices": [
     { "icon": "ℹ", "message": "Draai-/kiepraam: gekozen producten blokkeren kantelen &hellip;" }
