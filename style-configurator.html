@@ -65,10 +65,13 @@
     }
     .progress-row {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
       margin-bottom: 12px;
     }
+    /* Stap 5 wordt visueel afgezwakt als hij niet in scope zit. */
+    .progress-step.skipped { opacity: .35; }
+    .progress-step.skipped .num { background: #eef0f4; color: var(--muted); }
     .progress-step {
       display: flex; align-items: center; gap: 8px;
       font-size: .82rem; color: var(--muted); min-width: 0;
@@ -358,6 +361,175 @@
       display: flex; align-items: center; gap: 10px;
     }
 
+    /* ── Meubel-inventarisatie ──────────────────────────── */
+    .furniture-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 14px; }
+    .furniture-item {
+      display: grid;
+      grid-template-columns: 110px 1fr auto;
+      gap: 14px; align-items: center;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 12px 14px;
+    }
+    .furniture-thumb {
+      width: 110px; height: 80px; border-radius: 6px;
+      background: linear-gradient(135deg,#eef0f4,#dadde2);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--muted); font-size: 1.6rem; overflow: hidden; cursor: pointer;
+      position: relative;
+    }
+    .furniture-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .furniture-thumb input { display: none; }
+    .furniture-fields {
+      display: grid;
+      grid-template-columns: 1fr repeat(3, 80px);
+      gap: 8px; align-items: end;
+    }
+    .furniture-fields label {
+      font-size: .72rem; font-weight: 600; color: var(--muted);
+      display: flex; flex-direction: column; gap: 3px;
+    }
+    .furniture-fields input, .furniture-fields select {
+      font: inherit; padding: 6px 8px; border: 1px solid var(--border);
+      border-radius: 5px; font-size: .85rem; background: #fff; color: var(--text);
+    }
+    .furniture-remove {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--error); border-radius: 5px; padding: 6px 10px;
+      cursor: pointer; font-size: .82rem;
+    }
+    .furniture-remove:hover { background: var(--error-lt); border-color: var(--error); }
+    .commerce-bias {
+      background: var(--accent-lt); border: 1px solid #c4d4e6;
+      color: var(--accent-dk); padding: 11px 14px; border-radius: 8px;
+      font-size: .85rem; margin-bottom: 16px;
+    }
+    @media (max-width: 720px) {
+      .furniture-item { grid-template-columns: 1fr; }
+      .furniture-fields { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* ── Scope tile-grid (3 grote tegels) ────────────────── */
+    .scope-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+    }
+
+    /* ── Raam-card (per ruimte, per raam) ────────────────── */
+    .room-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; box-shadow: var(--shadow);
+      padding: 18px 20px; margin-bottom: 16px;
+    }
+    .room-header {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 14px;
+    }
+    .room-header .badge {
+      background: var(--accent); color: #fff; font-size: .72rem;
+      font-weight: 700; padding: 3px 9px; border-radius: 12px;
+      letter-spacing: .04em; text-transform: uppercase;
+    }
+    .room-header h3 { font-size: 1.05rem; color: var(--accent-dk); flex: 1; }
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px 14px; margin-bottom: 14px;
+    }
+    .field-grid label {
+      font-size: .76rem; font-weight: 600; color: var(--muted);
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .field-grid input, .field-grid select {
+      font: inherit; padding: 7px 9px; border: 1px solid var(--border);
+      border-radius: 5px; font-size: .85rem; background: #fff; color: var(--text);
+    }
+
+    /* ── Doel-klant chips (multi-select) ─────────────────── */
+    .goal-chips {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      margin-bottom: 14px;
+    }
+    .goal-chip {
+      cursor: pointer; user-select: none;
+      font-size: .78rem; font-weight: 600;
+      padding: 6px 12px; border-radius: 18px;
+      background: #f4f5f7; border: 1px solid var(--border);
+      color: var(--muted); transition: all .15s;
+    }
+    .goal-chip:hover { border-color: var(--accent); color: var(--accent-dk); }
+    .goal-chip.active {
+      background: var(--accent); color: #fff; border-color: var(--accent);
+    }
+
+    /* ── Top-4 oplossing tegels ──────────────────────────── */
+    .top4-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px; margin-bottom: 14px;
+    }
+    .top4-tile {
+      cursor: pointer;
+      background: var(--surface); border: 2px solid var(--border);
+      border-radius: 8px; padding: 12px 14px;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .top4-tile:hover { border-color: var(--accent); box-shadow: var(--shadow); }
+    .top4-tile.selected {
+      border-color: var(--success);
+      box-shadow: 0 0 0 3px var(--success-lt);
+    }
+    .top4-tile .combo {
+      font-size: .92rem; font-weight: 700; color: var(--accent-dk);
+      margin-bottom: 4px;
+    }
+    .top4-tile .goals {
+      font-size: .72rem; color: var(--muted); line-height: 1.4;
+    }
+    .top4-tile .kapstaal {
+      margin-top: 8px; font-family: 'Courier New', monospace;
+      font-size: .7rem; color: var(--accent);
+      background: var(--accent-lt); padding: 2px 6px; border-radius: 3px;
+      display: inline-block;
+    }
+    .top4-empty {
+      padding: 14px; text-align: center; color: var(--muted);
+      font-size: .85rem; background: #fafbfd; border: 1px dashed var(--border);
+      border-radius: 6px; margin-bottom: 14px;
+    }
+
+    /* ── Notice (auto-waarschuwingen op basis van keuzes) ── */
+    .notice {
+      display: flex; align-items: flex-start; gap: 8px;
+      background: var(--warn-lt); border: 1px solid #ffcc80;
+      color: #7b3a00; padding: 9px 12px; border-radius: 6px;
+      font-size: .8rem; margin-bottom: 8px; line-height: 1.45;
+    }
+    .notice .icon { font-size: 1rem; line-height: 1.2; flex-shrink: 0; }
+
+    /* ── Advanced (collapsible) ──────────────────────────── */
+    details.advanced {
+      margin-top: 8px; border-top: 1px dashed var(--border);
+      padding-top: 10px;
+    }
+    details.advanced > summary {
+      cursor: pointer; font-size: .82rem; font-weight: 600;
+      color: var(--accent); user-select: none;
+      list-style: none; padding: 4px 0;
+    }
+    details.advanced > summary::-webkit-details-marker { display: none; }
+    details.advanced > summary::before {
+      content: '▸'; display: inline-block; margin-right: 6px;
+      transition: transform .15s;
+    }
+    details.advanced[open] > summary::before { transform: rotate(90deg); }
+
+    .add-btn {
+      width: 100%; padding: 10px;
+      border: 2px dashed var(--border); background: transparent;
+      color: var(--muted); border-radius: 8px; cursor: pointer;
+      font-size: .9rem; font-weight: 600; transition: all .15s;
+    }
+    .add-btn:hover { border-color: var(--accent); color: var(--accent); }
+
     /* ── Afsluitende boodschap ───────────────────────────── */
     .final-note {
       margin-top: 24px;
@@ -419,7 +591,10 @@
     <div class="progress-row" id="progressRow">
       <div class="progress-step active" data-step="1"><span class="num">1</span><span class="label">Woonstijl</span></div>
       <div class="progress-step"        data-step="2"><span class="num">2</span><span class="label">Kleur-palet</span></div>
-      <div class="progress-step"        data-step="3"><span class="num">3</span><span class="label">Foto &amp; profiel</span></div>
+      <div class="progress-step"        data-step="3"><span class="num">3</span><span class="label">Meubels</span></div>
+      <div class="progress-step"        data-step="4"><span class="num">4</span><span class="label">Scope</span></div>
+      <div class="progress-step"        data-step="5"><span class="num">5</span><span class="label">Raamdecor</span></div>
+      <div class="progress-step"        data-step="6"><span class="num">6</span><span class="label">Foto &amp; profiel</span></div>
     </div>
     <div class="progress-bar"><div class="fill" id="progressFill"></div></div>
   </div>
@@ -500,6 +675,95 @@ const STYLE_PALETTES = {
   Country:      ['Warm_Earth',    'Natural_Green', 'Bold_Contrast'], // weg: Cool_Fresh
 };
 
+// ── Project-scope tegels (stap 4) ───────────────────────────
+const PROJECT_SCOPES = [
+  { id: 'flooring',     label: 'Vloer',
+    sub: 'Alleen vloer-advies — bestaande raamdecoratie blijft.',
+    bgClass: 'bg-warm-earth', iconColor: 'icon-dark', icon: 'flooring' },
+  { id: 'window_decor', label: 'Raamdecoratie',
+    sub: 'Gordijnen, jaloezieën, duettes of rolgordijnen — per raam advies.',
+    bgClass: 'bg-cool-fresh', iconColor: 'icon-dark', icon: 'window_decor' },
+  { id: 'both',         label: 'Beide',
+    sub: 'Volledige metamorfose — vloer én raamdecoratie samen.',
+    bgClass: 'bg-natural-green', iconColor: 'icon-light', icon: 'both' },
+];
+
+// ── Meubel-types voor stap 3 ────────────────────────────────
+const MEUBEL_TYPES = [
+  'Bank', 'Eettafel', 'Eetkamerstoel', 'Salontafel', 'Kast', 'Dressoir',
+  'Bed', 'Fauteuil', 'Bureau', 'TV-meubel', 'Vloerkleed', 'Anders',
+];
+
+// ── Doelen klant (raamdecoratie) — multi-select chips ───────
+const RAAM_DOELEN = [
+  { id: 'sfeer',         label: 'Sfeer' },
+  { id: 'privacy',       label: 'Privacy' },
+  { id: 'doorkijk',      label: 'Doorkijk wanneer dicht' },
+  { id: 'hitte_uv',      label: 'Hitte & UV-bestendigheid' },
+  { id: 'verduistering', label: '100% Verduistering' },
+  { id: 'akoestiek',     label: 'Akoestiek' },
+  { id: 'warmte',        label: 'Warmte-isolatie' },
+  { id: 'inkijk',        label: 'Inkijk reguleren' },
+];
+
+// ── Oplossingen-matrix uit het bronbestand ──────────────────
+// Vertaling van de spreadsheet "Oplossingen × Doel klant". Elke combinatie
+// vermeldt welke producten erin zitten en welke klant-doelen ze afdekken.
+// Bron-volgorde aangehouden; de filter-functie sorteert later op
+// veelzijdigheid (aantal afgedekte doelen).
+const RAAM_OPLOSSINGEN = [
+  { id: 'inb_over_jal', combo: ['inbetween','overgordijn','jaloezie'],
+    goals: ['sfeer','privacy','doorkijk','hitte_uv','verduistering','akoestiek','warmte','inkijk'] },
+  { id: 'inb_over_due', combo: ['inbetween','overgordijn','duette'],
+    goals: ['sfeer','privacy','hitte_uv','verduistering','akoestiek','warmte'] },
+  { id: 'inb_over_rol', combo: ['inbetween','overgordijn','rolgordijn'],
+    goals: ['sfeer','privacy','hitte_uv','verduistering','akoestiek','warmte'] },
+  { id: 'inb_jal',      combo: ['inbetween','jaloezie'],
+    goals: ['sfeer','privacy','doorkijk','hitte_uv','inkijk'] },
+  { id: 'inb_due',      combo: ['inbetween','duette'],
+    goals: ['sfeer','privacy','hitte_uv'] },
+  { id: 'inb_rol',      combo: ['inbetween','rolgordijn'],
+    goals: ['sfeer','privacy','hitte_uv'] },
+  { id: 'over_jal',     combo: ['overgordijn','jaloezie'],
+    goals: ['privacy','doorkijk','hitte_uv','verduistering','akoestiek','warmte','inkijk'] },
+  { id: 'over_due_t',   combo: ['overgordijn','duette_transparant'],
+    goals: ['sfeer','privacy','verduistering','akoestiek','warmte'] },
+  { id: 'over_rol',     combo: ['overgordijn','rolgordijn'],
+    goals: ['privacy','verduistering','akoestiek','warmte'] },
+  { id: 'inb_over',     combo: ['inbetween','overgordijn'],
+    goals: ['sfeer','privacy','verduistering','akoestiek','warmte'] },
+  { id: 'jal',          combo: ['jaloezie'],
+    goals: ['privacy','doorkijk','hitte_uv','inkijk'] },
+  { id: 'due',          combo: ['duette'],
+    goals: ['privacy','hitte_uv'] },
+  { id: 'rol',          combo: ['rolgordijn'],
+    goals: ['privacy','hitte_uv'] },
+  { id: 'inb',          combo: ['inbetween'],
+    goals: ['sfeer','privacy'] },
+  { id: 'over',         combo: ['overgordijn'],
+    goals: ['privacy','verduistering','akoestiek','warmte'] },
+];
+
+// Productlabels voor weergave + Kapstalen-ID code.
+const PRODUCT_LABELS = {
+  inbetween:           { label: 'Inbetween',       code: 'INB' },
+  overgordijn:         { label: 'Overgordijn',     code: 'OG' },
+  jaloezie:            { label: 'Jaloezie',        code: 'JAL' },
+  duette:              { label: 'Duette',          code: 'DUE' },
+  duette_transparant:  { label: 'Duette transparant', code: 'DUT' },
+  rolgordijn:          { label: 'Rolgordijn',      code: 'ROL' },
+};
+
+// Kozijn-regels — sturen mounting-advies + waarschuwingen.
+const KOZIJN_REGELS = {
+  kunststof: { mag_boren: false, mounting: ['klem','ingespannen'],
+    notice: 'Kunststof kozijn: niet boren — gebruik klem-bevestiging of ingespannen modellen. Raam draait meestal naar binnen.' },
+  hout:      { mag_boren: true,  mounting: ['vrij','klem','ingespannen'],
+    notice: 'Houten kozijn: boren toegestaan; raam draait meestal naar buiten — vrijhangende modellen mogelijk.' },
+  alu:       { mag_boren: false, mounting: ['klem','ingespannen'],
+    notice: 'Aluminium kozijn: niet boren — gebruik klem-bevestiging of ingespannen modellen.' },
+};
+
 // ── SVG-iconen — placeholders voor de tiles. Vervang of verwijder als je
 // je eigen showroomfoto's gebruikt (dan render je een <img> in .tile-image
 // in plaats van het SVG-icoon). ────────────────────────────────────────
@@ -537,6 +801,21 @@ const ICONS = {
     <path d="M32 52V28"/><path d="M32 28c-8 0-14-4-14-12 8 0 14 4 14 12z"/>
     <path d="M32 34c8 0 14-4 14-12-8 0-14 4-14 12z"/>
   </svg>`,
+
+  // Scope-iconen (stap 4)
+  flooring: `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M8 22h48M8 32h48M8 42h48M8 52h48"/>
+    <path d="M20 22v30M40 22v30"/>
+  </svg>`,
+  window_decor: `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="14" y="10" width="36" height="44" rx="2"/>
+    <path d="M14 18h36M32 18v36M22 18v36M42 18v36"/>
+  </svg>`,
+  both: `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="10" y="8" width="22" height="32" rx="2"/>
+    <path d="M10 16h22M21 16v24"/>
+    <path d="M36 44h22M36 50h22M36 56h22"/>
+  </svg>`,
 };
 
 // ── Lookup helpers ──────────────────────────────────────────
@@ -548,10 +827,88 @@ const state = {
   step: 1,
   style: null,
   palette: null,
+  furniture: [],          // [{id, type, l, w, h, photoUrl}]
+  projectScope: null,     // 'flooring' | 'window_decor' | 'both'
+  windows: [],            // [{id, name, height, width, frame_material, ... goals[], chosenComboId}]
   photoFile: null,
   photoDataUrl: null,
   aiSuggested: false,
 };
+
+// ── Filter-functie voor de oplossingen-matrix ───────────────
+// @param {string[]} selectedGoals — id's uit RAAM_DOELEN.
+// @returns sorted RAAM_OPLOSSINGEN: alleen combinaties die ALLE
+//          geselecteerde doelen afdekken; meest veelzijdig eerst.
+//
+// TypeScript-equivalent voor AI-pipeline:
+//   function filterRaamOplossingen(selectedGoals: string[]): RaamOplossing[]
+function filterRaamOplossingen(selectedGoals) {
+  if (!selectedGoals || selectedGoals.length === 0) {
+    // Geen doelen → toon alle, gesorteerd op veelzijdigheid (meest gedekte doelen).
+    return [...RAAM_OPLOSSINGEN].sort((a, b) => b.goals.length - a.goals.length);
+  }
+  return RAAM_OPLOSSINGEN
+    .filter(o => selectedGoals.every(g => o.goals.includes(g)))
+    .sort((a, b) => b.goals.length - a.goals.length);
+}
+
+// Genereer een Kapstalen-ID voor de showroom: STYLE-PALETTE-PRODUCTCODES-NR.
+// Voorbeeld: KAP-IND-WE-INB-OG-DUE-001
+function generateKapstalenId(styleId, paletteId, comboId, idx = 1) {
+  const STY = (styleId || '???').slice(0, 3).toUpperCase();
+  const PAL = (paletteId || '??').split('_').map(s => s[0]).join('').toUpperCase();
+  const oplossing = RAAM_OPLOSSINGEN.find(o => o.id === comboId);
+  const productCodes = oplossing
+    ? oplossing.combo.map(p => PRODUCT_LABELS[p]?.code || p.toUpperCase().slice(0,3)).join('-')
+    : '___';
+  return `KAP-${STY}-${PAL}-${productCodes}-${String(idx).padStart(3, '0')}`;
+}
+
+// ── Furniture CRUD ──────────────────────────────────────────
+function addFurniture() {
+  state.furniture.push({
+    id: 'f' + Date.now() + Math.floor(Math.random() * 1000),
+    type: 'Bank', l: '', w: '', h: '', photoUrl: null,
+  });
+}
+function removeFurniture(id) {
+  state.furniture = state.furniture.filter(f => f.id !== id);
+}
+
+// ── Window CRUD ─────────────────────────────────────────────
+function defaultWindow(idx = 1) {
+  return {
+    id: 'w' + Date.now() + Math.floor(Math.random() * 1000),
+    name: `Raam ${idx}`,
+    width: '', height: '',
+    frame_material: 'kunststof',
+    operable_type: 'vast',                 // vast | bewegend | beide
+    mounting: 'in_de_dag',                 // in_de_dag | wand | plafond | kozijn
+    goals: [],                             // [doel-id, ...]
+    chosenComboId: null,
+    // Advanced
+    vol_muur: false,
+    wens_verduistering: false,
+    draaikiep: false,
+    vent_rooster: 'onbekend',              // ja | nee | onbekend
+    bediening: 'hand',                     // hand | electrisch | electrisch_accu
+    inbouwdiepte: '',
+    open_richting: 'vast',                 // vast | binnen | buiten
+    hor_nodig: false,
+  };
+}
+function addWindow() {
+  state.windows.push(defaultWindow(state.windows.length + 1));
+}
+function removeWindow(id) {
+  state.windows = state.windows.filter(w => w.id !== id);
+}
+function getWindow(id) { return state.windows.find(w => w.id === id); }
+
+// Of de huidige scope window-decor inhoud heeft.
+function scopeIncludesWindowDecor() {
+  return state.projectScope === 'window_decor' || state.projectScope === 'both';
+}
 
 // ── Rendering helpers ──────────────────────────────────────
 function $(sel) { return document.querySelector(sel); }
@@ -570,14 +927,17 @@ function escHtml(s) {
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// Voortgangsbalk synchroniseren met state.step.
+// Voortgangsbalk synchroniseren met state.step. Stap 5 (raamdecor) wordt
+// gemarkeerd als 'skipped' wanneer de scope alleen vloer is.
 function renderProgress() {
-  const total = 3;
+  const total = 6;
   $('#progressFill').style.width = ((state.step - 1) / (total - 1) * 100) + '%';
+  const skipStep5 = state.projectScope === 'flooring';
   document.querySelectorAll('.progress-step').forEach(node => {
     const n = parseInt(node.dataset.step, 10);
-    node.classList.toggle('active', n === state.step);
-    node.classList.toggle('done',   n < state.step);
+    node.classList.toggle('active',  n === state.step);
+    node.classList.toggle('done',    n < state.step);
+    node.classList.toggle('skipped', n === 5 && skipStep5);
   });
 }
 
@@ -610,7 +970,7 @@ function renderStep1() {
   host.innerHTML = '';
   const card = el('div', { class: 'step' });
   card.innerHTML = `
-    <div class="step-eyebrow">Stap 1 van 3</div>
+    <div class="step-eyebrow">Stap 1 van 6</div>
     <h2 class="step-title">Welke sfeer voelt als thuis?</h2>
     <p class="step-lead">Kies wat je hart raakt — niet wat je <em>zou moeten</em> kiezen.
        Op basis van deze richting filteren we het kleurpalet dat echt bij je past.</p>
@@ -643,7 +1003,7 @@ function renderStep2() {
 
   const card = el('div', { class: 'step' });
   card.innerHTML = `
-    <div class="step-eyebrow">Stap 2 van 3 · ${escHtml(styleObj.label)}</div>
+    <div class="step-eyebrow">Stap 2 van 6 · ${escHtml(styleObj.label)}</div>
     <h2 class="step-title">Welk palet spreekt je aan?</h2>
     <p class="step-lead">Bij <strong>${escHtml(styleObj.label.toLowerCase())}</strong> tonen we de kleurfamilies die het beste werken.
        Andere paletten blijven mogelijk, maar zijn afgezwakt — vertrouw op je eerste reactie.</p>
@@ -675,11 +1035,353 @@ function renderStep2() {
   card.querySelector('#back2').addEventListener('click', () => gotoStep(1));
 }
 
-// ── STAP 3 — Foto-upload + JSON output ─────────────────────
+// ── STAP 3 — Meubel inventarisatie ─────────────────────────
+// Optionele lijst van meubels die de klant wil behouden. Foto + LxBxH
+// helpen de AI in stap 6 om bestaande items in de transformatie te ontzien.
+function renderStep3() {
+  const host = $('#stepHost');
+  host.innerHTML = '';
+
+  const card = el('div', { class: 'step' });
+  card.innerHTML = `
+    <div class="step-eyebrow">Stap 3 van 6 · Inventarisatie</div>
+    <h2 class="step-title">Welke meubels wil je behouden?</h2>
+    <p class="step-lead">Voeg meubels toe die mee blijven — de AI past nieuwe vloer en raamdecoratie
+       hierop aan zodat alles complimenteert. Geen meubels behouden? Sla deze stap gewoon over.</p>
+
+    <div class="commerce-bias">
+      💡 <strong>Tip:</strong> hoe scherper de afmetingen, hoe beter de adviseur de
+      <em>nieuwe</em> producten kan afstemmen op wat blijft. Bank, salontafel en eettafel
+      zijn meestal de visuele anker-punten.
+    </div>
+
+    <div class="furniture-list" id="furnitureList"></div>
+    <button type="button" class="add-btn" id="addFurnitureBtn">+ Meubel toevoegen</button>
+
+    <div class="step-actions">
+      <button class="btn btn-ghost" type="button" id="back3">← Ander palet kiezen</button>
+      <button class="btn btn-primary btn-lg" type="button" id="next3">Volgende →</button>
+    </div>`;
+  host.appendChild(card);
+  renderFurnitureList();
+
+  card.querySelector('#back3').addEventListener('click', () => gotoStep(2));
+  card.querySelector('#next3').addEventListener('click', () => gotoStep(4));
+  card.querySelector('#addFurnitureBtn').addEventListener('click', () => {
+    addFurniture();
+    renderFurnitureList();
+  });
+}
+
+// Render alleen de meubel-lijst (sub-render zodat we niet de hele step
+// opnieuw hoeven op te bouwen bij add/remove).
+function renderFurnitureList() {
+  const host = document.getElementById('furnitureList');
+  if (!host) return;
+  if (state.furniture.length === 0) {
+    host.innerHTML = '<div class="top4-empty">Nog geen meubels toegevoegd. Klik hieronder om er één toe te voegen, of ga verder zonder.</div>';
+    return;
+  }
+  host.innerHTML = '';
+  state.furniture.forEach(f => {
+    const item = el('div', { class: 'furniture-item' });
+    item.innerHTML = `
+      <label class="furniture-thumb" data-id="${escHtml(f.id)}">
+        ${f.photoUrl
+          ? `<img src="${escHtml(f.photoUrl)}" alt="${escHtml(f.type)}">`
+          : '📦'}
+        <input type="file" accept="image/*" />
+      </label>
+      <div class="furniture-fields">
+        <label>Type
+          <select data-field="type">
+            ${MEUBEL_TYPES.map(t => `<option ${f.type === t ? 'selected' : ''}>${escHtml(t)}</option>`).join('')}
+          </select>
+        </label>
+        <label>L (cm)<input type="number" min="0" step="1" value="${escHtml(f.l)}" data-field="l" /></label>
+        <label>B (cm)<input type="number" min="0" step="1" value="${escHtml(f.w)}" data-field="w" /></label>
+        <label>H (cm)<input type="number" min="0" step="1" value="${escHtml(f.h)}" data-field="h" /></label>
+      </div>
+      <button class="furniture-remove" type="button" data-action="remove">Verwijder</button>`;
+    // Field updates.
+    item.querySelectorAll('[data-field]').forEach(input => {
+      input.addEventListener('change', e => {
+        f[e.target.dataset.field] = e.target.value;
+      });
+    });
+    // Photo upload.
+    const photoInput = item.querySelector('.furniture-thumb input');
+    photoInput.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => { f.photoUrl = ev.target.result; renderFurnitureList(); };
+      reader.readAsDataURL(file);
+    });
+    item.querySelector('[data-action="remove"]').addEventListener('click', () => {
+      removeFurniture(f.id);
+      renderFurnitureList();
+    });
+    host.appendChild(item);
+  });
+}
+
+// ── STAP 4 — Project scope ─────────────────────────────────
+function renderStep4() {
+  const host = $('#stepHost');
+  host.innerHTML = '';
+
+  const card = el('div', { class: 'step' });
+  card.innerHTML = `
+    <div class="step-eyebrow">Stap 4 van 6 · Productselectie</div>
+    <h2 class="step-title">Wat wil je laten transformeren?</h2>
+    <p class="step-lead">Kies waar de adviseur op moet focussen. Bij <em>Beide</em> krijg je een geïntegreerd
+       advies waar vloer en raamdecoratie elkaar versterken.</p>
+    <div class="tiles scope-grid" id="tilesStep4"></div>
+    <div class="step-actions">
+      <button class="btn btn-ghost" type="button" id="back4">← Meubels aanpassen</button>
+      <span style="font-size:.78rem;color:var(--muted)">Klik op een scope om verder te gaan.</span>
+    </div>`;
+  host.appendChild(card);
+
+  const grid = card.querySelector('#tilesStep4');
+  PROJECT_SCOPES.forEach(s => {
+    grid.appendChild(renderTile(s, {
+      selected: state.projectScope === s.id,
+      onClick: chosen => {
+        state.projectScope = chosen.id;
+        // Default: maak één leeg raam aan zodra raamdecor in scope komt.
+        if (scopeIncludesWindowDecor() && state.windows.length === 0) addWindow();
+        gotoStep(scopeIncludesWindowDecor() ? 5 : 6);
+      },
+    }));
+  });
+  card.querySelector('#back4').addEventListener('click', () => gotoStep(3));
+}
+
+// ── STAP 5 — Raamdecoratie per raam ────────────────────────
+// Conditioneel: alleen wanneer scope window_decor of both is.
+function renderStep5() {
+  const host = $('#stepHost');
+  host.innerHTML = '';
+  if (!scopeIncludesWindowDecor()) {
+    // Defensive: als scope flooring is, slaan we deze stap over.
+    return gotoStep(6);
+  }
+
+  const card = el('div', { class: 'step' });
+  card.innerHTML = `
+    <div class="step-eyebrow">Stap 5 van 6 · Raamdecoratie</div>
+    <h2 class="step-title">Configureer de ramen</h2>
+    <p class="step-lead">Per raam bepaal je <strong>maten</strong>, <strong>kozijn</strong> en
+       <strong>doelen</strong> (privacy, verduistering, akoestiek, …). Op basis van de oplossingen-matrix
+       tonen we de Top 4 combinaties die jouw doelen afdekken.</p>
+
+    <div id="windowsHost"></div>
+    <button type="button" class="add-btn" id="addWindowBtn">+ Raam toevoegen</button>
+
+    <div class="step-actions">
+      <button class="btn btn-ghost"   type="button" id="back5">← Scope wijzigen</button>
+      <button class="btn btn-primary btn-lg" type="button" id="next5">Volgende →</button>
+    </div>`;
+  host.appendChild(card);
+
+  card.querySelector('#back5').addEventListener('click', () => gotoStep(4));
+  card.querySelector('#next5').addEventListener('click', () => gotoStep(6));
+  card.querySelector('#addWindowBtn').addEventListener('click', () => {
+    addWindow(); renderWindowsHost();
+  });
+
+  renderWindowsHost();
+}
+
+// Sub-render: de lijst van raam-cards. We re-renderen alleen deze zodat
+// open <details> en focus-state in andere stappen behouden blijven.
+function renderWindowsHost() {
+  const host = document.getElementById('windowsHost');
+  if (!host) return;
+  if (state.windows.length === 0) {
+    host.innerHTML = '<div class="top4-empty">Geen ramen geconfigureerd. Klik hieronder om er één toe te voegen.</div>';
+    return;
+  }
+  host.innerHTML = '';
+  state.windows.forEach((w, idx) => host.appendChild(renderWindowCard(w, idx)));
+}
+
+function renderWindowCard(w, idx) {
+  const card = el('div', { class: 'room-card' });
+  const goalsByObj = id => RAAM_DOELEN.find(d => d.id === id);
+
+  // Auto-warnings op basis van actuele waarden.
+  const notices = [];
+  if (w.frame_material && KOZIJN_REGELS[w.frame_material]) {
+    notices.push({ icon: '⚠', text: KOZIJN_REGELS[w.frame_material].notice });
+  }
+  if (w.draaikiep) {
+    notices.push({ icon: 'ℹ', text: 'Draaikiep raam: kies bij voorkeur Duette of Jaloezie met top-down/bottom-up bediening — geeft toegang tot raam zonder demontage.' });
+  }
+  if (w.wens_verduistering || (w.goals && w.goals.includes('verduistering'))) {
+    notices.push({ icon: 'ℹ', text: 'Verduistering gewenst: bij overgordijn — geen Wave plooi, alleen verzwaringskoord of lock, geen onderzoom bij blackout-stof. Zonder blackout-stof: blackout voering toevoegen.' });
+  }
+  if (w.vol_muur) {
+    notices.push({ icon: 'ℹ', text: 'Vol-muur aankleden: gordijnen volle muur, zonwering binnen "in de dag".' });
+  }
+  if (w.height && parseInt(w.height, 10) <= 1500) {
+    notices.push({ icon: 'ℹ', text: 'Klein raam (≤ 1500 mm): bandhoogte 8 cm aanbevolen.' });
+  }
+  if (w.vent_rooster === 'ja') {
+    notices.push({ icon: 'ℹ', text: 'Ventilatierooster aanwezig: kies bij Duette voor top-down/bottom-up bediening.' });
+  }
+  if (w.open_richting === 'binnen') {
+    notices.push({ icon: 'ℹ', text: 'Raam draait naar binnen: gebruik ingespannen modellen, geen vrijhangende.' });
+  }
+
+  // Filter de Top 4 op basis van de gekozen doelen.
+  const matches = filterRaamOplossingen(w.goals);
+  const top4 = matches.slice(0, 4);
+
+  card.innerHTML = `
+    <div class="room-header">
+      <span class="badge">Raam ${idx + 1}</span>
+      <h3>${escHtml(w.name)}</h3>
+      ${state.windows.length > 1
+        ? `<button class="furniture-remove" type="button" data-action="remove-window">Verwijder raam</button>`
+        : ''}
+    </div>
+
+    <div class="field-grid">
+      <label>Naam<input type="text" data-field="name" value="${escHtml(w.name)}" /></label>
+      <label>Hoogte (mm)<input type="number" min="0" step="10" data-field="height" value="${escHtml(w.height)}" placeholder="bijv. 2400" /></label>
+      <label>Breedte (mm)<input type="number" min="0" step="10" data-field="width"  value="${escHtml(w.width)}"  placeholder="bijv. 1800" /></label>
+      <label>Type raam
+        <select data-field="operable_type">
+          <option value="vast"      ${w.operable_type === 'vast'      ? 'selected' : ''}>Vast</option>
+          <option value="bewegend"  ${w.operable_type === 'bewegend'  ? 'selected' : ''}>Bewegend</option>
+          <option value="beide"     ${w.operable_type === 'beide'     ? 'selected' : ''}>Vast + bewegend</option>
+        </select>
+      </label>
+      <label>Kozijn-materiaal
+        <select data-field="frame_material">
+          <option value="kunststof" ${w.frame_material === 'kunststof' ? 'selected' : ''}>Kunststof</option>
+          <option value="hout"      ${w.frame_material === 'hout'      ? 'selected' : ''}>Hout</option>
+          <option value="alu"       ${w.frame_material === 'alu'       ? 'selected' : ''}>Aluminium</option>
+        </select>
+      </label>
+      <label>Montage
+        <select data-field="mounting">
+          <option value="in_de_dag" ${w.mounting === 'in_de_dag' ? 'selected' : ''}>In de dag</option>
+          <option value="wand"      ${w.mounting === 'wand'      ? 'selected' : ''}>Wand op de dag</option>
+          <option value="plafond"   ${w.mounting === 'plafond'   ? 'selected' : ''}>Plafond</option>
+          <option value="kozijn"    ${w.mounting === 'kozijn'    ? 'selected' : ''}>Op het kozijn</option>
+        </select>
+      </label>
+    </div>
+
+    <div style="font-size:.82rem;font-weight:600;color:var(--accent-dk);margin-bottom:6px">Doel klant — wat moet dit raam doen?</div>
+    <div class="goal-chips" data-goals-for="${escHtml(w.id)}">
+      ${RAAM_DOELEN.map(d => `
+        <span class="goal-chip ${w.goals.includes(d.id) ? 'active' : ''}" data-goal="${escHtml(d.id)}">${escHtml(d.label)}</span>
+      `).join('')}
+    </div>
+
+    <div style="font-size:.82rem;font-weight:600;color:var(--accent-dk);margin-bottom:6px">
+      Top ${top4.length || 0} aanbevolen combinaties
+      ${w.goals.length > 0 ? `<span style="font-weight:400;color:var(--muted)">— gefilterd op: ${w.goals.map(g => escHtml(goalsByObj(g).label)).join(', ')}</span>` : ''}
+    </div>
+    <div class="top4-grid" data-top4-for="${escHtml(w.id)}">
+      ${top4.length === 0
+        ? '<div class="top4-empty">Geen combinatie dekt alle gekozen doelen samen. Verlaag het aantal doelen of kies minder strikte criteria.</div>'
+        : top4.map(o => `
+          <div class="top4-tile ${w.chosenComboId === o.id ? 'selected' : ''}" data-combo="${escHtml(o.id)}">
+            <div class="combo">${o.combo.map(p => escHtml(PRODUCT_LABELS[p].label)).join(' + ')}</div>
+            <div class="goals">Dekt: ${o.goals.map(g => escHtml(goalsByObj(g).label)).join(' · ')}</div>
+            <span class="kapstaal">${escHtml(generateKapstalenId(state.style, state.palette, o.id, idx + 1))}</span>
+          </div>
+        `).join('')}
+    </div>
+
+    ${notices.map(n => `
+      <div class="notice"><span class="icon">${n.icon}</span><span>${escHtml(n.text)}</span></div>
+    `).join('')}
+
+    <details class="advanced">
+      <summary>Geavanceerde raam-eigenschappen</summary>
+      <div class="field-grid" style="margin-top:10px">
+        <label><input type="checkbox" data-field="vol_muur" ${w.vol_muur ? 'checked' : ''}> Vol-muur aankleden</label>
+        <label><input type="checkbox" data-field="wens_verduistering" ${w.wens_verduistering ? 'checked' : ''}> Wens verduistering</label>
+        <label><input type="checkbox" data-field="draaikiep" ${w.draaikiep ? 'checked' : ''}> Draai-/kiepraam</label>
+        <label><input type="checkbox" data-field="hor_nodig" ${w.hor_nodig ? 'checked' : ''}> Hor nodig</label>
+        <label>Bediening
+          <select data-field="bediening">
+            <option value="hand"             ${w.bediening === 'hand'             ? 'selected' : ''}>Hand</option>
+            <option value="electrisch"       ${w.bediening === 'electrisch'       ? 'selected' : ''}>Elektrisch</option>
+            <option value="electrisch_accu"  ${w.bediening === 'electrisch_accu'  ? 'selected' : ''}>Elektrisch (accu)</option>
+          </select>
+        </label>
+        <label>Inbouwdiepte (mm)<input type="number" min="0" step="5" data-field="inbouwdiepte" value="${escHtml(w.inbouwdiepte)}" placeholder="bijv. 75" /></label>
+        <label>Open-richting
+          <select data-field="open_richting">
+            <option value="vast"   ${w.open_richting === 'vast'   ? 'selected' : ''}>Vast</option>
+            <option value="binnen" ${w.open_richting === 'binnen' ? 'selected' : ''}>Naar binnen</option>
+            <option value="buiten" ${w.open_richting === 'buiten' ? 'selected' : ''}>Naar buiten</option>
+          </select>
+        </label>
+        <label>Ventilatierooster
+          <select data-field="vent_rooster">
+            <option value="onbekend" ${w.vent_rooster === 'onbekend' ? 'selected' : ''}>Onbekend</option>
+            <option value="ja"       ${w.vent_rooster === 'ja'       ? 'selected' : ''}>Ja</option>
+            <option value="nee"      ${w.vent_rooster === 'nee'      ? 'selected' : ''}>Nee</option>
+          </select>
+        </label>
+      </div>
+    </details>
+  `;
+
+  // Field updates → re-render alleen deze raam-card zodat de matched
+  // matrix-suggesties + notices live meeveranderen.
+  card.querySelectorAll('[data-field]').forEach(input => {
+    input.addEventListener('change', () => {
+      const key = input.dataset.field;
+      w[key] = input.type === 'checkbox' ? input.checked : input.value;
+      // Volledig opnieuw renderen voor het juiste effect (matrix + notices + chips).
+      renderWindowsHost();
+    });
+  });
+
+  // Goal-chips toggle (multi-select).
+  card.querySelectorAll('[data-goal]').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const id = chip.dataset.goal;
+      if (w.goals.includes(id)) w.goals = w.goals.filter(g => g !== id);
+      else w.goals = [...w.goals, id];
+      renderWindowsHost();
+    });
+  });
+
+  // Top 4 combinatie kiezen.
+  card.querySelectorAll('[data-combo]').forEach(t => {
+    t.addEventListener('click', () => {
+      w.chosenComboId = t.dataset.combo;
+      renderWindowsHost();
+    });
+  });
+
+  // Verwijder-knop (alleen bij ≥ 2 ramen).
+  const removeBtn = card.querySelector('[data-action="remove-window"]');
+  if (removeBtn) {
+    removeBtn.addEventListener('click', () => {
+      removeWindow(w.id); renderWindowsHost();
+    });
+  }
+
+  return card;
+}
+
+// ── STAP 6 — Foto-upload + JSON output ─────────────────────
 // (Materiaal-keuze is bewust verwijderd: de visualizer-API van Kevin werkt
 //  op style_id + color_palette_id; materialen worden door zijn model zelf
 //  afgeleid uit de gekozen stijl.)
-function renderStep3() {
+function renderStep6() {
   const host = $('#stepHost');
   host.innerHTML = '';
   const styleObj   = styleById(state.style);
@@ -687,7 +1389,7 @@ function renderStep3() {
 
   const card = el('div', { class: 'step' });
   card.innerHTML = `
-    <div class="step-eyebrow">Stap 3 van 3 · Style profile</div>
+    <div class="step-eyebrow">Stap 6 van 6 · Style profile</div>
     <h2 class="step-title">Upload je foto — en zie hoe de AI je woonkamer invult</h2>
     <p class="step-lead">Upload een foto van de huidige woonruimte. We genereren een Style Profile (JSON)
        met je keuzes en prompt-tags voor de AI-visualizer.</p>
@@ -727,7 +1429,7 @@ function renderStep3() {
     </div>
 
     <div class="step-actions">
-      <button class="btn btn-ghost"   type="button" id="back3">← Ander palet kiezen</button>
+      <button class="btn btn-ghost"   type="button" id="back6">← Vorige stap</button>
       <button class="btn btn-success btn-lg" type="button" id="genJson" disabled>✓ Genereer Style Profile</button>
     </div>
 
@@ -755,7 +1457,10 @@ function renderStep3() {
   host.appendChild(card);
 
   // ── Listeners ─────────────────────────────────────────
-  card.querySelector('#back3').addEventListener('click', () => gotoStep(2));
+  // Back-knop: terug naar stap 5 als raamdecor in scope, anders naar stap 4.
+  card.querySelector('#back6').addEventListener('click', () => {
+    gotoStep(scopeIncludesWindowDecor() ? 5 : 4);
+  });
 
   const dropZone = card.querySelector('#dropZone');
   const fileInput = card.querySelector('#photoInput');
@@ -786,7 +1491,7 @@ function renderStep3() {
     });
   }
 
-  // Restore vorige foto-keuze (bij terugnavigatie naar stap 3).
+  // Restore vorige foto-keuze (bij terugnavigatie naar stap 6).
   if (state.photoDataUrl) showPhotoPreview();
 }
 
@@ -836,22 +1541,71 @@ function showPhotoPreview() {
 
 // ── Style profile (JSON output) ─────────────────────────
 // Sleutel-namen volgen Kevin's AI-visualizer-API: style_id + color_palette_id
-// zijn de primaire inputs; de overige velden zijn bijlage / context.
+// zijn de primaire inputs; project_scope, existing_furniture en window_specs
+// per raam zijn de uitbreiding voor het volledige interieur-advies.
 function buildStyleProfile() {
   const styleObj   = styleById(state.style);
   const paletteObj = paletteById(state.palette);
+
+  // Project-scope als array (matcht JSON-schema in briefing).
+  const scopeArr = state.projectScope === 'both'
+    ? ['flooring', 'window_decor']
+    : state.projectScope ? [state.projectScope] : [];
+
+  // Behouden meubels — alleen velden met inhoud.
+  const existing_furniture = state.furniture
+    .filter(f => f.type || f.l || f.w || f.h || f.photoUrl)
+    .map(f => ({
+      type: f.type,
+      dimensions: { l: parseInt(f.l, 10) || null, w: parseInt(f.w, 10) || null, h: parseInt(f.h, 10) || null },
+      image_url: f.photoUrl || null,
+    }));
+
+  // Per-raam specs — alleen als raamdecor in scope.
+  const window_specs = scopeIncludesWindowDecor() ? state.windows.map((w, idx) => {
+    const oplossing = w.chosenComboId
+      ? RAAM_OPLOSSINGEN.find(o => o.id === w.chosenComboId)
+      : null;
+    return {
+      name: w.name,
+      dimensions: { width: parseInt(w.width, 10) || null, height: parseInt(w.height, 10) || null },
+      frame_material: w.frame_material,
+      operable_type:  w.operable_type,
+      mounting:       w.mounting,
+      function_goals: w.goals,
+      suggested_products: oplossing ? oplossing.combo : [],
+      kapstalen_id: oplossing ? generateKapstalenId(state.style, state.palette, oplossing.id, idx + 1) : null,
+      advanced: {
+        vol_muur: w.vol_muur,
+        wens_verduistering: w.wens_verduistering,
+        draaikiep: w.draaikiep,
+        vent_rooster: w.vent_rooster,
+        bediening: w.bediening,
+        inbouwdiepte: parseInt(w.inbouwdiepte, 10) || null,
+        open_richting: w.open_richting,
+        hor_nodig: w.hor_nodig,
+      },
+    };
+  }) : [];
+
   // Tags: stijl + palet samengevoegd, doublures verwijderd.
   const tags = [...styleObj.tags, ...paletteObj.tags];
   const uniqueTags = Array.from(new Set(tags));
+
   return {
     style_id: state.style,
     color_palette_id: state.palette,
+    project_scope: scopeArr,
+    existing_furniture,
+    window_specs,
     customer_photo_url: state.photoDataUrl,
     ai_prompt_tags: uniqueTags,
     meta: {
       style_label: styleObj.label,
       palette_label: paletteObj.label,
       ai_suggested: state.aiSuggested,
+      furniture_count: existing_furniture.length,
+      window_count: window_specs.length,
       generated_at: new Date().toISOString(),
     },
   };
@@ -918,8 +1672,8 @@ function showToast(msg = 'Gekopieerd ✓') {
 }
 
 // ── "Inspireer me" — automatisch een geldig profiel kiezen ──
-// Veelgevraagde stijl + palet combinaties; we randomiseren binnen die set
-// en springen direct door naar de foto-upload (stap 3).
+// Vult stijl + palet + scope=both + één raam met privacy/sfeer/akoestiek,
+// en kiest gelijk de eerste matching combinatie. Springt naar stap 6.
 function inspireerMe() {
   const POPULAR = [
     { style: 'Industrial',   palette: 'Warm_Earth' },
@@ -932,28 +1686,49 @@ function inspireerMe() {
     { style: 'Country',      palette: 'Natural_Green' },
   ];
   const pick = POPULAR[Math.floor(Math.random() * POPULAR.length)];
-  state.style       = pick.style;
-  state.palette     = pick.palette;
+  state.style        = pick.style;
+  state.palette      = pick.palette;
+  state.projectScope = 'both';
+  // Eén voorbeeld-raam zodat de JSON niet leeg is voor window_decor.
+  if (state.windows.length === 0) addWindow();
+  const w = state.windows[0];
+  w.height = '2400'; w.width = '1800';
+  w.frame_material = 'kunststof';
+  w.goals = ['privacy', 'sfeer', 'akoestiek'];
+  // Eerste matching combinatie selecteren.
+  const top = filterRaamOplossingen(w.goals);
+  if (top.length > 0) w.chosenComboId = top[0].id;
   state.aiSuggested = true;
-  gotoStep(3);
+  gotoStep(6);
 }
 
 // ── Navigatie ──────────────────────────────────────────────
+// Stap 5 wordt automatisch overgeslagen wanneer scope alleen 'flooring' is.
 function gotoStep(n) {
   // Vooruit: voorwaarden bekijken. Achteruit: altijd toegestaan.
-  if (n > 1 && !state.style)   n = 1;
-  if (n > 2 && !state.palette) n = 2;
+  if (n > 1 && !state.style)        n = 1;
+  if (n > 2 && !state.palette)      n = 2;
+  if (n > 4 && !state.projectScope) n = 4;
+  // Auto-skip stap 5 bij scope flooring-only.
+  if (n === 5 && !scopeIncludesWindowDecor()) n = state.step < 5 ? 6 : 4;
+
   state.step = n;
   renderProgress();
   if (n === 1) renderStep1();
   if (n === 2) renderStep2();
   if (n === 3) renderStep3();
+  if (n === 4) renderStep4();
+  if (n === 5) renderStep5();
+  if (n === 6) renderStep6();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function resetAll() {
   state.step = 1;
   state.style = state.palette = null;
+  state.projectScope = null;
+  state.furniture = [];
+  state.windows = [];
   state.photoFile = state.photoDataUrl = null;
   state.aiSuggested = false;
   gotoStep(1);

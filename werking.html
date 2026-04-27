@@ -787,7 +787,7 @@
   <p>De pagina <a href="style-configurator.html"><code>style-configurator.html</code></a> is een aparte tool die de woonstijl en kleurvoorkeur van een klant vertaalt naar een gestructureerd JSON-profiel. Dit profiel wordt door de externe AI-visualizer-API van <em>Kevin</em> gebruikt om meubels in een foto van de klant te plaatsen.</p>
 
   <div class="flow">
-    <div class="flow-title">3-staps trechter &mdash; van keuze naar Style Profile JSON</div>
+    <div class="flow-title">6-staps trechter &mdash; van inspiratie tot Style Profile JSON</div>
 
     <div class="flow-row"><div class="node node-input">Stap 1 &mdash; Woonstijl<small>Industrieel / Scandinavisch / Modern / Landelijk</small></div></div>
     <div class="flow-arrow-down"></div>
@@ -795,11 +795,20 @@
     <div class="flow-arrow-down"></div>
     <div class="flow-row"><div class="node node-input">Stap 2 &mdash; Kleur-palet<small>Warm &amp; Geborgen / Koel &amp; Fris / Krachtig Contrast / Natuurlijk</small></div></div>
     <div class="flow-arrow-down"></div>
-    <div class="flow-row"><div class="node node-input">Stap 3 &mdash; Foto-upload<small>JPG / PNG / WEBP &mdash; drag-drop of klik</small></div></div>
+    <div class="flow-row"><div class="node node-input">Stap 3 &mdash; Meubel-inventarisatie<small>foto + L&times;B&times;H per behouden meubel (optioneel)</small></div></div>
     <div class="flow-arrow-down"></div>
-    <div class="flow-row"><div class="node node-calc">buildStyleProfile()<small>style.tags + palette.tags &rarr; uniek</small></div></div>
+    <div class="flow-row"><div class="node node-input">Stap 4 &mdash; Project-scope<small>Vloer / Raamdecoratie / Beide</small></div></div>
     <div class="flow-arrow-down"></div>
-    <div class="flow-row"><div class="node node-output">Style Profile JSON<small>style_id + color_palette_id + base64-foto + tags</small></div></div>
+    <div class="flow-row">
+      <div class="node node-input">Stap 5 &mdash; Raamdecoratie per raam<small>maten + kozijn + doel-klant &rarr; Top-4 uit oplossingen-matrix</small></div>
+      <div class="node node-decide" style="margin-left:14px">Scope = Vloer?<br/><small>&rarr; sla stap 5 over</small></div>
+    </div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-input">Stap 6 &mdash; Foto-upload<small>JPG / PNG / WEBP &mdash; drag-drop of klik</small></div></div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-calc">buildStyleProfile()<small>stijl + palet + scope + meubels + ramen + tags</small></div></div>
+    <div class="flow-arrow-down"></div>
+    <div class="flow-row"><div class="node node-output">Style Profile JSON<small>+ kapstalen-IDs per raam &rarr; showroom-koppeling</small></div></div>
     <div class="flow-arrow-down"></div>
     <div class="flow-row"><div class="node node-output" style="border-color:var(--success);background:var(--success-lt);color:#1b5e20">Adviseur-CTA<small>"Vraag fysieke stalen van dit ontwerp"</small></div></div>
   </div>
@@ -816,31 +825,69 @@
     </tbody>
   </table>
 
-  <h3>JSON-output (input voor Kevin's visualizer-API)</h3>
-  <p>De primaire sleutels die de API verwacht zijn <code>style_id</code> en <code>color_palette_id</code>. De <code>ai_prompt_tags</code> zijn een samengevoegde lijst van prompt-fragmenten per stijl + palet (deduplicaten verwijderd). De foto wordt als base64 data-URL ingebed zodat het profiel als één bestand naar de AI-pipeline gaat.</p>
+  <h3>Oplossingen-matrix &mdash; doel-klant filtert raamdecoratie (stap 5)</h3>
+  <p>Per raam selecteert de klant één of meer doelen (privacy, verduistering, akoestiek, hitte/UV, …). De functie <code>filterRaamOplossingen(goals)</code> filtert de matrix uit de bron-spreadsheet en toont de Top 4 combinaties die <em>alle</em> doelen afdekken, gesorteerd op veelzijdigheid.</p>
+  <pre><code>// TypeScript-equivalent voor AI-pipeline
+function filterRaamOplossingen(goals: string[]): RaamOplossing[] {
+  if (!goals.length) return [...RAAM_OPLOSSINGEN].sort(byCoverage);
+  return RAAM_OPLOSSINGEN
+    .filter(o =&gt; goals.every(g =&gt; o.goals.includes(g)))
+    .sort((a, b) =&gt; b.goals.length - a.goals.length);
+}</code></pre>
+  <p>De 15 combinaties uit de matrix dekken alle producten van het bronbestand: <em>Inbetween</em>, <em>Overgordijn</em>, <em>Jaloezie</em>, <em>Duette</em> (incl. transparante variant) en <em>Rolgordijn</em> &mdash; solo of in combinaties van 2-3 producten.</p>
+
+  <h3>Auto-waarschuwingen per raam (stap 5)</h3>
+  <ul>
+    <li><strong>Kunststof / aluminium kozijn</strong> &rarr; niet boren; alleen <em>klem</em> of <em>ingespannen</em> modellen.</li>
+    <li><strong>Houten kozijn</strong> &rarr; boren toegestaan, raam draait meestal naar buiten &rarr; vrijhangende modellen mogelijk.</li>
+    <li><strong>Draai-/kiepraam</strong> &rarr; Duette of Jaloezie met <em>top-down/bottom-up</em> aanbevolen.</li>
+    <li><strong>Verduistering gewenst</strong> &rarr; geen Wave plooi; alleen verzwaringskoord of lock; geen onderzoom bij blackout-stof; bij niet-blackout: blackout voering toevoegen.</li>
+    <li><strong>Vol-muur aankleden</strong> &rarr; gordijnen volle muur, zonwering binnen <em>"in de dag"</em>.</li>
+    <li><strong>Kleine raam (&le; 1500 mm)</strong> &rarr; bandhoogte 8 cm aanbevolen.</li>
+    <li><strong>Ventilatierooster aanwezig</strong> &rarr; kies bij Duette top-down/bottom-up.</li>
+    <li><strong>Raam draait naar binnen</strong> &rarr; geen vrijhangende modellen, ingespannen models.</li>
+  </ul>
+
+  <h3>Kapstalen-ID &mdash; showroom-koppeling</h3>
+  <p>Per gekozen raamdecoratie-combinatie wordt automatisch een <code>kapstalen_id</code> gegenereerd in de vorm <code>KAP-{stijl}-{palet}-{producten}-{nr}</code>. De verkoper in de showroom weet daarmee direct welke fysieke stalen uit het rek te halen.</p>
+  <pre><code>generateKapstalenId('Industrial', 'Warm_Earth', 'inb_over_jal', 1)
+// → "KAP-IND-WE-INB-OG-JAL-001"</code></pre>
+
+  <h3>Uitgebreide JSON-output (input voor Kevin's visualizer-API)</h3>
+  <p>De primaire sleutels zijn nog steeds <code>style_id</code> en <code>color_palette_id</code>; daarnaast gaan nu <code>project_scope</code>, <code>existing_furniture</code> en per-raam <code>window_specs</code> mee &mdash; inclusief technische advanced-velden en de Kapstalen-ID die de verkoper aan de showroom koppelt.</p>
   <pre><code>{
   "style_id": "Industrial",
   "color_palette_id": "Warm_Earth",
-  "customer_photo_url": "data:image/jpeg;base64,&hellip;",
-  "ai_prompt_tags": [
-    "exposed brick walls", "metal accents", "concrete floor",
-    "warm earth tones", "cream and beige palette", "amber accents"
+  "project_scope": ["window_decor", "flooring"],
+  "existing_furniture": [
+    { "type": "Bank", "dimensions": { "l": 220, "w": 90, "h": 80 }, "image_url": "data:&hellip;" }
   ],
-  "meta": {
-    "style_label": "Industrieel",
-    "palette_label": "Warm &amp; Geborgen",
-    "ai_suggested": false,
-    "generated_at": "2026-04-27T&hellip;"
-  }
+  "window_specs": [
+    {
+      "name": "Raam 1",
+      "dimensions": { "width": 1800, "height": 2400 },
+      "frame_material": "kunststof",
+      "operable_type": "bewegend",
+      "mounting": "in_de_dag",
+      "function_goals": ["privacy", "verduistering", "akoestiek"],
+      "suggested_products": ["inbetween", "overgordijn", "duette"],
+      "kapstalen_id": "KAP-IND-WE-INB-OG-DUE-001",
+      "advanced": { "vol_muur": false, "draaikiep": true, "&hellip;": "&hellip;" }
+    }
+  ],
+  "customer_photo_url": "data:image/jpeg;base64,&hellip;",
+  "ai_prompt_tags": ["exposed brick walls", "warm earth tones", "&hellip;"],
+  "meta": { "ai_suggested": false, "furniture_count": 1, "window_count": 1, "&hellip;": "&hellip;" }
 }</code></pre>
 
   <h3>Bijzonderheden</h3>
   <ul>
-    <li><strong>"Inspireer me"</strong> &mdash; willekeurige greep uit acht populaire stijl-/paletcombinaties; springt direct naar stap 3 met <code>ai_suggested: true</code> in de output. Handig voor klanten die niet willen kiezen.</li>
-    <li><strong>Geen materiaal-stap</strong> &mdash; Kevin's diffusion-model leidt materialen zelf af uit de stijl; we vragen er niet expliciet naar om te voorkomen dat de keuze-trechter te smal wordt.</li>
+    <li><strong>"Inspireer me"</strong> &mdash; willekeurige greep uit acht populaire stijl-/paletcombinaties; vult automatisch een voorbeeld-raam met privacy/sfeer/akoestiek en kiest de eerste matching combinatie. Springt direct naar stap 6 met <code>ai_suggested: true</code> in de output.</li>
+    <li><strong>Stap 5 wordt overgeslagen</strong> wanneer de gebruiker scope <em>Vloer</em> kiest &mdash; de progress-bar markeert de stap als <em>skipped</em> (afgezwakt).</li>
+    <li><strong>Geen materiaal-stap</strong> &mdash; Kevin's diffusion-model leidt materialen zelf af uit stijl + gekozen raamdecoratie; we vragen er niet expliciet naar om de keuze-trechter niet te smal te maken.</li>
     <li><strong>Tile-visuals</strong> zijn CSS-gradient placeholders met SVG mood-iconen. Elk <code>.tile-image</code>-blok heeft een HTML-comment <code>&lt;!-- IMAGE-PLACEHOLDER {ID} --&gt;</code>; vervang het door <code>&lt;img src="&hellip;"&gt;</code> voor showroomfoto's.</li>
     <li><strong>Adviseur-CTA</strong> &mdash; na het genereren van het profiel verschijnt een groene callout: <em>"Je persoonlijke stijl is vertaald naar jouw ruimte. Vraag nu een van onze adviseurs voor de fysieke stalen van dit ontwerp."</em></li>
-    <li><strong>Geen Supabase-koppeling</strong> &mdash; alle state leeft in de browser; foto wordt nooit naar een server geüpload tenzij de gebruiker de JSON elders postet.</li>
+    <li><strong>Geen Supabase-koppeling</strong> &mdash; alle state leeft in de browser; foto's (woonkamer + meubels) worden als base64 ingebed in de uiteindelijke JSON.</li>
   </ul>
 
   <a class="top-link" href="#top">&uarr; Terug naar boven</a>
