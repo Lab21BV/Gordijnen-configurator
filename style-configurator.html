@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Style Engine — Interieur-configurator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #f4f5f7;
+      --surface:   #ffffff;
+      --border:    #d9dde8;
+      --accent:    #2c5f8a;
+      --accent-lt: #e8f0f8;
+      --accent-dk: #1e4166;
+      --success:   #2e7d32;
+      --success-lt:#e7f5e8;
+      --error:     #c62828;
+      --error-lt:  #fde8e8;
+      --warn:      #e65100;
+      --warn-lt:   #fff3e0;
+      --text:      #1a1a2e;
+      --muted:     #5a6072;
+      --radius:    10px;
+      --shadow:    0 2px 8px rgba(0,0,0,.10);
+      --shadow-lg: 0 6px 24px rgba(20,30,60,.16);
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* ── Header ─────────────────────────────────────────────── */
+    header {
+      background: var(--accent); color: #fff; padding: 14px 28px;
+      display: flex; align-items: center; gap: 14px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.25);
+      position: sticky; top: 0; z-index: 100;
+    }
+    header svg { flex-shrink: 0; }
+    header h1 { font-size: 1.15rem; font-weight: 600; letter-spacing: .02em; }
+    header nav { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+    header nav a {
+      color: rgba(255,255,255,.85); text-decoration: none; font-size: .82rem;
+      font-weight: 500; padding: 5px 12px; border-radius: 5px;
+      border: 1px solid rgba(255,255,255,.3); transition: background .15s;
+    }
+    header nav a:hover { background: rgba(255,255,255,.15); color: #fff; }
+
+    .page { max-width: 1100px; margin: 0 auto; padding: 28px 24px 80px; }
+
+    /* ── Voortgangsbalk ─────────────────────────────────────── */
+    .progress-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 22px;
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+    }
+    .progress-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .progress-step {
+      display: flex; align-items: center; gap: 8px;
+      font-size: .82rem; color: var(--muted); min-width: 0;
+    }
+    .progress-step .num {
+      flex-shrink: 0;
+      width: 26px; height: 26px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%; font-size: .78rem; font-weight: 700;
+      background: #eef0f4; color: var(--muted);
+      border: 2px solid transparent;
+      transition: all .25s;
+    }
+    .progress-step .label {
+      font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .progress-step.active .num    { background: var(--accent); color: #fff; transform: scale(1.06); }
+    .progress-step.active .label  { color: var(--accent-dk); }
+    .progress-step.done .num      { background: var(--success); color: #fff; }
+    .progress-step.done .label    { color: var(--success); }
+    .progress-bar {
+      height: 6px;
+      background: #eef0f4;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress-bar .fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), #4a8bc2);
+      width: 0%;
+      transition: width .35s ease;
+    }
+
+    .luck-bar {
+      display: flex; justify-content: flex-end; align-items: center;
+      gap: 10px; margin-bottom: 12px; font-size: .78rem; color: var(--muted);
+    }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: inherit; font-size: .82rem; font-weight: 600;
+      padding: 8px 14px; border-radius: 6px; cursor: pointer;
+      border: 1px solid transparent; transition: all .15s; line-height: 1.2;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-dk); }
+    .btn-primary:disabled { background: #bcc4d2; cursor: not-allowed; }
+    .btn-outline { background: transparent; color: var(--accent); border-color: var(--accent); }
+    .btn-outline:hover { background: var(--accent-lt); }
+    .btn-ghost { background: transparent; color: var(--muted); }
+    .btn-ghost:hover { background: var(--accent-lt); color: var(--accent-dk); }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-success:hover { background: #1f5d23; }
+    .btn-lg { padding: 11px 20px; font-size: .9rem; }
+
+    /* ── Stap-card ──────────────────────────────────────────── */
+    .step {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 32px 28px 28px;
+      animation: fadeIn .35s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .step-eyebrow {
+      font-size: .72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .12em; color: var(--accent);
+      margin-bottom: 6px;
+    }
+    .step-title {
+      font-size: 1.6rem; font-weight: 700; color: var(--accent-dk);
+      margin-bottom: 8px;
+    }
+    .step-lead {
+      color: var(--muted); font-size: .95rem;
+      max-width: 640px; margin-bottom: 28px;
+    }
+    .step-actions {
+      margin-top: 28px;
+      display: flex; gap: 10px; align-items: center; justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    /* ── Tile-grid (visuele keuze) ──────────────────────────── */
+    .tiles {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+    }
+    .tile {
+      position: relative;
+      cursor: pointer;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: transform .2s, box-shadow .2s, border-color .2s;
+      display: flex; flex-direction: column;
+    }
+    .tile:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--accent);
+    }
+    .tile.selected {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-lt), var(--shadow-lg);
+    }
+    .tile.selected::after {
+      content: '✓';
+      position: absolute; top: 10px; right: 10px;
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--accent); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; font-weight: 700;
+      box-shadow: 0 2px 6px rgba(0,0,0,.25);
+    }
+    .tile-image {
+      aspect-ratio: 4 / 3;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+    }
+    /* Each .tile-image renders a CSS-gradient placeholder. The SVG inside acts
+       as a "mood icon". ── REPLACE: vervang de inline <svg> of de
+       background door <img src="…/showroomfoto.jpg" alt=""> met je eigen
+       showroomfoto's voor extra impact. ── */
+    .tile-image svg {
+      width: 64%; height: 64%;
+      filter: drop-shadow(0 3px 6px rgba(0,0,0,.18));
+    }
+    .tile-body {
+      padding: 14px 16px 18px;
+      display: flex; flex-direction: column; gap: 4px;
+      flex: 1;
+    }
+    .tile-title {
+      font-size: 1.02rem; font-weight: 700; color: var(--accent-dk);
+    }
+    .tile-sub {
+      font-size: .82rem; color: var(--muted); line-height: 1.45;
+    }
+
+    /* ── Tile-backgrounds (placeholders, makkelijk te vervangen) ── */
+    .bg-industrial      { background: linear-gradient(135deg,#5a4938 0%,#2e2a26 50%,#15110f 100%); }
+    .bg-scandinavian    { background: linear-gradient(135deg,#fafafa 0%,#e9ecef 60%,#cdd2d8 100%); }
+    .bg-modern          { background: linear-gradient(135deg,#dadde2 0%,#a8b0bd 60%,#6c7480 100%); }
+    .bg-country         { background: linear-gradient(135deg,#e8d5a8 0%,#c8a571 50%,#8a6438 100%); }
+
+    .bg-warm-earth      { background: linear-gradient(135deg,#fbeacb 0%,#e3c79b 50%,#ad8456 100%); }
+    .bg-cool-fresh      { background: linear-gradient(135deg,#f3f5f8 0%,#c8d0db 60%,#7e8a9c 100%); }
+    .bg-bold-contrast   { background: linear-gradient(135deg,#3a3d44 0%,#1c1e23 50%,#0a0c10 100%); }
+    .bg-natural-green   { background: linear-gradient(135deg,#d3dfa8 0%,#7d9461 50%,#3e5430 100%); }
+
+    .bg-cognac-leather  { background: linear-gradient(135deg,#bf7f4d 0%,#8c5126 60%,#4f2e15 100%); }
+    .bg-soft-velvet     { background: linear-gradient(135deg,#7f4a86 0%,#4d2960 60%,#2a1432 100%); }
+    .bg-natural-oak     { background: linear-gradient(135deg,#dec299 0%,#a87a4d 50%,#6b4623 100%); }
+    .bg-black-steel     { background: linear-gradient(135deg,#3b3f48 0%,#1a1d22 60%,#06070a 100%); }
+
+    .icon-light    { color: rgba(255,255,255,.92); }
+    .icon-dark     { color: rgba(0,0,0,.65); }
+
+    /* Tiles die door filtering NIET passen worden subtiel afgezwakt. */
+    .tile.dimmed {
+      opacity: .35;
+      filter: grayscale(.6);
+      pointer-events: none;
+    }
+
+    /* ── Foto-upload ────────────────────────────────────────── */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      background: #fafbfd;
+      padding: 36px 20px;
+      text-align: center;
+      transition: border-color .2s, background .2s;
+      cursor: pointer;
+      position: relative;
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: var(--accent);
+      background: var(--accent-lt);
+    }
+    .upload-zone input[type="file"] { display: none; }
+    .upload-zone .icon {
+      font-size: 2.6rem; margin-bottom: 10px; line-height: 1;
+    }
+    .upload-zone .title {
+      font-size: 1.05rem; font-weight: 700; color: var(--accent-dk);
+      margin-bottom: 4px;
+    }
+    .upload-zone .hint {
+      font-size: .82rem; color: var(--muted);
+    }
+
+    .photo-preview {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: minmax(200px, 1fr) 2fr;
+      gap: 18px;
+      align-items: start;
+    }
+    .photo-preview img {
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    .photo-meta {
+      font-size: .85rem; color: var(--muted);
+      background: #fafbfd; border: 1px solid var(--border);
+      border-radius: 8px; padding: 12px 14px;
+    }
+    .photo-meta b { color: var(--text); }
+    .photo-meta .row { display: flex; justify-content: space-between; padding: 3px 0; }
+
+    @media (max-width: 720px) {
+      .photo-preview { grid-template-columns: 1fr; }
+    }
+
+    /* ── Style profile output ──────────────────────────────── */
+    .profile-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin: 22px 0 18px;
+    }
+    .profile-item {
+      background: var(--accent-lt);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+    .profile-item .lbl {
+      font-size: .68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--accent); margin-bottom: 3px;
+    }
+    .profile-item .val {
+      font-size: 1.05rem; font-weight: 700; color: var(--accent-dk);
+    }
+    .profile-item .sub {
+      font-size: .76rem; color: var(--muted);
+    }
+
+    pre.json-out {
+      background: #0f1320;
+      color: #e6e9ef;
+      padding: 18px 20px;
+      border-radius: 8px;
+      font-family: 'Courier New', Consolas, monospace;
+      font-size: .82rem;
+      line-height: 1.55;
+      overflow-x: auto;
+      max-height: 380px;
+      overflow-y: auto;
+    }
+    pre.json-out .k  { color: #82b8ff; }
+    pre.json-out .s  { color: #d8a76a; }
+    pre.json-out .n  { color: #b1cf85; }
+    pre.json-out .b  { color: #ce9178; }
+
+    .copy-row {
+      display: flex; gap: 10px; flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .toast {
+      position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+      background: var(--accent-dk); color: #fff;
+      padding: 10px 18px; border-radius: 6px;
+      box-shadow: var(--shadow-lg);
+      font-size: .85rem; font-weight: 600;
+      opacity: 0; pointer-events: none;
+      transition: opacity .2s;
+      z-index: 200;
+    }
+    .toast.show { opacity: 1; }
+
+    .ai-suggest-banner {
+      background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+      border: 1px solid #ffcc80;
+      color: #7b3a00;
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: .85rem;
+      margin-bottom: 18px;
+      display: flex; align-items: center; gap: 10px;
+    }
+
+    /* Smaller mobile tweaks. */
+    @media (max-width: 540px) {
+      .step { padding: 22px 18px 18px; }
+      .step-title { font-size: 1.3rem; }
+      .progress-step .label { display: none; }
+      .progress-row { gap: 4px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="3" width="18" height="2" rx="1"/>
+    <line x1="6"  y1="5" x2="6"  y2="21"/>
+    <line x1="18" y1="5" x2="18" y2="21"/>
+    <path d="M6 8 Q9 10 12 8 Q15 6 18 8"/>
+    <path d="M6 13 Q9 15 12 13 Q15 11 18 13"/>
+    <path d="M6 18 Q9 20 12 18 Q15 16 18 18"/>
+  </svg>
+  <h1>Style Engine — interieur-configurator</h1>
+  <nav>
+    <a href="index.html">&larr; Gordijn-configurator</a>
+    <a href="import.html">Artikel-import</a>
+    <a href="werking.html" target="_blank" rel="noopener">📈 Werking</a>
+  </nav>
+</header>
+
+<div class="page" id="top">
+
+  <!-- ── Voortgang ── -->
+  <div class="progress-wrap">
+    <div class="progress-row" id="progressRow">
+      <div class="progress-step active" data-step="1"><span class="num">1</span><span class="label">Woonstijl</span></div>
+      <div class="progress-step"        data-step="2"><span class="num">2</span><span class="label">Kleur-palet</span></div>
+      <div class="progress-step"        data-step="3"><span class="num">3</span><span class="label">Materiaal</span></div>
+      <div class="progress-step"        data-step="4"><span class="num">4</span><span class="label">Foto &amp; profiel</span></div>
+    </div>
+    <div class="progress-bar"><div class="fill" id="progressFill"></div></div>
+  </div>
+
+  <div class="luck-bar">
+    <span>Geen tijd om te kiezen?</span>
+    <button class="btn btn-outline btn-sm" id="btnInspireer" type="button">✨ Inspireer me</button>
+  </div>
+
+  <!-- ── Step host (één step zichtbaar tegelijk) ── -->
+  <div id="stepHost"></div>
+
+</div>
+
+<div class="toast" id="toast">Gekopieerd ✓</div>
+
+<script>
+// ============================================================
+// STYLE ENGINE — Interieur-configurator
+// Output: een gestructureerd JSON-profiel dat een externe image-to-image
+// AI gebruikt om de woonkamerfoto van de klant in te vullen met meubels,
+// kleuren en materialen die bij de gekozen stijl passen.
+// ============================================================
+
+// ── Datamodel ────────────────────────────────────────────────
+const STYLES = [
+  { id: 'Industrial',   label: 'Industrieel',
+    sub: 'Rauw, eerlijk, stoer. Staal, baksteen, edison-licht.',
+    bgClass: 'bg-industrial', iconColor: 'icon-light',
+    tags: ['exposed brick walls', 'metal accents', 'concrete floor',
+           'edison filament lighting', 'large factory windows'] },
+  { id: 'Scandinavian', label: 'Scandinavisch',
+    sub: 'Licht, rustig, functioneel. Wit met natuurlijk hout.',
+    bgClass: 'bg-scandinavian', iconColor: 'icon-dark',
+    tags: ['white walls', 'soft natural daylight', 'minimalist furniture',
+           'clean lines', 'pale wood floor'] },
+  { id: 'Modern',       label: 'Modern / Minimalistisch',
+    sub: 'Strak, bewust, tijdloos. Heldere lijnen en weinig ruis.',
+    bgClass: 'bg-modern', iconColor: 'icon-light',
+    tags: ['clean architectural lines', 'minimal decor',
+           'matte neutral walls', 'polished surfaces', 'recessed lighting'] },
+  { id: 'Country',      label: 'Landelijk / Klassiek',
+    sub: 'Warm, vertrouwd, ambachtelijk. Houten balken en linnen.',
+    bgClass: 'bg-country', iconColor: 'icon-light',
+    tags: ['exposed wooden ceiling beams', 'plastered walls',
+           'linen textiles', 'antique brass details', 'cozy wool textures'] },
+];
+
+const PALETTES = [
+  { id: 'Warm_Earth',    label: 'Warm & Geborgen',
+    sub: 'Beige, taupe, crème, gerookt hout.',
+    bgClass: 'bg-warm-earth', iconColor: 'icon-dark',
+    tags: ['warm earth tones', 'cream and beige palette',
+           'soft warm tungsten lighting', 'amber accents'] },
+  { id: 'Cool_Fresh',    label: 'Koel & Fris',
+    sub: 'Grijstinten, zacht wit, helder daglicht.',
+    bgClass: 'bg-cool-fresh', iconColor: 'icon-dark',
+    tags: ['cool grey tones', 'soft daylight', 'airy and bright',
+           'subtle blue undertones'] },
+  { id: 'Bold_Contrast', label: 'Krachtig Contrast',
+    sub: 'Diepe antraciet, zwart, met heldere accenten.',
+    bgClass: 'bg-bold-contrast', iconColor: 'icon-light',
+    tags: ['deep anthracite walls', 'high contrast composition',
+           'moody dramatic lighting', 'sharp light-dark accents'] },
+  { id: 'Natural_Green', label: 'Natuurlijk',
+    sub: 'Groen, oker en hout — direct uit de natuur.',
+    bgClass: 'bg-natural-green', iconColor: 'icon-light',
+    tags: ['sage and olive green tones', 'ochre accents',
+           'natural plant elements', 'organic earthy palette'] },
+];
+
+const MATERIALS = [
+  { id: 'Cognac_Leather', label: 'Robuust leer',
+    sub: 'Cognac of donker bruin, gerijpt en zacht.',
+    bgClass: 'bg-cognac-leather', iconColor: 'icon-light',
+    tags: ['cognac leather sofa', 'aged leather details',
+           'visible leather grain'] },
+  { id: 'Soft_Velvet',    label: 'Zacht velvet',
+    sub: 'Diep en tactiel — petrol, mosgroen of okergeel.',
+    bgClass: 'bg-soft-velvet', iconColor: 'icon-light',
+    tags: ['velvet upholstery', 'tactile rich fabric',
+           'jewel-tone accents'] },
+  { id: 'Natural_Oak',    label: 'Natuurlijk eiken',
+    sub: 'Eerlijk hout met zichtbare nerf en knoesten.',
+    bgClass: 'bg-natural-oak', iconColor: 'icon-dark',
+    tags: ['oak furniture', 'visible natural wood grain',
+           'matte oiled wood finish'] },
+  { id: 'Black_Steel',    label: 'Zwart staal',
+    sub: 'Mat, strak, zichtbare lasnaden.',
+    bgClass: 'bg-black-steel', iconColor: 'icon-light',
+    tags: ['matte black steel frames', 'industrial metal accents',
+           'powder-coated black hardware'] },
+];
+
+// Stijl → toegestane paletten (3 van 4 — filtert er één uit die stilistisch
+// niet past). De volgorde stuurt de tile-volgorde in stap 2.
+const STYLE_PALETTES = {
+  Industrial:   ['Bold_Contrast', 'Warm_Earth', 'Natural_Green'], // weg: Cool_Fresh
+  Scandinavian: ['Cool_Fresh',    'Warm_Earth', 'Natural_Green'], // weg: Bold_Contrast
+  Modern:       ['Cool_Fresh',    'Bold_Contrast', 'Warm_Earth'], // weg: Natural_Green
+  Country:      ['Warm_Earth',    'Natural_Green', 'Bold_Contrast'], // weg: Cool_Fresh
+};
+
+// (Stijl, palet) → top materialen (2-3 stuks). Beperkt de keuze tot wat
+// stilistisch overtuigt — trechter-principe.
+const STYLE_PALETTE_MATERIALS = {
+  'Industrial|Bold_Contrast':   ['Black_Steel', 'Cognac_Leather'],
+  'Industrial|Warm_Earth':      ['Cognac_Leather', 'Natural_Oak', 'Black_Steel'],
+  'Industrial|Natural_Green':   ['Natural_Oak', 'Cognac_Leather', 'Black_Steel'],
+
+  'Scandinavian|Cool_Fresh':    ['Natural_Oak', 'Soft_Velvet'],
+  'Scandinavian|Warm_Earth':    ['Natural_Oak', 'Soft_Velvet', 'Cognac_Leather'],
+  'Scandinavian|Natural_Green': ['Natural_Oak', 'Soft_Velvet'],
+
+  'Modern|Cool_Fresh':          ['Black_Steel', 'Soft_Velvet', 'Natural_Oak'],
+  'Modern|Bold_Contrast':       ['Black_Steel', 'Cognac_Leather', 'Soft_Velvet'],
+  'Modern|Warm_Earth':          ['Soft_Velvet', 'Natural_Oak', 'Cognac_Leather'],
+
+  'Country|Warm_Earth':         ['Natural_Oak', 'Cognac_Leather', 'Soft_Velvet'],
+  'Country|Natural_Green':      ['Natural_Oak', 'Cognac_Leather'],
+  'Country|Bold_Contrast':      ['Cognac_Leather', 'Black_Steel', 'Natural_Oak'],
+};
+
+// ── SVG-iconen — placeholders voor de tiles. Vervang of verwijder als je
+// je eigen showroomfoto's gebruikt (dan render je een <img> in .tile-image
+// in plaats van het SVG-icoon). ────────────────────────────────────────
+const ICONS = {
+  Industrial: `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M32 8v6"/><circle cx="32" cy="28" r="12"/>
+    <path d="M28 21l8 14"/><path d="M36 21l-8 14"/>
+    <path d="M22 44h20l-2 12H24z"/>
+  </svg>`,
+  Scandinavian: `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M14 30h36"/><path d="M16 30v18M48 30v18"/>
+    <path d="M14 30c0-6 6-12 18-12s18 6 18 12"/>
+    <path d="M22 48l-3 8M42 48l3 8"/>
+  </svg>`,
+  Modern: `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="14" y="20" width="36" height="22" rx="2"/>
+    <path d="M14 28h36"/><circle cx="50" cy="50" r="3" fill="currentColor"/>
+  </svg>`,
+  Country: `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10 26L32 12l22 14"/><path d="M16 26v24h32V26"/>
+    <path d="M28 50v-12h8v12"/>
+  </svg>`,
+
+  Warm_Earth: `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="32" cy="32" r="14"/><path d="M32 18v-6M32 52v-6M18 32h-6M52 32h-6"/>
+  </svg>`,
+  Cool_Fresh: `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 38c0-8 6-14 14-14s14 6 14 14"/><path d="M14 42h36"/>
+    <path d="M22 50l-2 4M42 50l2 4M32 50v6"/>
+  </svg>`,
+  Bold_Contrast: `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="32" cy="32" r="16"/><path d="M32 16a16 16 0 0 0 0 32" fill="currentColor"/>
+  </svg>`,
+  Natural_Green: `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M32 52V28"/><path d="M32 28c-8 0-14-4-14-12 8 0 14 4 14 12z"/>
+    <path d="M32 34c8 0 14-4 14-12-8 0-14 4-14 12z"/>
+  </svg>`,
+
+  Cognac_Leather: `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="10" y="22" width="44" height="22" rx="6"/>
+    <path d="M14 32h36"/><path d="M20 44v6M44 44v6"/>
+  </svg>`,
+  Soft_Velvet: `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 18Q32 30 52 18"/><path d="M12 30Q32 42 52 30"/>
+    <path d="M12 42Q32 54 52 42"/>
+  </svg>`,
+  Natural_Oak: `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M14 18Q22 32 14 46"/><path d="M26 18Q34 32 26 46"/>
+    <path d="M38 18Q46 32 38 46"/><path d="M50 18Q58 32 50 46"/>
+  </svg>`,
+  Black_Steel: `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="14" y="14" width="36" height="36"/>
+    <path d="M14 14l36 36M50 14L14 50"/>
+  </svg>`,
+};
+
+// ── Lookup helpers ──────────────────────────────────────────
+const styleById    = id => STYLES.find(s => s.id === id);
+const paletteById  = id => PALETTES.find(p => p.id === id);
+const materialById = id => MATERIALS.find(m => m.id === id);
+
+// ── State ──────────────────────────────────────────────────
+const state = {
+  step: 1,
+  style: null,
+  palette: null,
+  material: null,
+  photoFile: null,
+  photoDataUrl: null,
+  aiSuggested: false,
+};
+
+// ── Rendering helpers ──────────────────────────────────────
+function $(sel) { return document.querySelector(sel); }
+function el(tag, attrs = {}, html = '') {
+  const n = document.createElement(tag);
+  Object.entries(attrs).forEach(([k, v]) => {
+    if (k === 'class') n.className = v;
+    else if (k.startsWith('on')) n.addEventListener(k.slice(2), v);
+    else n.setAttribute(k, v);
+  });
+  if (html) n.innerHTML = html;
+  return n;
+}
+function escHtml(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Voortgangsbalk synchroniseren met state.step.
+function renderProgress() {
+  const total = 4;
+  $('#progressFill').style.width = ((state.step - 1) / (total - 1) * 100) + '%';
+  document.querySelectorAll('.progress-step').forEach(node => {
+    const n = parseInt(node.dataset.step, 10);
+    node.classList.toggle('active', n === state.step);
+    node.classList.toggle('done',   n < state.step);
+  });
+}
+
+// Tile bouwen voor stijl/palet/materiaal — gedeelde renderer.
+function renderTile(item, opts = {}) {
+  const { selected, dimmed, onClick } = opts;
+  const tile = el('button', {
+    type: 'button',
+    class: `tile ${selected ? 'selected' : ''} ${dimmed ? 'dimmed' : ''}`,
+    'aria-pressed': selected ? 'true' : 'false',
+    'data-id': item.id,
+  });
+  tile.style.textAlign = 'left';
+  tile.innerHTML = `
+    <!-- IMAGE-PLACEHOLDER ${escHtml(item.id)} — vervang door <img src="…" alt=""> voor showroomfoto -->
+    <div class="tile-image ${item.bgClass}">
+      <span class="${item.iconColor}">${ICONS[item.id] || ''}</span>
+    </div>
+    <div class="tile-body">
+      <div class="tile-title">${escHtml(item.label)}</div>
+      <div class="tile-sub">${escHtml(item.sub)}</div>
+    </div>`;
+  if (onClick) tile.addEventListener('click', () => onClick(item));
+  return tile;
+}
+
+// ── STAP 1 — Woonstijl ─────────────────────────────────────
+function renderStep1() {
+  const host = $('#stepHost');
+  host.innerHTML = '';
+  const card = el('div', { class: 'step' });
+  card.innerHTML = `
+    <div class="step-eyebrow">Stap 1 van 4</div>
+    <h2 class="step-title">Welke sfeer voelt als thuis?</h2>
+    <p class="step-lead">Kies wat je hart raakt — niet wat je <em>zou moeten</em> kiezen.
+       Op basis van deze richting filteren we straks paletten en materialen die echt bij je passen.</p>
+    <div class="tiles" id="tilesStep1"></div>
+    <div class="step-actions">
+      <span style="font-size:.78rem;color:var(--muted)">Klik op een sfeer om verder te gaan.</span>
+    </div>`;
+  host.appendChild(card);
+  const grid = card.querySelector('#tilesStep1');
+  STYLES.forEach(s => {
+    grid.appendChild(renderTile(s, {
+      selected: state.style === s.id,
+      onClick: chosen => {
+        // Reset dependent choices wanneer een andere stijl gekozen wordt — anders
+        // blijft een palet/materiaal hangen dat misschien niet meer past.
+        if (state.style !== chosen.id) {
+          state.palette = null;
+          state.material = null;
+        }
+        state.style = chosen.id;
+        gotoStep(2);
+      },
+    }));
+  });
+}
+
+// ── STAP 2 — Kleur-palet (gefilterd op stijl) ──────────────
+function renderStep2() {
+  const host = $('#stepHost');
+  host.innerHTML = '';
+  const styleObj = styleById(state.style);
+  const allowed = STYLE_PALETTES[state.style] || PALETTES.map(p => p.id);
+
+  const card = el('div', { class: 'step' });
+  card.innerHTML = `
+    <div class="step-eyebrow">Stap 2 van 4 · ${escHtml(styleObj.label)}</div>
+    <h2 class="step-title">Welk palet spreekt je aan?</h2>
+    <p class="step-lead">Bij <strong>${escHtml(styleObj.label.toLowerCase())}</strong> tonen we de kleurfamilies die het beste werken.
+       Andere paletten blijven mogelijk, maar zijn afgezwakt — vertrouw op je eerste reactie.</p>
+    <div class="tiles" id="tilesStep2"></div>
+    <div class="step-actions">
+      <button class="btn btn-ghost" type="button" id="back2">← Andere stijl kiezen</button>
+      <span style="font-size:.78rem;color:var(--muted)">Klik op een palet om verder te gaan.</span>
+    </div>`;
+  host.appendChild(card);
+
+  const grid = card.querySelector('#tilesStep2');
+  // Eerst de toegelaten paletten in de gegeven volgorde, daarna afgezwakt de rest.
+  const ordered = [
+    ...allowed.map(id => paletteById(id)),
+    ...PALETTES.filter(p => !allowed.includes(p.id)),
+  ];
+  ordered.forEach(p => {
+    const isAllowed = allowed.includes(p.id);
+    grid.appendChild(renderTile(p, {
+      selected: state.palette === p.id,
+      dimmed: !isAllowed,
+      onClick: chosen => {
+        if (!allowed.includes(chosen.id)) return;
+        if (state.palette !== chosen.id) state.material = null;
+        state.palette = chosen.id;
+        gotoStep(3);
+      },
+    }));
+  });
+  card.querySelector('#back2').addEventListener('click', () => gotoStep(1));
+}
+
+// ── STAP 3 — Materiaal (gefilterd op stijl + palet) ────────
+function renderStep3() {
+  const host = $('#stepHost');
+  host.innerHTML = '';
+  const styleObj   = styleById(state.style);
+  const paletteObj = paletteById(state.palette);
+  const key = `${state.style}|${state.palette}`;
+  const allowed = STYLE_PALETTE_MATERIALS[key] || MATERIALS.map(m => m.id);
+
+  const card = el('div', { class: 'step' });
+  card.innerHTML = `
+    <div class="step-eyebrow">Stap 3 van 4 · ${escHtml(styleObj.label)} · ${escHtml(paletteObj.label)}</div>
+    <h2 class="step-title">Welk materiaal mag niet ontbreken?</h2>
+    <p class="step-lead">Eén materiaal is genoeg — dit wordt het signatuur dat de AI als anker gebruikt
+       bij het invullen van je foto. De rest stemt zich daarop af.</p>
+    <div class="tiles" id="tilesStep3"></div>
+    <div class="step-actions">
+      <button class="btn btn-ghost" type="button" id="back3">← Ander palet kiezen</button>
+      <span style="font-size:.78rem;color:var(--muted)">Klik op een materiaal om verder te gaan.</span>
+    </div>`;
+  host.appendChild(card);
+
+  const grid = card.querySelector('#tilesStep3');
+  const ordered = [
+    ...allowed.map(id => materialById(id)),
+    ...MATERIALS.filter(m => !allowed.includes(m.id)),
+  ];
+  ordered.forEach(m => {
+    const isAllowed = allowed.includes(m.id);
+    grid.appendChild(renderTile(m, {
+      selected: state.material === m.id,
+      dimmed: !isAllowed,
+      onClick: chosen => {
+        if (!allowed.includes(chosen.id)) return;
+        state.material = chosen.id;
+        gotoStep(4);
+      },
+    }));
+  });
+  card.querySelector('#back3').addEventListener('click', () => gotoStep(2));
+}
+
+// ── STAP 4 — Foto upload + JSON output ─────────────────────
+function renderStep4() {
+  const host = $('#stepHost');
+  host.innerHTML = '';
+  const styleObj    = styleById(state.style);
+  const paletteObj  = paletteById(state.palette);
+  const materialObj = materialById(state.material);
+
+  const card = el('div', { class: 'step' });
+  card.innerHTML = `
+    <div class="step-eyebrow">Stap 4 van 4 · Style profile</div>
+    <h2 class="step-title">Upload je foto — en zie hoe de AI je woonkamer invult</h2>
+    <p class="step-lead">Upload een foto van de huidige woonruimte. We genereren een Style Profile (JSON)
+       met je keuzes en prompt-tags die het externe AI-model kan inlezen.</p>
+
+    ${state.aiSuggested ? `
+      <div class="ai-suggest-banner">
+        <span style="font-size:1.4rem">✨</span>
+        <span><b>Inspireer me</b> — we hebben een combinatie voor je gekozen op basis van wat veelgevraagd is.
+              Niet enthousiast? <a href="#" id="resetAi" style="color:var(--accent-dk);text-decoration:underline">handmatig opnieuw kiezen</a>.</span>
+      </div>` : ''}
+
+    <div class="profile-summary">
+      <div class="profile-item">
+        <div class="lbl">Woonstijl</div>
+        <div class="val">${escHtml(styleObj.label)}</div>
+        <div class="sub">${escHtml(styleObj.sub)}</div>
+      </div>
+      <div class="profile-item">
+        <div class="lbl">Kleur-palet</div>
+        <div class="val">${escHtml(paletteObj.label)}</div>
+        <div class="sub">${escHtml(paletteObj.sub)}</div>
+      </div>
+      <div class="profile-item">
+        <div class="lbl">Sleutel-materiaal</div>
+        <div class="val">${escHtml(materialObj.label)}</div>
+        <div class="sub">${escHtml(materialObj.sub)}</div>
+      </div>
+    </div>
+
+    <label class="upload-zone" id="dropZone">
+      <input type="file" id="photoInput" accept="image/*" />
+      <div class="icon">📷</div>
+      <div class="title" id="dropTitle">Sleep een foto hierheen of klik om te kiezen</div>
+      <div class="hint" id="dropHint">JPG, PNG of WEBP — bij voorkeur 1500px breed of meer</div>
+    </label>
+
+    <div id="photoPreviewWrap" style="display:none">
+      <div class="photo-preview">
+        <img id="photoImg" alt="Geüploade foto" />
+        <div class="photo-meta" id="photoMeta"></div>
+      </div>
+    </div>
+
+    <div class="step-actions">
+      <button class="btn btn-ghost"   type="button" id="back4">← Ander materiaal</button>
+      <button class="btn btn-success btn-lg" type="button" id="genJson" disabled>✓ Genereer Style Profile</button>
+    </div>
+
+    <div id="jsonWrap" style="display:none;margin-top:24px">
+      <h3 style="font-size:1rem;color:var(--accent-dk);margin-bottom:8px">Style Profile (JSON)</h3>
+      <p style="font-size:.82rem;color:var(--muted);margin-bottom:8px">
+        Stuur dit bestand samen met de foto naar je image-to-image AI-tool.
+      </p>
+      <pre class="json-out" id="jsonOut"></pre>
+      <div class="copy-row">
+        <button class="btn btn-primary" type="button" id="copyJson">📋 Kopieer JSON</button>
+        <button class="btn btn-outline" type="button" id="downloadJson">⬇ Download JSON</button>
+        <button class="btn btn-ghost"   type="button" id="resetAll">↺ Opnieuw beginnen</button>
+      </div>
+    </div>`;
+  host.appendChild(card);
+
+  // ── Listeners ─────────────────────────────────────────
+  card.querySelector('#back4').addEventListener('click', () => gotoStep(3));
+
+  const dropZone = card.querySelector('#dropZone');
+  const fileInput = card.querySelector('#photoInput');
+  const genBtn = card.querySelector('#genJson');
+
+  ['dragenter','dragover'].forEach(ev =>
+    dropZone.addEventListener(ev, e => { e.preventDefault(); dropZone.classList.add('dragover'); }));
+  ['dragleave','drop'].forEach(ev =>
+    dropZone.addEventListener(ev, e => { e.preventDefault(); dropZone.classList.remove('dragover'); }));
+  dropZone.addEventListener('drop', e => {
+    if (e.dataTransfer.files.length) handlePhoto(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', e => {
+    if (e.target.files.length) handlePhoto(e.target.files[0]);
+  });
+
+  genBtn.addEventListener('click', () => {
+    const json = buildStyleProfile();
+    showJson(json);
+  });
+
+  if (state.aiSuggested) {
+    const resetAi = card.querySelector('#resetAi');
+    if (resetAi) resetAi.addEventListener('click', e => {
+      e.preventDefault();
+      state.aiSuggested = false;
+      gotoStep(1);
+    });
+  }
+
+  // Restore vorige foto-keuze (bij terugnavigatie naar stap 4).
+  if (state.photoDataUrl) showPhotoPreview();
+}
+
+// Foto inlezen, valideren, en als data-URL in state opslaan.
+function handlePhoto(file) {
+  if (!file || !file.type.startsWith('image/')) {
+    alert('Kies een afbeeldingsbestand (JPG / PNG / WEBP).');
+    return;
+  }
+  const MAX = 8 * 1024 * 1024; // 8 MB — boven dit is base64 te zwaar voor JSON copy/paste.
+  if (file.size > MAX) {
+    if (!confirm(`Deze foto is ${(file.size / 1024 / 1024).toFixed(1)} MB — base64 wordt erg groot. Toch doorgaan?`)) return;
+  }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    state.photoFile = file;
+    state.photoDataUrl = ev.target.result;
+    showPhotoPreview();
+    document.getElementById('genJson').disabled = false;
+  };
+  reader.readAsDataURL(file);
+}
+
+function showPhotoPreview() {
+  const wrap = document.getElementById('photoPreviewWrap');
+  const img = document.getElementById('photoImg');
+  const meta = document.getElementById('photoMeta');
+  if (!wrap || !state.photoDataUrl) return;
+  img.src = state.photoDataUrl;
+  const f = state.photoFile;
+  const sizeMB = f ? (f.size / 1024 / 1024).toFixed(2) : '?';
+  meta.innerHTML = `
+    <div class="row"><span>Bestand</span><b>${escHtml(f ? f.name : 'foto')}</b></div>
+    <div class="row"><span>Grootte</span><b>${escHtml(sizeMB)} MB</b></div>
+    <div class="row"><span>Type</span><b>${escHtml(f ? f.type : '—')}</b></div>
+    <div class="row" style="border-top:1px dashed var(--border);margin-top:8px;padding-top:8px;color:var(--muted);font-size:.78rem">
+      De foto wordt als <code>base64</code> in het Style Profile JSON ingebed
+      zodat het bestand zelfstandig naar de AI gaat.
+    </div>`;
+  wrap.style.display = '';
+  document.getElementById('dropTitle').textContent = 'Foto klaar — klik om te vervangen';
+  document.getElementById('dropHint').textContent  = state.photoFile ? state.photoFile.name : '';
+  // Genereer-knop activeren als de foto al in state zat (bv. bij terug-navigatie).
+  const genBtn = document.getElementById('genJson');
+  if (genBtn) genBtn.disabled = false;
+}
+
+// ── Style profile (JSON output) ─────────────────────────
+function buildStyleProfile() {
+  const styleObj    = styleById(state.style);
+  const paletteObj  = paletteById(state.palette);
+  const materialObj = materialById(state.material);
+  // Tags: stijl + palet + materiaal samengevoegd, doublures verwijderd.
+  const tags = [...styleObj.tags, ...paletteObj.tags, ...materialObj.tags];
+  const uniqueTags = Array.from(new Set(tags));
+  return {
+    style: state.style,
+    color_palette: state.palette,
+    key_material: state.material,
+    customer_photo_url: state.photoDataUrl,
+    ai_prompt_tags: uniqueTags,
+    meta: {
+      style_label: styleObj.label,
+      palette_label: paletteObj.label,
+      material_label: materialObj.label,
+      ai_suggested: state.aiSuggested,
+      generated_at: new Date().toISOString(),
+    },
+  };
+}
+
+// JSON renderen met basis syntax-highlight, en data-URL truncated voor leesbaarheid.
+function showJson(profile) {
+  const wrap = document.getElementById('jsonWrap');
+  const out = document.getElementById('jsonOut');
+  // Voor de UI: photo-URL tot 80 chars + "[…+ N bytes]" zodat het scherm leesbaar blijft.
+  const display = JSON.parse(JSON.stringify(profile));
+  if (display.customer_photo_url && display.customer_photo_url.length > 100) {
+    const full = display.customer_photo_url;
+    const head = full.slice(0, 60);
+    display.customer_photo_url = `${head}…[+${full.length - 60} bytes base64]`;
+  }
+  out.innerHTML = highlightJson(JSON.stringify(display, null, 2));
+  wrap.style.display = '';
+  // Knoppen wiren — eenmalig.
+  document.getElementById('copyJson').onclick = () => copyJson(profile);
+  document.getElementById('downloadJson').onclick = () => downloadJson(profile);
+  document.getElementById('resetAll').onclick = resetAll;
+  wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// Minimale JSON-highlighter — kleurt keys/strings/numbers/booleans.
+function highlightJson(str) {
+  return escHtml(str)
+    .replace(/(&quot;[^&]*?&quot;)(\s*:)/g, '<span class="k">$1</span>$2')
+    .replace(/:\s*(&quot;[^&]*?&quot;)/g, ': <span class="s">$1</span>')
+    .replace(/:\s*(true|false|null)/g, ': <span class="b">$1</span>')
+    .replace(/:\s*(-?\d+(\.\d+)?)/g, ': <span class="n">$1</span>');
+}
+
+function copyJson(profile) {
+  const text = JSON.stringify(profile, null, 2);
+  navigator.clipboard.writeText(text).then(showToast).catch(() => {
+    // Fallback voor oudere browsers.
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta); showToast();
+  });
+}
+
+function downloadJson(profile) {
+  const text = JSON.stringify(profile, null, 2);
+  const blob = new Blob([text], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `style_profile_${profile.style}_${profile.color_palette}.json`;
+  a.click();
+  // Korte vertraging zodat de download daadwerkelijk start vóór de URL ingetrokken wordt.
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function showToast(msg = 'Gekopieerd ✓') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._tid);
+  t._tid = setTimeout(() => t.classList.remove('show'), 1600);
+}
+
+// ── "Inspireer me" — automatisch een geldig profiel kiezen ──
+// Gewogen voor "veelgevraagde" combinaties: warme aardse paletten met eiken
+// en cognac leer doen het altijd goed; we randomiseren binnen die zone.
+function inspireerMe() {
+  const POPULAR = [
+    { style: 'Industrial',   palette: 'Warm_Earth',    material: 'Cognac_Leather' },
+    { style: 'Industrial',   palette: 'Bold_Contrast', material: 'Black_Steel' },
+    { style: 'Scandinavian', palette: 'Warm_Earth',    material: 'Natural_Oak' },
+    { style: 'Scandinavian', palette: 'Cool_Fresh',    material: 'Natural_Oak' },
+    { style: 'Modern',       palette: 'Cool_Fresh',    material: 'Soft_Velvet' },
+    { style: 'Modern',       palette: 'Bold_Contrast', material: 'Black_Steel' },
+    { style: 'Country',      palette: 'Warm_Earth',    material: 'Natural_Oak' },
+    { style: 'Country',      palette: 'Natural_Green', material: 'Cognac_Leather' },
+  ];
+  const pick = POPULAR[Math.floor(Math.random() * POPULAR.length)];
+  state.style       = pick.style;
+  state.palette     = pick.palette;
+  state.material    = pick.material;
+  state.aiSuggested = true;
+  gotoStep(4);
+}
+
+// ── Navigatie ──────────────────────────────────────────────
+function gotoStep(n) {
+  // Vooruit: voorwaarden bekijken. Achteruit: altijd toegestaan.
+  if (n > 1 && !state.style)    n = 1;
+  if (n > 2 && !state.palette)  n = 2;
+  if (n > 3 && !state.material) n = 3;
+  state.step = n;
+  renderProgress();
+  if (n === 1) renderStep1();
+  if (n === 2) renderStep2();
+  if (n === 3) renderStep3();
+  if (n === 4) renderStep4();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function resetAll() {
+  state.step = 1;
+  state.style = state.palette = state.material = null;
+  state.photoFile = state.photoDataUrl = null;
+  state.aiSuggested = false;
+  gotoStep(1);
+}
+
+// ── Init ───────────────────────────────────────────────────
+document.getElementById('btnInspireer').addEventListener('click', inspireerMe);
+gotoStep(1);
+</script>
+</body>
+</html>
